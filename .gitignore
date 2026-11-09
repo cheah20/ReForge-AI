@@ -19,9 +19,3 @@ Thumbs.db
 *.log
 
 # NOTE: Do NOT ignore /.kiro — the hackathon requires it in the repo.
-
-# Local AI assistant files (not part of the project)
-.claude/
-CLAUDE.md
-.cursor/
-.copilot/
