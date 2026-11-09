@@ -8,8 +8,8 @@ ReForge AI stitches two systems into one assistant:
 
 | Module | What it does |
 | --- | --- |
-| **AccessForge** — 老旧网站智能改造 | Reads outdated, hard-to-use websites and rebuilds them as a clean, modern, accessible interface that still operates the original site. |
-| **FormBridge** — 多语言 PDF 与网页智能填表 | Understands PDF and web forms, asks the user questions in their own language (e.g. Chinese, Malay, English), validates the answers, and fills the form. |
+| **AccessForge** — legacy website makeover | Reads outdated, hard-to-use websites and rebuilds them as a clean, modern, accessible interface that still operates the original site. |
+| **FormBridge** — multilingual form filling for PDFs and web pages | Understands PDF and web forms, asks the user questions in their own language (e.g. Chinese, Malay, English), validates the answers, and fills the form. |
 
 ## How it works
 
