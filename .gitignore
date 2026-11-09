@@ -1,4 +1,4 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 
 # Build output
@@ -6,7 +6,7 @@ dist/
 build/
 .vite/
 
-# Secrets — never commit API keys
+# Secrets â€” never commit API keys
 .env
 .env.*
 !.env.example
@@ -18,4 +18,8 @@ Thumbs.db
 # Logs
 *.log
 
-# NOTE: Do NOT ignore /.kiro — the hackathon requires it in the repo.
+# NOTE: Do NOT ignore /.kiro â€” the hackathon requires it in the repo.
+
+# Private planning notes — never commit
+.local/
+

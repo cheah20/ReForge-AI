@@ -81,13 +81,23 @@ The PDF binary never leaves the browser. User answers never leave the browser, e
 
 ### Repository layout
 
+**Single-package layout using `@cloudflare/vite-plugin`.** The frontend (React + Vite) and the Worker live in one `package.json`. The plugin compiles the Worker alongside the frontend; `wrangler dev` serves both from a single process. No npm workspaces needed.
+
 ```
 reforge-ai/
-  fixtures/                     # Synthetic PDF fixtures (repo root, not src/)
+  package.json                  # Single package; no workspaces
+  vite.config.ts                # Vite + @cloudflare/vite-plugin
+  wrangler.toml                 # Workers config; assets from Vite dist
+  tsconfig.json                 # Strict TypeScript; paths for src/
+  vitest.config.ts              # Vitest (jsdom for frontend, node for worker)
+  playwright.config.ts          # Playwright (Chromium + Firefox)
+  .env.example
+  fixtures/                     # Synthetic PDF fixtures (repo root)
   scripts/
     create-fixtures/
       README.md
       encrypted.ts              # Dev script to produce encrypted.pdf
+    generate-fixture-cache.ts   # Precompute AI analysis for fixtures
   src/
     worker/
       index.ts                  # Worker entry point, route dispatch
@@ -97,9 +107,11 @@ reforge-ai/
         translate.ts            # POST /api/forms/translate
       cache/
         fixture-cache.ts        # Precomputed analysis cache lookup
+        precomputed/            # <hash>-<bcp47>.json files (committed)
     frontend/
       main.tsx                  # Vite entry
       App.tsx                   # Router + global providers
+      tokens.css                # Design tokens (CSS custom properties)
       screens/
         LanguagePicker.tsx
         Upload.tsx              # Upload + disclosure notice
@@ -1241,4 +1253,5 @@ Minimum 100 iterations. Each test annotated: `// Feature: formbridge-pdf, Proper
 2. **CJK prototype result** — Spike 2. Fill in `## CJK Prototype Result` above after running the prototype. If the prototype fails, CJK tasks are deferred and §5.3a Dec 1 items move to a later milestone.
 
 3. **`@pdf-lib/fontkit` CJK subsetting reliability** — issues #1396 and #494 on the pdf-lib tracker. The prototype will determine whether Option A (runtime subsetting) or Option B (pre-subsetted static asset) is needed.
+
 
