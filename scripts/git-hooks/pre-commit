@@ -1,0 +1,6 @@
+#!/bin/sh
+# Git pre-commit hook: blocks commits that stage private files (local-*,
+# .local/), likely secrets, or non-Latin text outside locale files, fixtures,
+# the fixture generator and tests.
+# Activate once per clone:  git config core.hooksPath scripts/git-hooks
+exec node "$(git rev-parse --show-toplevel)/scripts/commit-guard.cjs" --pre-commit

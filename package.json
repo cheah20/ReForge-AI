@@ -5,6 +5,7 @@
   "description": "ReForge AI — AI-Powered Legacy Web Modernization and Multilingual Form Assistance",
   "type": "module",
   "scripts": {
+    "prepare": "git config core.hooksPath scripts/git-hooks || exit 0",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

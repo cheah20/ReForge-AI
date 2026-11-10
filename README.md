@@ -21,6 +21,8 @@ npm run dev         # Vite dev server and the local Worker
 
 Open [http://localhost:5173](http://localhost:5173).
 
+`npm install` also turns on the repository's git pre-commit hook (`scripts/git-hooks/pre-commit`). The hook blocks a commit that stages private notes, likely secrets, or non-English text outside the locale files, fixtures and tests.
+
 By default the app runs with the **mock AI provider**, so it works offline and costs nothing. To use real Workers AI, run `wrangler login` (or set `CLOUDFLARE_API_TOKEN` in `.env`) and set `AI_MODE` to `real`. Real AI in local development reaches Cloudflare and spends neurons from your daily free allocation (10,000 per day), because Workers AI has no local simulation.
 
 ### Environment variables

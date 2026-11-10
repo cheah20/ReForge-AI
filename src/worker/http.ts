@@ -130,6 +130,7 @@ export interface LogEntry {
   attempts?: number;
   promptTokens?: number;
   completionTokens?: number;
+  neurons?: number;
   servedFromCache?: boolean;
 }
 

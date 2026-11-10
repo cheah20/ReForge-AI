@@ -69,10 +69,17 @@ export class CfWorkersAiProvider implements AiProvider {
     return this.run(translateMessages(call), MAX_TOKENS.translate, 0);
   }
 
-  /** Model inputs. Exposed for tests. */
+  /**
+   * Model inputs. Exposed for tests.
+   * Both candidates reason by default, and reasoning tokens count against
+   * max_completion_tokens: in Spike 1 the reasoning used the whole budget and
+   * the JSON never arrived. Gemma's thinking is switched off; Qwen runs with
+   * reasoning_effort "low" (decision 10).
+   */
   inputs(messages: ChatMessage[], maxTokens: number, temperature: number): Record<string, unknown> {
     const inputs: Record<string, unknown> = { messages, max_completion_tokens: maxTokens, temperature };
     if (this.model === QWEN_MODEL) inputs['reasoning_effort'] = 'low';
+    if (this.model === GEMMA_MODEL) inputs['chat_template_kwargs'] = { enable_thinking: false };
     return inputs;
   }
 
@@ -92,8 +99,12 @@ export class CfWorkersAiProvider implements AiProvider {
       if (timer !== undefined) clearTimeout(timer);
     }
 
+    const usage = replyUsage(raw);
     const value = extractJson(replyContent(raw));
-    if (value === undefined) throw new AiError('AI_INVALID_OUTPUT', 'Model reply was not JSON');
-    return { value, usage: { model: this.model, durationMs: this.now() - started, ...replyUsage(raw) } };
+    if (value === undefined) {
+      // finish_reason "length" means the token budget ran out before the JSON was complete.
+      throw new AiError('AI_INVALID_OUTPUT', `Model reply was not JSON (finish_reason: ${usage.finishReason ?? 'unknown'})`);
+    }
+    return { value, usage: { model: this.model, durationMs: this.now() - started, ...usage } };
   }
 }

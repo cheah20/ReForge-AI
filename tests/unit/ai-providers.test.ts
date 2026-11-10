@@ -169,6 +169,35 @@ describe('CfWorkersAiProvider', () => {
     expect(qwen).toMatchObject({ reasoning_effort: 'low' });
   });
 
+  // Spike 1: with reasoning on, the reasoning used the whole token budget and no JSON arrived.
+  it('switches Gemma thinking off; Qwen keeps reasoning_effort low instead', () => {
+    const gemma = new CfWorkersAiProvider(ok('{}')).inputs([], 2000, 0.2);
+    const qwen = new CfWorkersAiProvider(ok('{}'), { model: QWEN_MODEL }).inputs([], 2000, 0.2);
+    expect(gemma['chat_template_kwargs']).toEqual({ enable_thinking: false });
+    expect(qwen).not.toHaveProperty('chat_template_kwargs');
+  });
+
+  it('records the neurons and finish reason Workers AI reports', async () => {
+    const binding: AiBinding = {
+      run: async () => ({
+        choices: [{ message: { content: '{"translation":"ok"}' }, finish_reason: 'stop' }],
+        usage: { prompt_tokens: 2468, completion_tokens: 1368, neurons: 59.745 },
+      }),
+    };
+    const r = await call(new CfWorkersAiProvider(binding));
+    expect(r.usage).toMatchObject({ promptTokens: 2468, completionTokens: 1368, neurons: 59.745, finishReason: 'stop' });
+  });
+
+  it('names finish_reason length when the budget ran out before the JSON', async () => {
+    const binding: AiBinding = {
+      run: async () => ({ choices: [{ message: { content: '' }, finish_reason: 'length' }], usage: { completion_tokens: 2000 } }),
+    };
+    await expect(call(new CfWorkersAiProvider(binding))).rejects.toMatchObject({
+      code: 'AI_INVALID_OUTPUT',
+      message: 'Model reply was not JSON (finish_reason: length)',
+    });
+  });
+
   it('sends the model id and both prompt messages, with PDF data in the user message', async () => {
     let seen: { model: string; inputs: Record<string, unknown> } | undefined;
     const binding: AiBinding = {

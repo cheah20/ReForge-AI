@@ -68,13 +68,31 @@ export function extractJson(content: unknown): unknown {
   return undefined;
 }
 
-/** Token counts from a Workers AI reply; missing counts stay undefined, never 0. */
-export function replyUsage(reply: unknown): { promptTokens?: number; completionTokens?: number } {
-  const usage = reply && typeof reply === 'object' ? (reply as Record<string, unknown>)['usage'] : undefined;
-  if (!usage || typeof usage !== 'object') return {};
-  const u = usage as Record<string, unknown>;
-  const out: { promptTokens?: number; completionTokens?: number } = {};
-  if (typeof u['prompt_tokens'] === 'number') out.promptTokens = u['prompt_tokens'];
-  if (typeof u['completion_tokens'] === 'number') out.completionTokens = u['completion_tokens'];
+export interface ReplyUsage {
+  promptTokens?: number;
+  completionTokens?: number;
+  /** Neurons billed for this call, as reported by Workers AI in usage.neurons. */
+  neurons?: number;
+  /** choices[0].finish_reason, e.g. "stop" or "length". */
+  finishReason?: string;
+}
+
+/** Usage from a Workers AI reply; missing values stay undefined, never 0. */
+export function replyUsage(reply: unknown): ReplyUsage {
+  if (!reply || typeof reply !== 'object') return {};
+  const r = reply as Record<string, unknown>;
+  const out: ReplyUsage = {};
+  const usage = r['usage'];
+  if (usage && typeof usage === 'object') {
+    const u = usage as Record<string, unknown>;
+    if (typeof u['prompt_tokens'] === 'number') out.promptTokens = u['prompt_tokens'];
+    if (typeof u['completion_tokens'] === 'number') out.completionTokens = u['completion_tokens'];
+    if (typeof u['neurons'] === 'number' && Number.isFinite(u['neurons'])) out.neurons = u['neurons'];
+  }
+  const choices = r['choices'];
+  if (Array.isArray(choices) && choices[0] && typeof choices[0] === 'object') {
+    const reason = (choices[0] as Record<string, unknown>)['finish_reason'];
+    if (typeof reason === 'string') out.finishReason = reason;
+  }
   return out;
 }

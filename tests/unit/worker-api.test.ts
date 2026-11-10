@@ -158,7 +158,7 @@ describe('POST /api/forms/analyze', () => {
     expect(JSON.stringify(logs)).not.toContain(CANARY);
     for (const entry of logs) {
       expect(Object.keys(entry).every((k) =>
-        ['requestId', 'route', 'status', 'durationMs', 'errorCode', 'aiMode', 'model', 'attempts', 'promptTokens', 'completionTokens', 'servedFromCache'].includes(k),
+        ['requestId', 'route', 'status', 'durationMs', 'errorCode', 'aiMode', 'model', 'attempts', 'promptTokens', 'completionTokens', 'neurons', 'servedFromCache'].includes(k),
       )).toBe(true);
     }
   });

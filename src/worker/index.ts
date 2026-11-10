@@ -103,6 +103,7 @@ export function createHandler(deps: HandlerDeps = {}) {
         entry.model = usage.model;
         if (usage.promptTokens !== undefined) entry.promptTokens = usage.promptTokens;
         if (usage.completionTokens !== undefined) entry.completionTokens = usage.completionTokens;
+        if (usage.neurons !== undefined) entry.neurons = usage.neurons;
       }
       if (result.servedFromCache) entry.servedFromCache = true;
     } catch (err) {

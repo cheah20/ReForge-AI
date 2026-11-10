@@ -14,7 +14,17 @@
  * writes are never blocked, even when the text being written mentions git.
  *
  * Exit 2 blocks the command (reason on stderr). Exit 0 allows it.
- * Usage: node scripts/commit-guard.cjs  (hook JSON on stdin)
+ *
+ * Two ways to run it:
+ *   node scripts/commit-guard.cjs --pre-commit
+ *       Git pre-commit hook (scripts/git-hooks/pre-commit, activated with
+ *       `git config core.hooksPath scripts/git-hooks`). Checks the staged
+ *       changes: private paths, likely secrets, non-Latin text outside the
+ *       allowed paths. Exit 1 blocks the commit. This is the active guard.
+ *   node scripts/commit-guard.cjs   (hook JSON on stdin)
+ *       Command-level check for an agent PreToolUse hook. Not wired up any
+ *       more: a PreToolUse command hook made every shell command ask for
+ *       permission. Kept, with its tests, for setups that want it.
  */
 'use strict';
 
@@ -248,9 +258,28 @@ function evaluate(event) {
   return problems;
 }
 
-module.exports = { evaluate, segments, isPrivate };
+/**
+ * Git pre-commit mode: inspect what is staged right now. Returns the problems
+ * found; a git failure is itself a problem (fail closed).
+ */
+function preCommit(cwd) {
+  try {
+    return checkStaged(cwd);
+  } catch (err) {
+    return [`could not inspect staged changes (${String(err && err.message).split('\n')[0]})`];
+  }
+}
 
-if (require.main === module) {
+module.exports = { evaluate, segments, isPrivate, preCommit };
+
+if (require.main === module && process.argv.includes('--pre-commit')) {
+  const problems = preCommit(process.cwd());
+  if (problems.length) {
+    process.stderr.write(`commit blocked by scripts/commit-guard.cjs:\n${problems.map((p) => `  - ${p}`).join('\n')}\n`);
+    process.exit(1);
+  }
+  process.exit(0);
+} else if (require.main === module) {
   let raw = '';
   process.stdin.on('data', (d) => (raw += d));
   process.stdin.on('end', () => {

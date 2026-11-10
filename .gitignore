@@ -27,3 +27,12 @@ Thumbs.db
 # Local Worker variables (may hold secrets)
 .dev.vars*
 !.dev.vars.example
+
+# Local Wrangler state and scratch output (never commit raw model output)
+.wrangler/
+probe-*.txt
+probe-*.json
+spike-*.txt
+spike-*.json
+test-out.txt
+*.tmp

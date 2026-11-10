@@ -36,6 +36,9 @@ export interface AiUsage {
   model: string;
   promptTokens?: number;
   completionTokens?: number;
+  /** Neurons reported by Workers AI for the call. */
+  neurons?: number;
+  finishReason?: string;
   durationMs: number;
 }
 

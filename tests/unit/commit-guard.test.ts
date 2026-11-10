@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawnSync, execFileSync } from 'child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs';
+import { copyFileSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 
@@ -154,6 +154,62 @@ describe('everything else is allowed', () => {
 
   it('ignores commands unrelated to git', () => {
     expect(run('npx vitest run').status).toBe(0);
+  });
+});
+
+describe('git pre-commit mode', () => {
+  const preCommit = (cwd: string) => spawnSync(process.execPath, [SCRIPT, '--pre-commit'], { cwd, encoding: 'utf8' });
+
+  it('allows clean staged changes', () => {
+    expect(preCommit(clean).status).toBe(0);
+  });
+
+  it('blocks a staged private file, a secret and non-Latin text in source', () => {
+    const token = ['CLOUDFLARE_API_TOKEN', '=', 'abcdefghijklmnopqrstuvwxyz123456'].join('');
+    const repo = tempRepo({
+      [`${PRIVATE_DIR}/notes.md`]: 'private\n',
+      'config.env.example': `${token}\n`,
+      'src/app.ts': `// ${String.fromCodePoint(0x4e2d, 0x6587)}\n`,
+    });
+    repos.push(repo);
+    const r = preCommit(repo);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('staged private file');
+    expect(r.stderr).toContain('possible secret');
+    expect(r.stderr).toContain('non-English text in src/app.ts');
+  });
+
+  it('fails closed outside a git repository', () => {
+    const notRepo = mkdtempSync(path.join(tmpdir(), 'guard-pc-'));
+    repos.push(notRepo);
+    const r = preCommit(notRepo);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('could not inspect');
+  });
+
+  it('the tracked git hook really stops `git commit` when hooks are activated', () => {
+    const repo = tempRepo({ 'ok.txt': 'ok\n' });
+    repos.push(repo);
+    // The hook calls scripts/commit-guard.cjs at the repository top level, so copy both.
+    mkdirSync(path.join(repo, 'scripts', 'git-hooks'), { recursive: true });
+    copyFileSync(SCRIPT, path.join(repo, 'scripts', 'commit-guard.cjs'));
+    copyFileSync(path.resolve(__dirname, '../../scripts/git-hooks/pre-commit'), path.join(repo, 'scripts', 'git-hooks', 'pre-commit'));
+    const git = (...args: string[]) =>
+      spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...args], { cwd: repo, encoding: 'utf8' });
+    git('config', 'core.hooksPath', 'scripts/git-hooks');
+    git('add', '-A');
+    expect(git('commit', '-q', '-m', 'clean').status).toBe(0);
+
+    writeFileSync(path.join(repo, 'local-secret-notes.md'), 'private\n');
+    git('add', '-f', '--', 'local-secret-notes.md');
+    const blocked = git('commit', '-q', '-m', 'private');
+    expect(blocked.status).not.toBe(0);
+    expect(blocked.stderr).toContain('staged private file local-secret-notes.md');
+  });
+
+  it('npm install activates the hook in every clone (package.json prepare script)', () => {
+    const pkg = JSON.parse(readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8')) as { scripts: Record<string, string> };
+    expect(pkg.scripts['prepare']).toMatch(/^git config core\.hooksPath scripts\/git-hooks/);
   });
 });
 

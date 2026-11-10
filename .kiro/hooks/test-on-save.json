@@ -4,7 +4,8 @@
     {
       "name": "Run related tests on save",
       "trigger": "PostFileSave",
-      "description": "Runs only the unit tests related to the saved source, script, test or locale file",
+      "enabled": false,
+      "description": "Disabled for the unattended build: as a command hook it asks for permission on every save. The full suite runs at every checkpoint instead. Runs only the unit tests related to the saved source, script, test or locale file.",
       "matcher": "(^|[\\\\/])((src|tests)[\\\\/].*\\.(ts|tsx)|scripts[\\\\/].*\\.cjs|src[\\\\/]packs[\\\\/]language[\\\\/]locales[\\\\/][^\\\\/]+\\.json)$",
       "action": {
         "type": "command",
