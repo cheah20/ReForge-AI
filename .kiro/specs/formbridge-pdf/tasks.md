@@ -168,17 +168,17 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 20.2 Integrate into `fillPdf()`: build `FontMap` for required scripts, select correct font per field
     - _Requirements: 10.2_
 
-- [ ] 21. PDF fill property tests
-  - [ ] 21.1 Write Property 5 (fill/read-back round trip): generate arbitrary field answer subsets for `fixtures/clinic-registration.pdf`; `read(fill(pdf, answers))` returns the same normalized value for every filled field; generator must produce non-trivial answer sets
+- [x] 21. PDF fill property tests
+  - [x] 21.1 Write Property 5 (fill/read-back round trip): generate arbitrary field answer subsets for `fixtures/clinic-registration.pdf`; `read(fill(pdf, answers))` returns the same normalized value for every filled field; generator must produce non-trivial answer sets
     - **Property 5: Fill / read-back round trip**
     - **Validates: Requirements 10.1, 10.2, 15.1**
-  - [ ] 21.2 Write Property 6 (untouched fields unchanged): generate arbitrary subsets S; after `fill(pdf, S)`, every field not in S has the same value and appearance as before; verify using field value reads and appearance stream comparison
+  - [x] 21.2 Write Property 6 (untouched fields unchanged): generate arbitrary subsets S; after `fill(pdf, S)`, every field not in S has the same value and appearance as before; verify using field value reads and appearance stream comparison
     - **Property 6: Untouched fields are unchanged after fill**
     - **Validates: Requirements 10.3, 15.1**
-  - [ ] 21.3 Write Property 10 (dropdown/radio export value): generate arbitrary fields with options lists and answer strings; validate iff answer is a member `exportValue`; the `exportValue` is always what is written to the PDF; generator must include answers not in the options list
+  - [x] 21.3 Write Property 10 (dropdown/radio export value): generate arbitrary fields with options lists and answer strings; validate iff answer is a member `exportValue`; the `exportValue` is always what is written to the PDF; generator must include answers not in the options list
     - **Property 10: Dropdown/radio value containment**
     - **Validates: Requirements 7.8**
-  - [ ] 21.4 Write Property 11 (max length rejection): generate arbitrary `maxLength` N and answer strings; invalid with non-empty message iff `answer.length > N`; generator must produce strings both sides of the boundary
+  - [x] 21.4 Write Property 11 (max length rejection): generate arbitrary `maxLength` N and answer strings; invalid with non-empty message iff `answer.length > N`; generator must produce strings both sides of the boundary
     - **Property 11: Max length rejection**
     - **Validates: Requirements 7.9, 10.2**
 
