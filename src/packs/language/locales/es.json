@@ -33,6 +33,7 @@
 
   "analysis.loading": "Analizando tu formulario…",
   "analysis.batch": "Analizando lote {current} de {total}…",
+  "mock.question": "Indique: {label}",
   "analysis.demoMode": "Modo demo — las respuestas de IA están simuladas",
 
   "confirm.title": "Confirmar idioma del formulario",

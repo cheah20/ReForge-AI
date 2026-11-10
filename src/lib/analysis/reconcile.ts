@@ -90,9 +90,17 @@ function isUnresolvable(evidence: FieldEvidence, analysis: FieldAnalysis): boole
   return analysis.confidence === 0 && !hasTooltip && !hasSnippet;
 }
 
+/**
+ * Fields sent to /api/forms/analyze. A field whose PDF name was too long has
+ * only a local identifier, so it is never sent (review 2, item 3).
+ */
+export function needsAnalysis(evidence: FieldEvidence): boolean {
+  return !evidence.idTooLong;
+}
+
 export function classifyField(evidence: FieldEvidence, analysis: FieldAnalysis | null): FieldStatus {
   if (evidence.fieldType === 'signature') return 'fill-yourself';
-  if (evidence.multiSelect || evidence.unresolvedPage) return 'fill-yourself';
+  if (evidence.multiSelect || evidence.unresolvedPage || evidence.unsupported || evidence.idTooLong) return 'fill-yourself';
   if (!analysis) return 'fill-yourself';
   if (isUnresolvable(evidence, analysis)) return 'fill-yourself';
   return isLowConfidence(analysis.confidence) ? 'low-confidence' : 'mapped';

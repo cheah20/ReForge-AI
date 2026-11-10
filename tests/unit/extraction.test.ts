@@ -124,13 +124,47 @@ describe('clinic-registration.pdf evidence', () => {
     expect(f.get('patient.birthDate')?.tooltip).toBe('Tarikh lahir dalam format DD/MM/YYYY');
   });
 
-  it('gives every widget a snippet containing its own label', async () => {
+  // Review 2, item 4: each snippet starts with the field's own printed label.
+  it('starts every snippet with the field’s own printed label (fixture spec labels)', async () => {
+    const OWN_LABEL: Record<string, string[]> = {
+      'patient.fullName': ['Nama penuh'],
+      Text1: ['No. Kad Pengenalan'],
+      'patient.birthDate': ['Tarikh Lahir (DD/MM/YYYY)'],
+      'patient.gender': ['Jantina', 'Lelaki', 'Tidak dinyatakan'],
+      'clinic.branchCode': ['Kod cawangan'],
+      Text7: ['Rujukan'],
+      'contact.mobile': ['Telefon bimbit'],
+      'contact.homePhone': ['Telefon rumah'],
+      Text3: ['E-mel'],
+      'contact.address': ['Alamat surat-menyurat'],
+      'contact.postcode': ['Poskod'],
+      'contact.city': ['Bandar'],
+      'contact.state': ['Negeri / Wilayah'],
+      'visit.date': ['Tarikh lawatan'],
+      'visit.firstVisit': ['Lawatan pertama'],
+      'medical.allergyFlag': ['Ada alahan'],
+      'medical.description': ['Sebab lawatan / gejala'],
+      'emergency.name': ['Nama untuk dihubungi semasa kecemasan'],
+      'emergency.phone': ['Telefon kecemasan'],
+      'consent.contact': ['Saya bersetuju untuk dihubungi'],
+      'visit.shortCode': ['Kod ringkas (maksimum 4 aksara)'],
+      'consent.signature': ['Tandatangan pesakit'],
+    };
     const f = byId(await fieldsOf(fixture('clinic-registration.pdf')));
-    for (const field of f.values()) {
-      for (const w of field.widgets) expect(w.pageSnippet.length).toBeGreaterThan(0);
+    expect([...f.keys()].sort()).toEqual(Object.keys(OWN_LABEL).sort());
+    for (const [id, labels] of Object.entries(OWN_LABEL)) {
+      const snippets = f.get(id)!.widgets.map((w) => w.pageSnippet);
+      expect(snippets.length, id).toBe(labels.length);
+      snippets.forEach((s, i) => expect(s.startsWith(labels[i]!), `${id} widget ${i}: "${s}"`).toBe(true));
     }
-    expect(f.get('Text1')!.widgets[0]!.pageSnippet).toContain('No. Kad Pengenalan');
-    expect(f.get('Text3')!.widgets[0]!.pageSnippet).toContain('E-mel');
+  });
+
+  it('does not run on into the labels of other rows or the form title', async () => {
+    const name = byId(await fieldsOf(fixture('clinic-registration.pdf'))).get('patient.fullName')!;
+    const s = name.widgets[0]!.pageSnippet;
+    for (const other of ['No. Kad Pengenalan', 'Tarikh Lahir', 'Borang Pendaftaran Pesakit', 'Perempuan', 'Lelaki']) {
+      expect(s).not.toContain(other);
+    }
   });
 
   it('reports page number and top-origin bbox from the fixture spec', async () => {
@@ -163,17 +197,36 @@ describe('school-enrolment.pdf evidence', () => {
 describe('privacy: prefilled values never leave as evidence (requirement 11.1)', () => {
   const CANARIES = ['VALUE_ONLY_CANARY_7Q2', 'RO_ONLY_CANARY_9R4', 'NO_AP_CANARY_3M8'];
 
-  it('no canary appears anywhere in the evidence', async () => {
-    const json = JSON.stringify(await fieldsOf(fixture('prefilled-field.pdf')));
+  // Review 2, item 5: first prove the canaries are really in the fixture, then prove they never leave.
+  it('the canaries really are in the fixture values, defaults and appearances', async () => {
+    const form = (await PDFDocument.load(fixture('prefilled-field.pdf'))).getForm();
+    expect(form.getTextField('person.name').getText()).toBe('VALUE_ONLY_CANARY_7Q2');
+    expect(form.getTextField('office.code').getText()).toBe('RO_ONLY_CANARY_9R4');
+    expect(form.getTextField('Text7').getText()).toBe('NO_AP_CANARY_3M8');
+    const dv = (name: string) => form.getField(name).acroField.dict.lookup(PDFName.of('DV'));
+    expect((dv('person.name') as PDFString).decodeText()).toBe('VALUE_ONLY_CANARY_7Q2');
+    expect((dv('office.code') as PDFString).decodeText()).toBe('RO_ONLY_CANARY_9R4');
+    expect(dv('Text7')).toBeUndefined();
+    expect(form.getDropdown('office.route').getSelected()).toEqual(['B']);
+  });
+
+  it('no canary appears anywhere in the serialized evidence, with real snippets present', async () => {
+    const fields = await fieldsOf(fixture('prefilled-field.pdf'));
+    expect(fields.every((f) => f.widgets.every((w) => w.pageSnippet.length > 0))).toBe(true);
+    const json = JSON.stringify(fields);
     for (const c of CANARIES) expect(json).not.toContain(c);
   });
 
-  it('does not reveal the selected dropdown option', async () => {
-    const route = byId(await fieldsOf(fixture('prefilled-field.pdf'))).get('office.route')!;
-    expect(Object.keys(route).sort()).toEqual(
-      ['fieldId', 'fieldType', 'hasValue', 'options', 'readOnly', 'required', 'tooltip', 'widgets'].sort(),
-    );
-    expect(route.options?.map((o) => o.exportValue)).toEqual(['A', 'B']);
+  it('two PDFs differing only in the selected option give identical evidence', async () => {
+    const original = fixture('prefilled-field.pdf');
+    const doc = await PDFDocument.load(original, { updateMetadata: false });
+    const route = doc.getForm().getDropdown('office.route').acroField.dict;
+    route.set(PDFName.of('V'), PDFString.of('A'));
+    route.set(PDFName.of('I'), doc.context.obj([0]));
+    const changed = await doc.save({ updateFieldAppearances: false });
+    // The selection really differs between the two files.
+    expect((await PDFDocument.load(changed)).getForm().getDropdown('office.route').getSelected()).toEqual(['A']);
+    expect(await fieldsOf(changed)).toEqual(await fieldsOf(original));
   });
 
   it('drops page text drawn inside a widget, even when it is static page content', async () => {

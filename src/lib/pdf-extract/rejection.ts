@@ -101,9 +101,11 @@ export async function checkPdf(fileBytes: ArrayBuffer | Uint8Array): Promise<Che
     if (hasXfa(pdfDoc)) return rejection('XFA');
     if (pdfDoc.getPageCount() > MAX_PAGES) return rejection('TOO_MANY_PAGES');
 
-    const fields = collectLogicalFields(pdfDoc).filter(isAnswerField);
+    const all = collectLogicalFields(pdfDoc);
+    const fields = all.filter(isAnswerField);
     if (fields.length > MAX_FIELDS) return rejection('TOO_MANY_FIELDS');
-    if (fields.some(isSignaturePopulated)) return rejection('SIGNED');
+    // Every logical field, answerable or not: a signed node must never hide behind a duplicate.
+    if (all.some(isSignaturePopulated)) return rejection('SIGNED');
     if (fields.length === 0) return rejection('NO_FIELDS');
 
     return { rejected: false, pdfDoc, fields };

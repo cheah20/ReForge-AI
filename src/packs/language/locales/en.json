@@ -33,6 +33,7 @@
 
   "analysis.loading": "Analyzing your form…",
   "analysis.batch": "Analyzing batch {current} of {total}…",
+  "mock.question": "Please enter: {label}",
   "analysis.demoMode": "Demo mode — AI responses are simulated",
 
   "confirm.title": "Confirm form language",

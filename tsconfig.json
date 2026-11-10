@@ -24,7 +24,7 @@
       "@worker/*": ["src/worker/*"],
       "@frontend/*": ["src/frontend/*"]
     },
-    "types": ["vitest/globals", "@cloudflare/workers-types", "node"]
+    "types": ["vitest/globals", "@cloudflare/workers-types", "node", "vite/client"]
   },
   "include": ["src/**/*", "scripts/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]

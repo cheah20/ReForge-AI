@@ -53,6 +53,11 @@ type Box = [number, number, number, number];
 interface Common {
   name: string;
   label: string;
+  /**
+   * Label baseline (top-origin) when the default "6pt above the field" would
+   * put the label within the 2pt privacy margin of the widget above it.
+   */
+  labelBaseline?: number;
   tu?: string;
   required?: boolean;
   readOnly?: boolean;
@@ -157,7 +162,8 @@ export const FIXTURES: FixtureSpec[] = [
       { kind: 'text', name: 'Text3', label: 'E-mel', maxLen: 80, rect: [36, 354, 559, 376] },
       { kind: 'text', name: 'contact.address', label: 'Alamat surat-menyurat', tu: 'Alamat seperti yang hendak dicetak', required: true, multiline: true, maxLen: 160, rect: [36, 404, 350, 454] },
       { kind: 'text', name: 'contact.postcode', label: 'Poskod', tu: 'Poskod Malaysia, lima digit', required: true, maxLen: 5, rect: [375, 404, 459, 426] },
-      { kind: 'text', name: 'contact.city', label: 'Bandar', required: true, maxLen: 40, rect: [375, 444, 559, 466] },
+      // Postcode ends at 426 and city starts at 444: a 10pt label clears both 2pt margins only with a baseline in (438, 439).
+      { kind: 'text', name: 'contact.city', label: 'Bandar', required: true, maxLen: 40, rect: [375, 444, 559, 466], labelBaseline: 438.5 },
       {
         kind: 'dropdown',
         name: 'contact.state',
@@ -251,7 +257,8 @@ export const FIXTURES: FixtureSpec[] = [
         name: 'visit.contactMethod',
         label: 'Preferred contact method',
         tu: 'Select one contact method',
-        labelAt: [270, 546],
+        // Between the state dropdown (ends 534) and the radio row (starts 552): clears both 2pt margins.
+        labelAt: [270, 546.5],
         options: [
           { exportValue: 'P', label: 'Phone', rect: [270, 552, 284, 566] },
           { exportValue: 'E', label: 'Email', rect: [375, 552, 389, 566] },
@@ -444,8 +451,8 @@ class Builder {
    * Label baseline 6pt above the field. Closer labels would have their descent
    * within the 2pt privacy margin of the widget and be dropped from snippets.
    */
-  labelAbove(label: string, box: Box): void {
-    this.text(label, box[0], box[1] - 6, 10);
+  labelAbove(label: string, box: Box, baseline?: number): void {
+    this.text(label, box[0], baseline ?? box[1] - 6, 10);
   }
 
   labelRight(label: string, box: Box): void {
@@ -456,7 +463,7 @@ class Builder {
     const ctx = this.ctx;
     switch (spec.kind) {
       case 'text': {
-        this.labelAbove(spec.label, spec.rect);
+        this.labelAbove(spec.label, spec.rect, spec.labelBaseline);
         this.border(spec.rect);
         const [l, t, r, b] = spec.rect;
         const entries: Record<string, unknown> = {

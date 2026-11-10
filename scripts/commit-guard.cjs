@@ -172,7 +172,8 @@ function checkCommitArgs(args) {
 /** Inspect the staged changes. Throws if git cannot be run (fail closed). */
 function checkStaged(cwd) {
   const opts = { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] };
-  const names = execFileSync('git', ['diff', '--cached', '--name-only'], opts).split(/\r?\n/).filter(Boolean);
+  // -z: NUL-separated raw names, so quoting of unusual names cannot hide a private path.
+  const names = execFileSync('git', ['diff', '--cached', '--name-only', '-z'], opts).split('\0').filter(Boolean);
   const diff = execFileSync('git', ['diff', '--cached', '-U0', '--no-color'], opts);
   const problems = names.filter(isPrivate).map((n) => `staged private file ${n}`);
   let file = '';
@@ -210,15 +211,28 @@ function cwdIn(event) {
   return typeof c === 'string' && c ? c : process.cwd();
 }
 
+/** `git commit --dry-run` (also implied by --short, --porcelain, --long) commits nothing. */
+function isDryRun(args) {
+  return args.some((a) => ['--dry-run', '--short', '--porcelain', '--long'].includes(a));
+}
+
 function evaluate(event) {
+  const commands = commandsIn(event);
+  // The hook only runs for shell tools; a payload without a command string is a shape we do not know.
+  if (commands.length === 0) return ['unrecognised hook payload (no command found)'];
+
   const problems = [];
   const cwd = cwdIn(event);
-  for (const command of commandsIn(event)) {
-    for (const words of segments(command)) {
-      const git = gitInvocation(words);
-      if (!git) continue;
+  for (const command of commands) {
+    const gits = segments(command).map(gitInvocation).filter(Boolean);
+    const stages = gits.some((g) => ['add', 'rm', 'mv', 'stage'].includes(g.sub));
+    const commits = gits.some((g) => g.sub === 'commit' && !isDryRun(g.args));
+    // At hook time the staging has not happened yet, so the commit cannot be inspected.
+    if (stages && commits) problems.push('stage and commit in separate commands, so the staged result can be checked');
+
+    for (const git of gits) {
       if (git.sub === 'add') problems.push(...checkAdd(git.args));
-      if (git.sub === 'commit') {
+      if (git.sub === 'commit' && !isDryRun(git.args)) {
         const argProblems = checkCommitArgs(git.args);
         problems.push(...argProblems);
         if (argProblems.length === 0) {
@@ -244,7 +258,9 @@ if (require.main === module) {
     try {
       event = JSON.parse(raw);
     } catch {
-      process.exit(0); // not a tool payload: nothing to check
+      // Fail closed: input we cannot read could hide a commit.
+      process.stderr.write('BLOCKED: unreadable hook payload (not JSON)\n');
+      process.exit(2);
     }
     const problems = evaluate(event);
     if (problems.length) {

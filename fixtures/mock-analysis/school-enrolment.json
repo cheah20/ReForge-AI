@@ -1,0 +1,19 @@
+{
+  "fixture": "school-enrolment.pdf",
+  "formLanguage": "ms",
+  "formLanguageConfidence": 0.5,
+  "formCountry": "MY",
+  "formCountryConfidence": 0.9,
+  "fields": {
+    "student.name": { "answerType": "text", "confidence": 0.95 },
+    "Text1": { "answerType": "date", "confidence": 0.95 },
+    "guardian.email": { "answerType": "email", "confidence": 0.95 },
+    "student.notes": { "answerType": "description", "confidence": 0.95 },
+    "admission.session": { "answerType": "radio", "confidence": 0.95 },
+    "admission.year": { "answerType": "dropdown", "confidence": 0.95 },
+    "Text7": { "answerType": "dropdown", "confidence": 0.95 },
+    "consent.trip": { "answerType": "checkbox", "confidence": 0.95 },
+    "office.code": { "answerType": "text", "confidence": 0.95 },
+    "consent.signature": { "answerType": "signature", "confidence": 0.95 }
+  }
+}

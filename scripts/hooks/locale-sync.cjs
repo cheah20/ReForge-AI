@@ -6,6 +6,10 @@
  * writes locale files: missing keys must get real translations, because
  * English copies would make the locale completeness test pass without them.
  *
+ * Limit: this checks that keys are present and non-empty. It does not check
+ * that a translation is correct, natural or even in the right language; that
+ * needs a human reader of each language.
+ *
  *   node scripts/hooks/locale-sync.cjs   -> exit 0 when complete, 1 otherwise
  */
 'use strict';

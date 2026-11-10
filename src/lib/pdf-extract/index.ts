@@ -10,10 +10,11 @@
  * are kept and the affected snippets stay empty.
  */
 
-import type { PDFDocument } from 'pdf-lib';
+import { PDFArray, PDFDict, type PDFDocument } from 'pdf-lib';
 import type { FieldEvidence } from '../../shared/types.js';
 import { buildEvidence, type ExtractedField } from './acroform.js';
-import { computePageSnippets, type TextItem } from './page-text.js';
+import { computePageSnippets, isFiniteRect, type TextItem } from './page-text.js';
+import { getAny, getNameText, getRect, resolveAs, type PdfRect } from './pdf-objects.js';
 import { checkPdf, rejection, type RejectionCode } from './rejection.js';
 
 export type ExtractionResult =
@@ -112,6 +113,37 @@ function snippetSafePages(pdfDoc: PDFDocument): Set<number> {
   return safe;
 }
 
+/**
+ * Privacy guard rectangles for one page (review 2, item 1): every widget
+ * annotation listed in the page's /Annots (any field type, nameless fields,
+ * pushbuttons, widgets past the per-field cap, orphan widgets outside the field
+ * tree). Returns undefined, meaning "no snippets for this page", when an
+ * annotation cannot be resolved or a widget rectangle is malformed.
+ */
+export function pageGuardRects(pdfDoc: PDFDocument, pageIndex: number): PdfRect[] | undefined {
+  try {
+    const page = pdfDoc.getPage(pageIndex);
+    const ctx = pdfDoc.context;
+    const raw = getAny(page.node, 'Annots');
+    if (raw === undefined) return [];
+    const annots = resolveAs(ctx, raw, PDFArray);
+    if (!annots) return undefined;
+    const rects: PdfRect[] = [];
+    for (let i = 0; i < annots.size(); i++) {
+      const annot = resolveAs(ctx, annots.get(i), PDFDict);
+      if (!annot) return undefined;
+      const isWidget = getNameText(annot, 'Subtype') === 'Widget' || getAny(annot, 'FT') !== undefined;
+      if (!isWidget) continue;
+      const rect = getRect(ctx, annot);
+      if (!rect || !isFiniteRect(rect)) return undefined;
+      rects.push(rect);
+    }
+    return rects;
+  } catch {
+    return undefined;
+  }
+}
+
 async function addPageSnippets(
   bytes: Uint8Array,
   pdfDoc: PDFDocument,
@@ -119,6 +151,13 @@ async function addPageSnippets(
   loader: PageTextLoader,
 ): Promise<void> {
   const safe = snippetSafePages(pdfDoc);
+  // Pages whose widgets cannot all be located get no snippets.
+  const guardsByPage = new Map<number, PdfRect[]>();
+  for (const i of [...safe]) {
+    const guards = pageGuardRects(pdfDoc, i);
+    if (guards) guardsByPage.set(i, guards);
+    else safe.delete(i);
+  }
   const pageNumbers = [
     ...new Set(extracted.flatMap((f) => f.pdfWidgets.map((w) => w.pageIndex))),
   ]
@@ -140,10 +179,10 @@ async function addPageSnippets(
     const onPage = extracted.flatMap((f) =>
       f.pdfWidgets.flatMap((w, wi) => (w.pageIndex + 1 === pageNumber ? [{ f, w, wi }] : [])),
     );
-    const snippets = computePageSnippets(
-      items,
-      onPage.map((x) => x.w.rect),
-    );
+    const widgetRects = onPage.map((x) => x.w.rect);
+    // Guards: every widget in /Annots, plus extracted widgets placed only through /P.
+    const guards = [...(guardsByPage.get(pageNumber - 1) ?? []), ...widgetRects];
+    const snippets = computePageSnippets(items, widgetRects, guards);
     onPage.forEach(({ f, wi }, k) => {
       const widget = f.evidence.widgets[wi];
       if (widget) widget.pageSnippet = snippets[k] ?? '';

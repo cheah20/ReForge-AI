@@ -53,6 +53,13 @@ export interface LogicalField {
   /** Inherited /V (resolved). Used only for structural signature detection. */
   value: PDFObject | undefined;
   widgets: WidgetNode[];
+  /**
+   * True when any node merged into this field is a populated signature
+   * (computed per node before merging, so a duplicate cannot hide it).
+   */
+  signed: boolean;
+  /** True when duplicate nodes with this name disagree on /FT: the field is unsupported. */
+  conflictingType: boolean;
 }
 
 export type FieldKind = 'text' | 'checkbox' | 'radio' | 'dropdown' | 'signature' | 'pushbutton';
@@ -82,11 +89,16 @@ export function isAnswerField(field: LogicalField): boolean {
 }
 
 /**
- * The single signature rule: a signature field is populated when its
- * (inherited) /V resolves to a dictionary. Structural detection only.
+ * The single signature rule for one field node: a signature node is populated
+ * when its (inherited) /V resolves to a dictionary. Structural detection only.
  */
+export function isNodeSignaturePopulated(ft: string | undefined, value: PDFObject | undefined): boolean {
+  return ft === 'Sig' && value instanceof PDFDict;
+}
+
+/** True when any node of this logical field is a populated signature. */
 export function isSignaturePopulated(field: LogicalField): boolean {
-  return fieldKind(field) === 'signature' && field.value instanceof PDFDict;
+  return field.signed;
 }
 
 interface Inherited {
@@ -152,12 +164,15 @@ export function collectLogicalFields(pdfDoc: PDFDocument): LogicalField[] {
       const p = pageOf(w);
       if (p !== undefined) w.pageIndex = p;
     }
+    const signed = isNodeSignaturePopulated(inh.ft, inh.value);
     const existing = byName.get(name);
     if (existing) {
       existing.widgets.push(...widgets);
+      existing.signed ||= signed;
+      if (existing.ft !== inh.ft) existing.conflictingType = true;
       return;
     }
-    const field: LogicalField = { name, dict, ...inh, widgets };
+    const field: LogicalField = { name, dict, ...inh, widgets, signed, conflictingType: false };
     byName.set(name, field);
     order.push(field);
   };

@@ -1,0 +1,97 @@
+{
+  "fixture": "clinic-registration.pdf",
+  "formLanguage": "ms",
+  "formLanguageConfidence": 0.65,
+  "formCountry": "MY",
+  "formCountryConfidence": 0.65,
+  "fields": {
+    "patient.fullName": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["Full name", "What is your full name, as written on your ID?"],
+      "ms": ["Nama penuh", "Apakah nama penuh anda seperti dalam dokumen pengenalan?"],
+      "zh-Hans": ["全名", "您的全名是什么？请按身份证件上的写法填写。"] } },
+    "Text1": { "answerType": "ic", "confidence": 0.9, "text": {
+      "en": ["IC number", "What is your Malaysian IC (MyKad) number?"],
+      "ms": ["No. Kad Pengenalan", "Apakah nombor kad pengenalan (MyKad) anda?"],
+      "zh-Hans": ["身份证号码", "您的马来西亚身份证（MyKad）号码是多少？"] } },
+    "patient.birthDate": { "answerType": "date", "confidence": 0.95, "text": {
+      "en": ["Date of birth", "What is your date of birth?"],
+      "ms": ["Tarikh lahir", "Apakah tarikh lahir anda?"],
+      "zh-Hans": ["出生日期", "您的出生日期是哪一天？"] } },
+    "patient.gender": { "answerType": "radio", "confidence": 0.95, "text": {
+      "en": ["Gender", "What is your gender?"],
+      "ms": ["Jantina", "Apakah jantina anda?"],
+      "zh-Hans": ["性别", "您的性别是？"] } },
+    "clinic.branchCode": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["Branch code", "Clinic branch code (filled in by the clinic)."],
+      "ms": ["Kod cawangan", "Kod cawangan klinik (diisi oleh klinik)."],
+      "zh-Hans": ["分院代码", "诊所分院代码（由诊所填写）。"] } },
+    "Text7": { "answerType": "text", "confidence": 0.45, "text": {
+      "en": ["Reference", "What is your reference code?"],
+      "ms": ["Rujukan", "Apakah kod rujukan anda?"],
+      "zh-Hans": ["参考", "您的参考编号是什么？"] } },
+    "contact.mobile": { "answerType": "phone", "confidence": 0.95, "text": {
+      "en": ["Mobile phone", "What is your mobile phone number?"],
+      "ms": ["Telefon bimbit", "Apakah nombor telefon bimbit anda?"],
+      "zh-Hans": ["手机号码", "您的手机号码是多少？"] } },
+    "contact.homePhone": { "answerType": "phone", "confidence": 0.95, "text": {
+      "en": ["Home phone", "What is your home phone number? (optional)"],
+      "ms": ["Telefon rumah", "Apakah nombor telefon rumah anda? (pilihan)"],
+      "zh-Hans": ["住宅电话", "您的住宅电话号码是多少？（可选）"] } },
+    "Text3": { "answerType": "email", "confidence": 0.9, "text": {
+      "en": ["Email", "What is your email address?"],
+      "ms": ["E-mel", "Apakah alamat e-mel anda?"],
+      "zh-Hans": ["电子邮箱", "您的电子邮箱地址是什么？"] } },
+    "contact.address": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["Mailing address", "What is your mailing address? Write it as it should be printed."],
+      "ms": ["Alamat surat-menyurat", "Apakah alamat surat-menyurat anda? Tulis seperti yang hendak dicetak."],
+      "zh-Hans": ["通信地址", "您的通信地址是什么？请按要印在表格上的样子填写。"] } },
+    "contact.postcode": { "answerType": "postcode", "confidence": 0.95, "text": {
+      "en": ["Postcode", "What is your postcode? (5 digits)"],
+      "ms": ["Poskod", "Apakah poskod anda? (5 digit)"],
+      "zh-Hans": ["邮政编码", "您的邮政编码是多少？（5位数字）"] } },
+    "contact.city": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["City", "Which city or town do you live in?"],
+      "ms": ["Bandar", "Di bandar manakah anda tinggal?"],
+      "zh-Hans": ["城市", "您住在哪个城市或城镇？"] } },
+    "contact.state": { "answerType": "dropdown", "confidence": 0.95, "text": {
+      "en": ["State", "Which state or federal territory do you live in?"],
+      "ms": ["Negeri / Wilayah", "Di negeri atau wilayah manakah anda tinggal?"],
+      "zh-Hans": ["州属", "您住在哪个州或联邦直辖区？"] } },
+    "visit.date": { "answerType": "date", "confidence": 0.95, "text": {
+      "en": ["Visit date", "What is the date of your visit?"],
+      "ms": ["Tarikh lawatan", "Apakah tarikh lawatan anda?"],
+      "zh-Hans": ["就诊日期", "您的就诊日期是哪一天？"] } },
+    "visit.firstVisit": { "answerType": "checkbox", "confidence": 0.95, "text": {
+      "en": ["First visit", "Is this your first visit to this clinic?"],
+      "ms": ["Lawatan pertama", "Adakah ini lawatan pertama anda ke klinik ini?"],
+      "zh-Hans": ["首次就诊", "这是您第一次来这家诊所吗？"] } },
+    "medical.allergyFlag": { "answerType": "checkbox", "confidence": 0.95, "text": {
+      "en": ["Allergies", "Do you have any allergies?"],
+      "ms": ["Ada alahan", "Adakah anda mempunyai sebarang alahan?"],
+      "zh-Hans": ["过敏", "您有任何过敏吗？"] } },
+    "medical.description": { "answerType": "description", "confidence": 0.95, "text": {
+      "en": ["Reason for visit", "Why are you visiting? Describe your symptoms."],
+      "ms": ["Sebab lawatan", "Mengapa anda datang? Terangkan gejala anda."],
+      "zh-Hans": ["就诊原因", "您为什么来就诊？请描述您的症状。"] } },
+    "emergency.name": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["Emergency contact", "Who should we contact in an emergency? Enter their name."],
+      "ms": ["Waris kecemasan", "Siapakah yang perlu dihubungi semasa kecemasan? Masukkan namanya."],
+      "zh-Hans": ["紧急联系人", "紧急情况下应联系谁？请填写其姓名。"] } },
+    "emergency.phone": { "answerType": "phone", "confidence": 0.95, "text": {
+      "en": ["Emergency phone", "What is your emergency contact's phone number?"],
+      "ms": ["Telefon kecemasan", "Apakah nombor telefon waris kecemasan anda?"],
+      "zh-Hans": ["紧急联系电话", "您的紧急联系人的电话号码是多少？"] } },
+    "consent.contact": { "answerType": "checkbox", "confidence": 0.95, "text": {
+      "en": ["Agree to be contacted", "Do you agree that the clinic may contact you?"],
+      "ms": ["Setuju dihubungi", "Adakah anda bersetuju untuk dihubungi oleh klinik?"],
+      "zh-Hans": ["同意联系", "您同意诊所与您联系吗？"] } },
+    "visit.shortCode": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["Short code", "Enter the short code (up to 4 characters)."],
+      "ms": ["Kod ringkas", "Masukkan kod ringkas (maksimum 4 aksara)."],
+      "zh-Hans": ["简码", "请输入简码（最多4个字符）。"] } },
+    "consent.signature": { "answerType": "signature", "confidence": 0.95, "text": {
+      "en": ["Patient signature", "Sign this form by hand after printing."],
+      "ms": ["Tandatangan pesakit", "Tandatangani borang ini selepas dicetak."],
+      "zh-Hans": ["患者签名", "打印后请在表格上亲笔签名。"] } }
+  }
+}

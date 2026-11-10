@@ -69,7 +69,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - _Requirements: 14.1_
   - [x] 7.2 Create `fixtures/school-enrolment.pdf` — synthetic bilingual EN/MS AcroForm: at least one field of each supported type (text, checkbox, radio, dropdown, signature); label some in English, some in Malay
     - _Requirements: 14.2_
-  - [ ] 7.3 Create `fixtures/no-fields.pdf`, `fixtures/xfa-acroform.pdf`, `fixtures/sig-empty.pdf`, `fixtures/sig-populated.pdf`, `fixtures/prefilled-field.pdf`; create dev script `scripts/create-fixtures/encrypted.ts` + commit `fixtures/encrypted.pdf`
+  - [x] 7.3 Create `fixtures/no-fields.pdf`, `fixtures/xfa-acroform.pdf`, `fixtures/sig-empty.pdf`, `fixtures/sig-populated.pdf`, `fixtures/prefilled-field.pdf`; create dev script `scripts/create-fixtures/encrypted.ts` + commit `fixtures/encrypted.pdf`
     - _Requirements: 14.3, 14.4, 14.5, 14.6, 14.7, 14.10_
   - [x] 7.4 Create `fixtures/us-community-clinic.pdf` — synthetic English-language US AcroForm: name, phone, ZIP, email, date (MM/DD/YYYY), SSN field; no real agency names
     - _Requirements: 14.9_
@@ -106,12 +106,12 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [x] 11. Checkpoint — extraction and fixtures
   - Build with `tsc --noEmit`; run all Vitest tests added so far (tasks 4–10). All pass. Fixtures exist and open in a PDF viewer. Ask the developer to confirm before continuing.
 
-- [ ] 12. Minimal Worker with AI binding [needs CF access]
-  - [ ] 12.1 Create `src/worker/index.ts` — route dispatch for `POST /api/forms/analyze`, `POST /api/forms/retranslate`, `POST /api/forms/translate`; serve frontend assets for all other routes; 32 KB body-size guard; Workers rate-limiting binding; 25 s timeout; metadata-only logging (`{ requestId, route, status, durationMs, errorCode }` — never bodies or AI responses); `ApiError` JSON on all error paths
+- [x] 12. Minimal Worker with AI binding [needs CF access]
+  - [x] 12.1 Create `src/worker/index.ts` — route dispatch for `POST /api/forms/analyze`, `POST /api/forms/retranslate`, `POST /api/forms/translate`; serve frontend assets for all other routes; 32 KB body-size guard; Workers rate-limiting binding; 25 s timeout; metadata-only logging (`{ requestId, route, status, durationMs, errorCode }` — never bodies or AI responses); `ApiError` JSON on all error paths
     - _Requirements: 12.1, 12.5, 12.6, 12.7_
-  - [ ] 12.2 Create `src/lib/ai/interface.ts` (`AiProvider` interface), `src/lib/ai/cf-workers.ts` (`CfWorkersAiProvider` using `env.AI.run` with the exact system prompt from design.md; throws typed errors on quota/rate/timeout), `src/lib/ai/mock.ts` (`MockAiProvider` — deterministic, same input → same output; fixed confidences: `formLanguageConfidence` and `formCountryConfidence` configurable per test instance to make confirmation screen path deterministic)
+  - [x] 12.2 Create `src/lib/ai/interface.ts` (`AiProvider` interface), `src/lib/ai/cf-workers.ts` (`CfWorkersAiProvider` using `env.AI.run` with the exact system prompt from design.md; throws typed errors on quota/rate/timeout), `src/lib/ai/mock.ts` (`MockAiProvider` — deterministic, same input → same output; fixed confidences: `formLanguageConfidence` and `formCountryConfidence` configurable per test instance to make confirmation screen path deterministic)
     - _Requirements: 12.1, 12.2, 12.3, 12.4_
-  - [ ] 12.3 Write unit tests for `MockAiProvider`: determinism check, all response fields pass `AnalyzeResponseSchema`; test both high-confidence path (no confirmation) and low-confidence path (triggers confirmation) using separate MockAiProvider instances with different fixed confidence values
+  - [x] 12.3 Write unit tests for `MockAiProvider`: determinism check, all response fields pass `AnalyzeResponseSchema`; test both high-confidence path (no confirmation) and low-confidence path (triggers confirmation) using separate MockAiProvider instances with different fixed confidence values
     - _Requirements: 12.3, 12.4_
 
 - [ ] 13. Spike 1 — Model comparison [needs CF access]
@@ -126,27 +126,27 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - If Spike 2 fails: add a "Chinese-language forms are not supported yet" message to the ConfirmLanguage screen when `formLanguage` is `zh-Hans` or `zh-Hant`; add a unit test that this message is shown and that `fillPdf` is never called for CJK form output
   - _Gates: tasks 37, 38 (CJK output, if pass); Chinese-fallback message (if fail)_
 
-- [ ] 15. POST /api/forms/analyze route
-  - [ ] 15.1 Create `src/worker/routes/analyze.ts`: validate with `AnalyzeRequestSchema`; call `aiProvider.analyze()` with `max_tokens: 2000` using model from Spike 1; validate AI response with `AnalyzeResponseSchema`; retry once on first failure; on second failure fall back (raw field names, PDF types, confidence 0); apply `answerType` compatibility rules (§5.5a) — pure function that can fail fast-check; filter unrecognised `fieldId`; filter duplicates; return `AnalyzeResponse`
+- [x] 15. POST /api/forms/analyze route
+  - [x] 15.1 Create `src/worker/routes/analyze.ts`: validate with `AnalyzeRequestSchema`; call `aiProvider.analyze()` with `max_tokens: 2000` using model from Spike 1; validate AI response with `AnalyzeResponseSchema`; retry once on first failure; on second failure fall back (raw field names, PDF types, confidence 0); apply `answerType` compatibility rules (§5.5a) — pure function that can fail fast-check; filter unrecognised `fieldId`; filter duplicates; return `AnalyzeResponse`
     - _Requirements: 5.1, 5.4, 5.5, 5.5a, 5.6_
-  - [ ] 15.2 On AI failure (quota, rate, timeout): call `lookupFixtureCache(contentHash, interfaceLanguage)` from `src/worker/cache/fixture-cache.ts` (stub returning null is fine at this stage); if hit → return with `servedFromCache: true`; if miss → `503 AI_UNAVAILABLE`
+  - [x] 15.2 On AI failure (quota, rate, timeout): call `lookupFixtureCache(contentHash, interfaceLanguage)` from `src/worker/cache/fixture-cache.ts` (stub returning null is fine at this stage); if hit → return with `servedFromCache: true`; if miss → `503 AI_UNAVAILABLE`
     - _Requirements: 12.7_
-  - [ ] 15.3 Write unit tests for analyze route using MockAiProvider: valid → valid; zod fail → 400; body > 32 KB → 413; incompatible answerType corrected; fields absent from AI reply marked fill-yourself
+  - [x] 15.3 Write unit tests for analyze route using MockAiProvider: valid → valid; zod fail → 400; body > 32 KB → 413; incompatible answerType corrected; fields absent from AI reply marked fill-yourself
     - _Requirements: 5.1, 5.5a_
-  - [ ] 15.4 Write Property 2 (answerType compatibility) test using fast-check: for any `(pdfFieldType, aiAnswerType)` pair, the enforcement function returns a compatible type or the PDF's own type at confidence 0 — never incompatible; generator must produce incompatible pairs so the property can fail
+  - [x] 15.4 Write Property 2 (answerType compatibility) test using fast-check: for any `(pdfFieldType, aiAnswerType)` pair, the enforcement function returns a compatible type or the PDF's own type at confidence 0 — never incompatible; generator must produce incompatible pairs so the property can fail
     - **Property 2: answerType compatibility enforcement**
     - **Validates: Requirements 5.5a**
 
 - [ ] 16. POST /api/forms/retranslate and POST /api/forms/translate routes
-  - [ ] 16.1 Create `src/worker/routes/retranslate.ts`: validate with `RetranslateRequestSchema`; call `aiProvider.retranslate()`; return only `humanLabel` and `question` updates; validate response with `RetranslateResponseSchema`
+  - [x] 16.1 Create `src/worker/routes/retranslate.ts`: validate with `RetranslateRequestSchema`; call `aiProvider.retranslate()`; return only `humanLabel` and `question` updates; validate response with `RetranslateResponseSchema`
     - _Requirements: 5.8_
   - [ ] 16.2 Create `src/worker/routes/translate.ts`: validate with `TranslateRequestSchema`; call `aiProvider.translate()`; never store or log request text; **the translate endpoint is only reachable when the user has pressed a "Translate" button** — the route does not need to enforce this, but note it in a comment; add a unit test that simulates the button-gating logic in session state (translate is not called without explicit user trigger)
     - _Requirements: 8.6, 11.1, 11.3_
-  - [ ] 16.3 Write unit tests for retranslate and translate routes
+  - [x] 16.3 Write unit tests for retranslate and translate routes
     - _Requirements: 5.8, 8.6_
 
 - [ ] 17. Precomputed fixture cache
-  - [ ] 17.1 Create `src/worker/cache/fixture-cache.ts`: `lookupFixtureCache(contentHash, interfaceLanguage)` reads from `src/worker/cache/precomputed/<hash>-<bcp47>.json`; returns null on miss
+  - [x] 17.1 Create `src/worker/cache/fixture-cache.ts`: `lookupFixtureCache(contentHash, interfaceLanguage)` reads from `src/worker/cache/precomputed/<hash>-<bcp47>.json`; returns null on miss
     - _Requirements: 12.7_
   - [ ] 17.2 Complete `scripts/generate-fixture-cache.ts`: load each bundled fixture, compute SHA-256, call real Workers AI model for each core language, validate with `AnalyzeResponseSchema`, write output files; document in `scripts/create-fixtures/README.md`
     - _Requirements: 12.7_

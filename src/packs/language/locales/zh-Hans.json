@@ -33,6 +33,7 @@
 
   "analysis.loading": "正在分析您的表格…",
   "analysis.batch": "正在分析第 {current} 批，共 {total} 批…",
+  "mock.question": "请填写：{label}",
   "analysis.demoMode": "演示模式——AI 响应为模拟",
 
   "confirm.title": "确认表格语言",

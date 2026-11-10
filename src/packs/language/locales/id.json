@@ -33,6 +33,7 @@
 
   "analysis.loading": "Menganalisis formulir Anda…",
   "analysis.batch": "Menganalisis batch {current} dari {total}…",
+  "mock.question": "Silakan isi: {label}",
   "analysis.demoMode": "Mode demo — respons AI disimulasikan",
 
   "confirm.title": "Konfirmasi bahasa formulir",

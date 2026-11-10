@@ -33,6 +33,7 @@
 
   "analysis.loading": "Menganalisis borang anda…",
   "analysis.batch": "Menganalisis kumpulan {current} daripada {total}…",
+  "mock.question": "Sila isi: {label}",
   "analysis.demoMode": "Mod demo — respons AI disimulasi",
 
   "confirm.title": "Sahkan bahasa borang",

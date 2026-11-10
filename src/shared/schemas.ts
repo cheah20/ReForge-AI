@@ -68,6 +68,19 @@ export const FieldEvidenceSchema = z
      * unknown. The wizard shows it as "fill this yourself" and `widgets` may be empty.
      */
     unresolvedPage: z.boolean().optional(),
+    /** Duplicate nodes disagree on the field type: "fill this yourself". */
+    unsupported: z.boolean().optional(),
+    /**
+     * The PDF name is longer than 256 characters. `fieldId` is then a local
+     * identifier, the field is "fill this yourself" and is never sent to analysis.
+     */
+    idTooLong: z.boolean().optional(),
+    /**
+     * The choice field had an option with an empty export value (a "please
+     * choose" placeholder). It is dropped from `options`; a blank selection is
+     * never written as an answer.
+     */
+    hasPlaceholderOption: z.boolean().optional(),
     widgets: z.array(WidgetSchema).max(20),
     hasValue: z.boolean(),
   })
@@ -137,12 +150,23 @@ export const AnalyzeResponseSchema = z.object({
 // Retranslate endpoint (language switch: retranslates labels and questions only)
 // ---------------------------------------------------------------------------
 
+/**
+ * The Worker is stateless, so the browser sends the current label and question
+ * of each field (AI-written wording, never user answers). Batched like analyze:
+ * at most 30 fields per request.
+ */
 export const RetranslateRequestSchema = z.object({
   contentHash: ContentHashSchema,
   fields: z
-    .array(z.object({ fieldId: FieldIdSchema }))
+    .array(
+      z.object({
+        fieldId: FieldIdSchema,
+        humanLabel: visibleText(40),
+        question: visibleText(120),
+      }),
+    )
     .min(1)
-    .max(MAX_FIELDS_PER_FORM),
+    .max(MAX_FIELDS_PER_BATCH),
   targetLanguage: LanguageTagSchema,
 });
 
@@ -155,7 +179,7 @@ export const RetranslateResponseSchema = z.object({
         question: visibleText(120),
       }),
     )
-    .max(MAX_FIELDS_PER_FORM),
+    .max(MAX_FIELDS_PER_BATCH),
 });
 
 // ---------------------------------------------------------------------------

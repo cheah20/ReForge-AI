@@ -1,0 +1,51 @@
+{
+  "fixture": "us-community-clinic.pdf",
+  "formLanguage": "en",
+  "formLanguageConfidence": 0.65,
+  "formCountry": "US",
+  "formCountryConfidence": 0.65,
+  "fields": {
+    "patient.fullName": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["Full name", "What is your full name, exactly as it should appear on the form?"],
+      "es": ["Nombre completo", "¿Cuál es su nombre completo, tal como debe aparecer en el formulario?"] } },
+    "patient.birthDate": { "answerType": "date", "confidence": 0.95, "text": {
+      "en": ["Date of birth", "What is your date of birth?"],
+      "es": ["Fecha de nacimiento", "¿Cuál es su fecha de nacimiento?"] } },
+    "Text1": { "answerType": "text", "confidence": 0.9, "text": {
+      "en": ["Social Security number", "What is your Social Security number? (optional)"],
+      "es": ["Número de Seguro Social", "¿Cuál es su número de Seguro Social? (opcional)"] } },
+    "contact.phone": { "answerType": "phone", "confidence": 0.95, "text": {
+      "en": ["Phone number", "What is your US phone number?"],
+      "es": ["Teléfono", "¿Cuál es su número de teléfono en EE. UU.?"] } },
+    "Text7": { "answerType": "postcode", "confidence": 0.95, "text": {
+      "en": ["ZIP code", "What is your ZIP code?"],
+      "es": ["Código postal (ZIP)", "¿Cuál es su código postal (ZIP)?"] } },
+    "contact.email": { "answerType": "email", "confidence": 0.95, "text": {
+      "en": ["Email", "What is your email address?"],
+      "es": ["Correo electrónico", "¿Cuál es su correo electrónico?"] } },
+    "contact.address": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["Mailing address", "What is your mailing address?"],
+      "es": ["Dirección postal", "¿Cuál es su dirección postal?"] } },
+    "contact.city": { "answerType": "text", "confidence": 0.95, "text": {
+      "en": ["City", "In which city do you live?"],
+      "es": ["Ciudad", "¿En qué ciudad vive?"] } },
+    "contact.state": { "answerType": "dropdown", "confidence": 0.95, "text": {
+      "en": ["State", "In which state do you live?"],
+      "es": ["Estado", "¿En qué estado vive?"] } },
+    "visit.date": { "answerType": "date", "confidence": 0.95, "text": {
+      "en": ["Visit date", "What is the date of your visit?"],
+      "es": ["Fecha de la visita", "¿Cuál es la fecha de su visita?"] } },
+    "visit.contactMethod": { "answerType": "radio", "confidence": 0.95, "text": {
+      "en": ["Contact method", "How should the clinic contact you?"],
+      "es": ["Forma de contacto", "¿Cómo prefiere que la clínica le contacte?"] } },
+    "visit.reason": { "answerType": "description", "confidence": 0.95, "text": {
+      "en": ["Reason for visit", "Why are you visiting? Describe your symptoms."],
+      "es": ["Motivo de la visita", "¿Por qué viene a consulta? Describa sus síntomas."] } },
+    "consent.reminders": { "answerType": "checkbox", "confidence": 0.95, "text": {
+      "en": ["Appointment reminders", "Do you agree to receive appointment reminders?"],
+      "es": ["Recordatorios de citas", "¿Acepta recibir recordatorios de citas?"] } },
+    "consent.signature": { "answerType": "signature", "confidence": 0.95, "text": {
+      "en": ["Patient signature", "Sign this form by hand after printing."],
+      "es": ["Firma del paciente", "Firme este formulario a mano después de imprimirlo."] } }
+  }
+}

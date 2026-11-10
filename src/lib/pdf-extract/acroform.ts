@@ -37,6 +37,8 @@ import {
 } from './pdf-objects.js';
 
 const MAX_WIDGETS = 20;
+/** FieldIdSchema limit. */
+const MAX_FIELD_ID = 256;
 const MAX_OPTIONS = 50;
 const MAX_TEXT = 200;
 
@@ -49,13 +51,20 @@ export interface PdfWidget {
 export interface ExtractedField {
   evidence: FieldEvidence;
   pdfWidgets: PdfWidget[];
+  /** The fully qualified PDF name (differs from evidence.fieldId only when idTooLong). */
+  pdfName: string;
 }
 
-/** /Opt entries of a choice field as export/display pairs. */
-function choiceOptions(pdfDoc: PDFDocument, dict: PDFDict): FieldOption[] {
+/**
+ * /Opt entries of a choice field as export/display pairs. Options whose export
+ * value is empty or blank are "please choose" placeholders: they are left out
+ * of the answer options and reported as `placeholder: true`.
+ */
+function choiceOptions(pdfDoc: PDFDocument, dict: PDFDict): { options: FieldOption[]; placeholder: boolean } {
   const opt = resolveAs(pdfDoc.context, getAny(dict, 'Opt'), PDFArray);
-  if (!opt) return [];
   const options: FieldOption[] = [];
+  let placeholder = false;
+  if (!opt) return { options, placeholder };
   for (let i = 0; i < opt.size() && options.length < MAX_OPTIONS; i++) {
     const ctx = pdfDoc.context;
     const entry = resolveAny(ctx, opt.get(i));
@@ -67,11 +76,15 @@ function choiceOptions(pdfDoc: PDFDocument, dict: PDFDict): FieldOption[] {
     } else {
       exportValue = textOf(entry);
     }
+    if (exportValue !== undefined && exportValue.trim() === '') {
+      placeholder = true;
+      continue;
+    }
     if (!exportValue || exportValue.length > MAX_TEXT) continue;
     const label = (displayLabel && displayLabel.trim()) || exportValue;
     options.push({ exportValue, displayLabel: label.slice(0, MAX_TEXT) });
   }
-  return options;
+  return { options, placeholder };
 }
 
 /** Appearance on-state name of a radio or checkbox widget (anything except Off). */
@@ -162,11 +175,23 @@ export function buildEvidence(pdfDoc: PDFDocument, fields: LogicalField[]): Extr
     return b;
   };
 
+  const taken = new Set(fields.map((f) => f.name));
+  let longCount = 0;
+  /** A short local identifier for a field whose PDF name is too long; never collides with a real name. */
+  const localId = (): string => {
+    let id: string;
+    do id = `long-field-${++longCount}`;
+    while (taken.has(id));
+    taken.add(id);
+    return id;
+  };
+
   const result: ExtractedField[] = [];
   for (const field of fields) {
     if (!isAnswerField(field)) continue;
     const kind = fieldKind(field)!;
     if (kind === 'pushbutton') continue;
+    const idTooLong = field.name.length > MAX_FIELD_ID;
 
     const pdfWidgets = locatedWidgets(pdfDoc, field.widgets).slice(0, MAX_WIDGETS);
     const widgets: Widget[] = pdfWidgets.map((w) => ({
@@ -176,7 +201,7 @@ export function buildEvidence(pdfDoc: PDFDocument, fields: LogicalField[]): Extr
     }));
 
     const evidence: FieldEvidence = {
-      fieldId: field.name,
+      fieldId: idTooLong ? localId() : field.name,
       fieldType: kind,
       required: (field.ff & FF.REQUIRED) !== 0,
       readOnly: (field.ff & FF.READ_ONLY) !== 0,
@@ -185,6 +210,8 @@ export function buildEvidence(pdfDoc: PDFDocument, fields: LogicalField[]): Extr
     };
 
     if (widgets.length === 0) evidence.unresolvedPage = true;
+    if (idTooLong) evidence.idTooLong = true;
+    if (field.conflictingType) evidence.unsupported = true;
 
     const tooltip = getText(field.dict, 'TU');
     if (tooltip && tooltip.trim()) evidence.tooltip = tooltip.slice(0, MAX_TEXT);
@@ -199,8 +226,9 @@ export function buildEvidence(pdfDoc: PDFDocument, fields: LogicalField[]): Extr
 
     if (kind === 'dropdown') {
       if (field.ff & FF.MULTI_SELECT) evidence.multiSelect = true;
-      const options = choiceOptions(pdfDoc, field.dict);
+      const { options, placeholder } = choiceOptions(pdfDoc, field.dict);
       if (options.length > 0) evidence.options = options;
+      if (placeholder) evidence.hasPlaceholderOption = true;
     }
 
     if (kind === 'radio') {
@@ -208,7 +236,7 @@ export function buildEvidence(pdfDoc: PDFDocument, fields: LogicalField[]): Extr
       if (options.length > 0) evidence.options = options;
     }
 
-    result.push({ evidence, pdfWidgets });
+    result.push({ evidence, pdfWidgets, pdfName: field.name });
   }
   return result;
 }

@@ -51,6 +51,49 @@ describe('test-on-save: related tests', () => {
   it('reads saved file paths from a hook payload', () => {
     expect(savedFiles({ event: { file: 'src/a.ts', other: 'README.md' } })).toEqual(['src/a.ts']);
   });
+
+  // Review 2, item 7
+  it('maps a .cjs script to the tests that require() it', () => {
+    expect(names(relatedTests('scripts/commit-guard.cjs', ROOT))).toContain('commit-guard.test.ts');
+    expect(names(relatedTests('scripts/hooks/locale-sync.cjs', ROOT))).toContain('hook-scripts.test.ts');
+    expect(savedFiles({ file: 'scripts/commit-guard.cjs' })).toEqual(['scripts/commit-guard.cjs']);
+  });
+
+  it('runs a saved test file that lives under src/', () => {
+    const file = path.join('src', 'lib', 'example.test.ts');
+    expect(relatedTests(file, ROOT).map((f) => path.relative(ROOT, f))).toEqual([file]);
+  });
+
+  it('maps a locale JSON edit to the tests that use the locales', () => {
+    const tests = names(relatedTests('src/packs/language/locales/ms.json', ROOT));
+    expect(tests).toEqual(expect.arrayContaining(['language-registry.test.ts', 'hook-scripts.test.ts']));
+    expect(tests).not.toContain('commit-guard.test.ts');
+  });
+
+  it('stops a test run that exceeds the timeout', () => {
+    const { runVitest } = require('../../scripts/hooks/test-on-save.cjs') as {
+      runVitest: (root: string, files: string[], timeoutMs: number) => number;
+    };
+    const root = mkdtempSync(path.join(tmpdir(), 'tos-timeout-'));
+    try {
+      // A fake "vitest" that never exits.
+      mkdirSync(path.join(root, 'node_modules', 'vitest'), { recursive: true });
+      writeFileSync(path.join(root, 'node_modules', 'vitest', 'vitest.mjs'), 'setInterval(() => {}, 1000);\n');
+      const started = Date.now();
+      const errors: string[] = [];
+      const original = console.error;
+      console.error = (m: string) => errors.push(m);
+      try {
+        expect(runVitest(root, [], 500)).toBe(1);
+      } finally {
+        console.error = original;
+      }
+      expect(Date.now() - started).toBeLessThan(10_000);
+      expect(errors.join(' ')).toContain('did not finish');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('locale-sync: gap report', () => {

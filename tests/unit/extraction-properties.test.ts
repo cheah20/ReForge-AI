@@ -147,6 +147,30 @@ describe('Property 7: page snippet length invariant', () => {
       { numRuns: 300 },
     );
   });
+
+  // Review 2, item 5: the length property alone passes with all-empty snippets.
+  it('keeps a label placed clearly above its widget and drops a canary inside it, within the limit', () => {
+    // Widgets far away from the controlled one, so their guards cannot touch its label.
+    const farRect = fc
+      .tuple(fc.double({ min: 0, max: 400, noNaN: true }), fc.double({ min: 3000, max: 4000, noNaN: true }))
+      .map(([x, y]) => ({ left: x, bottom: y, right: x + 100, top: y + 20 }));
+    fc.assert(
+      fc.property(
+        fc.string({ minLength: 1, maxLength: 250 }).filter((s) => s.trim().length > 0),
+        fc.array(farRect, { maxLength: 5 }),
+        (label, others) => {
+          const widget = { left: 100, bottom: 500, right: 400, top: 526 };
+          const labelItem: TextItem = { str: label, transform: [10, 0, 0, 10, 100, 536], width: 80, height: 10 };
+          const canary: TextItem = { str: 'PROPERTY_CANARY', transform: [10, 0, 0, 10, 104, 508], width: 80, height: 10 };
+          const [snippet] = computePageSnippets([canary, labelItem], [widget, ...others]);
+          expect(snippet!.length).toBeLessThanOrEqual(MAX_SNIPPET_LENGTH);
+          expect(snippet).not.toContain('PROPERTY_CANARY');
+          expect(snippet).toBe(label.trim().slice(0, MAX_SNIPPET_LENGTH));
+        },
+      ),
+      { numRuns: 300 },
+    );
+  });
 });
 
 describe('Property 8: batch count invariant', () => {

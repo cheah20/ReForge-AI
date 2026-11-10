@@ -43,7 +43,25 @@ describe('fixtures', () => {
     expect(await codeOf(fixture(name))).toBe(expected);
   });
 
-  it.todo('fixtures/encrypted.pdf (qpdf AES-256) -> ENCRYPTED: waiting for qpdf to be installed');
+  it('encrypted.pdf (qpdf AES-256) -> ENCRYPTED', async () => {
+    const bytes = fixture('encrypted.pdf');
+    // The fixture really is encrypted: the trailer names an /Encrypt dictionary.
+    expect(Buffer.from(bytes).toString('latin1')).toMatch(/\/Encrypt\s+\d+\s+\d+\s+R/);
+    expect(await codeOf(bytes)).toBe('ENCRYPTED');
+  });
+
+  it('encrypted.pdf is rejected by extractFields before any field is read', async () => {
+    const { extractFields } = await import('../../src/lib/pdf-extract/index.js');
+    let textLoaded = false;
+    const r = await extractFields(fixture('encrypted.pdf'), {
+      loadPageText: async () => {
+        textLoaded = true;
+        return new Map();
+      },
+    });
+    expect(r).toEqual({ ok: false, code: 'ENCRYPTED', messageKey: 'upload.error.encrypted' });
+    expect(textLoaded).toBe(false);
+  });
 });
 
 describe('size limit (decision 7: 10,485,760 bytes)', () => {

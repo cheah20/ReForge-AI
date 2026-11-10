@@ -233,7 +233,7 @@ describe('RetranslateRequestSchema', () => {
   it('accepts a valid retranslate request', () => {
     const result = RetranslateRequestSchema.safeParse({
       contentHash: 'b'.repeat(64),
-      fields: [{ fieldId: 'patient.name' }],
+      fields: [{ fieldId: 'patient.name', humanLabel: 'Full name', question: 'What is your full name?' }],
       targetLanguage: 'zh-Hans',
     });
     expect(result.success).toBe(true);
@@ -295,7 +295,11 @@ describe('contentHash format', () => {
     for (const bad of ['g'.repeat(64), 'A'.repeat(64), ' '.repeat(64)]) {
       expect(AnalyzeRequestSchema.safeParse(makeAnalyzeRequest({ contentHash: bad })).success, bad).toBe(false);
       expect(
-        RetranslateRequestSchema.safeParse({ contentHash: bad, fields: [{ fieldId: 'a' }], targetLanguage: 'ms' }).success,
+        RetranslateRequestSchema.safeParse({
+          contentHash: bad,
+          fields: [{ fieldId: 'a', humanLabel: 'L', question: 'Q' }],
+          targetLanguage: 'ms',
+        }).success,
       ).toBe(false);
     }
   });
@@ -339,9 +343,18 @@ describe('response bounds', () => {
     expect(RetranslateResponseSchema.safeParse(one({ question: 'x'.repeat(121) })).success).toBe(false);
   });
 
-  it('retranslate: at most 150 fields', () => {
-    const fields = Array.from({ length: 151 }, (_, i) => ({ fieldId: `f${i}`, humanLabel: 'L', question: 'Q' }));
-    expect(RetranslateResponseSchema.safeParse({ fields }).success).toBe(false);
+  it('retranslate: at most 30 fields per batch, in requests and responses', () => {
+    const fields = (n: number) => Array.from({ length: n }, (_, i) => ({ fieldId: `f${i}`, humanLabel: 'L', question: 'Q' }));
+    const request = (n: number) => ({ contentHash: 'b'.repeat(64), fields: fields(n), targetLanguage: 'ms' });
+    expect(RetranslateRequestSchema.safeParse(request(30)).success).toBe(true);
+    expect(RetranslateRequestSchema.safeParse(request(31)).success).toBe(false);
+    expect(RetranslateResponseSchema.safeParse({ fields: fields(30) }).success).toBe(true);
+    expect(RetranslateResponseSchema.safeParse({ fields: fields(31) }).success).toBe(false);
+  });
+
+  it('retranslate request: carries the current label and question of each field', () => {
+    const without = { contentHash: 'b'.repeat(64), fields: [{ fieldId: 'a' }], targetLanguage: 'ms' };
+    expect(RetranslateRequestSchema.safeParse(without).success).toBe(false);
   });
 
   it('translate: translation is non-empty and at most 4000 characters', () => {

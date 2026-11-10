@@ -1,0 +1,7 @@
+{
+  "note": "Deterministic mock translations for the acceptance scenarios. Keys are source:target language tags.",
+  "pairs": {
+    "zh-Hans:ms": { "我咳嗽了两天。": "Saya batuk selama dua hari." },
+    "es:en": { "Tengo tos desde hace dos días.": "I have had a cough for two days." }
+  }
+}

@@ -152,9 +152,46 @@ describe('everything else is allowed', () => {
     expect(run(`npm test && git add ${PRIVATE_DIR}/x`).status).toBe(2);
   });
 
-  it('ignores commands unrelated to git and non-JSON input', () => {
+  it('ignores commands unrelated to git', () => {
     expect(run('npx vitest run').status).toBe(0);
+  });
+});
+
+describe('review 2, item 6', () => {
+  it('fails closed on input that is not JSON', () => {
     const r = spawnSync(process.execPath, [SCRIPT], { input: 'not json', encoding: 'utf8' });
-    expect(r.status).toBe(0);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain('unreadable hook payload');
+  });
+
+  it('fails closed on a JSON payload with no command in it', () => {
+    const r = spawnSync(process.execPath, [SCRIPT], { input: JSON.stringify({ tool_input: { cmd: 'git commit -m x' } }), encoding: 'utf8' });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain('unrecognised hook payload');
+  });
+
+  it('rejects staging and committing in one command', () => {
+    for (const cmd of ['git add src/a.ts && git commit -m "x"', 'git add src/a.ts; git commit -m "x"', 'git rm old.txt\ngit commit -m "x"']) {
+      const r = run(cmd, clean);
+      expect(r.status, cmd).toBe(2);
+      expect(r.stderr).toContain('separate commands');
+    }
+  });
+
+  it('does not treat git commit --dry-run or --short as a real commit', () => {
+    const notRepo = mkdtempSync(path.join(tmpdir(), 'guard-dry-'));
+    repos.push(notRepo);
+    // A real commit here would fail closed (no repository); dry runs are not inspected.
+    expect(run('git commit --dry-run', notRepo).status).toBe(0);
+    expect(run('git commit --short', notRepo).status).toBe(0);
+    expect(run('git add src/a.ts && git commit --dry-run', notRepo).status).toBe(0);
+  });
+
+  it('reads staged names NUL-separated, so a non-ASCII private file name is still caught', () => {
+    const repo = tempRepo({ [`${PRIVATE_DIR}/caf\u00e9 notes.md`]: 'private\n' });
+    repos.push(repo);
+    const r = run('git commit -m "msg"', repo);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain(`staged private file ${PRIVATE_DIR}/caf\u00e9 notes.md`);
   });
 });
