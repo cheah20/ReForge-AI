@@ -1,0 +1,4 @@
+# Copy to .dev.vars to run the local Worker with real Workers AI.
+# Real AI needs `wrangler login` and spends neurons from your daily free allocation.
+# Leave this file out to run offline with the mock AI provider.
+AI_MODE=real

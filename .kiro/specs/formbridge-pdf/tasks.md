@@ -145,13 +145,13 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 16.3 Write unit tests for retranslate and translate routes
     - _Requirements: 5.8, 8.6_
 
-- [ ] 17. Precomputed fixture cache
+- [x] 17. Precomputed fixture cache
   - [x] 17.1 Create `src/worker/cache/fixture-cache.ts`: `lookupFixtureCache(contentHash, interfaceLanguage)` reads from `src/worker/cache/precomputed/<hash>-<bcp47>.json`; returns null on miss
     - _Requirements: 12.7_
-  - [ ] 17.2 Complete `scripts/generate-fixture-cache.ts`: load each bundled fixture, compute SHA-256, call real Workers AI model for each core language, validate with `AnalyzeResponseSchema`, write output files; document in `scripts/create-fixtures/README.md`
+  - [x] 17.2 Complete `scripts/generate-fixture-cache.ts`: load each bundled fixture, compute SHA-256, call real Workers AI model for each core language, validate with `AnalyzeResponseSchema`, write output files; document in `scripts/create-fixtures/README.md`
     - _Requirements: 12.7_
 
-- [ ] 18. Checkpoint — Worker and AI layer
+- [x] 18. Checkpoint — Worker and AI layer
   - Run `wrangler dev`; confirm all three routes respond with MockAiProvider; all unit tests pass. Ask the developer to confirm before continuing.
 
 - [ ] 19. PDF fill core

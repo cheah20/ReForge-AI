@@ -2,11 +2,14 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import path from 'path';
+import { devAiMode } from './scripts/dev-ai-mode';
 
 export default defineConfig({
   plugins: [
     react(),
-    cloudflare(),
+    // Remote bindings (Workers AI) need a Cloudflare login and spend neurons, so
+    // they open only when real AI is explicitly enabled; otherwise the mock runs offline.
+    cloudflare({ remoteBindings: devAiMode(process.cwd()) === 'real' }),
   ],
   resolve: {
     alias: {

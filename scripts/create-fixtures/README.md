@@ -36,3 +36,20 @@ AES-256 uses a random IV, so each run produces different bytes with the same str
 ## fixtures/chinese-school-form.pdf
 
 Created later by task 41.3.
+
+## generate-fixture-cache.ts
+
+Precomputes real Workers AI analyses for the bundled fixtures, one file per fixture and core language, in `src/worker/cache/precomputed/<sha256>-<bcp47>.json`. The Worker serves them only after a live AI call fails with a quota, rate-limit or timeout error.
+
+This spends neurons. Start a Worker with real AI, then run the script against it:
+
+```
+wrangler login
+npx vite --port 5173                      # with AI_MODE=real (for example in .dev.vars)
+npm run generate-fixture-cache -- clinic-registration
+npm run generate-fixture-cache -- us-community-clinic
+```
+
+Options: `--base-url <url>` (default `http://localhost:5173`) and `--languages ms,es`.
+
+The script writes a file only when the Worker reports real AI (`x-reforge-ai-mode: real`), the reply passes `AnalyzeResponseSchema`, it was not served from a cache, and it covers every field. Commit the generated files; they are not regenerated at deploy time.
