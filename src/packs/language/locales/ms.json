@@ -18,7 +18,7 @@
   "upload.title": "Muat naik borang anda",
   "upload.button": "Pilih fail PDF",
   "upload.dragHint": "atau seret PDF ke sini",
-  "upload.privacyNotice": "PDF anda kekal pada peranti anda. Hanya nama medan dan teks berdekatan yang dihantar ke AI — bukan jawapan atau PDF anda.",
+  "upload.privacyNotice": "Jawapan anda kekal dalam pelayar anda. Label medan borang, petunjuk dan teks berdekatan daripada PDF, serta sebarang jawapan keterangan yang anda pilih untuk diterjemahkan, dihantar kepada perkhidmatan AI untuk diproses. Jawapan tidak disimpan.",
   "upload.acknowledge": "Saya faham — teruskan",
   "upload.analyzing": "Membaca borang anda…",
   "upload.error.tooLarge": "Fail ini terlalu besar. Sila gunakan PDF di bawah 10 MB.",
@@ -82,7 +82,7 @@
   "validation.glyph.unsupported": "Sesetengah aksara dalam jawapan anda tidak boleh ditulis ke PDF ini. Sila semak.",
 
   "review.title": "Semak jawapan anda",
-  "review.privacyNotice": "Jawapan anda hanya ada pada peranti anda. Tiada apa yang disimpan atau dihantar selepas anda memuat turun.",
+  "review.privacyNotice": "Jawapan anda kekal dalam pelayar anda. Label medan borang, petunjuk dan teks berdekatan daripada PDF, serta sebarang jawapan keterangan yang anda pilih untuk diterjemahkan, dihantar kepada perkhidmatan AI untuk diproses. Jawapan tidak disimpan.",
   "review.field.status.filled": "Diisi",
   "review.field.status.skipped": "Dilangkau",
   "review.field.status.fillYourself": "Isi sendiri",

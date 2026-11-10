@@ -18,7 +18,7 @@
   "upload.title": "Sube tu formulario",
   "upload.button": "Elegir archivo PDF",
   "upload.dragHint": "o arrastra un PDF aquí",
-  "upload.privacyNotice": "Tu PDF permanece en tu dispositivo. Solo se envían al sistema de IA los nombres de campos y el texto cercano, nunca tus respuestas ni el PDF.",
+  "upload.privacyNotice": "Tus respuestas se quedan en tu navegador. Las etiquetas de los campos, las descripciones emergentes y el texto cercano del PDF, y cualquier respuesta descriptiva que elijas traducir, se envían al servicio de IA para procesarlos. Las respuestas no se guardan.",
   "upload.acknowledge": "Entendido — continuar",
   "upload.analyzing": "Leyendo tu formulario…",
   "upload.error.tooLarge": "Este archivo es demasiado grande. Usa un PDF de menos de 10 MB.",
@@ -82,7 +82,7 @@
   "validation.glyph.unsupported": "Algunos caracteres de tu respuesta no se pueden escribir en este PDF. Revísalo.",
 
   "review.title": "Revisa tus respuestas",
-  "review.privacyNotice": "Tus respuestas solo están en tu dispositivo. Nada se guarda ni se envía después de descargar.",
+  "review.privacyNotice": "Tus respuestas se quedan en tu navegador. Las etiquetas de los campos, las descripciones emergentes y el texto cercano del PDF, y cualquier respuesta descriptiva que elijas traducir, se envían al servicio de IA para procesarlos. Las respuestas no se guardan.",
   "review.field.status.filled": "Rellenado",
   "review.field.status.skipped": "Omitido",
   "review.field.status.fillYourself": "Rellenar tú mismo",

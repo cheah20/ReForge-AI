@@ -18,7 +18,7 @@
   "upload.title": "Unggah formulir Anda",
   "upload.button": "Pilih file PDF",
   "upload.dragHint": "atau seret PDF ke sini",
-  "upload.privacyNotice": "PDF Anda tetap di perangkat Anda. Hanya nama bidang dan teks terdekat yang dikirim ke AI — bukan jawaban atau PDF Anda.",
+  "upload.privacyNotice": "Jawaban Anda tetap di browser Anda. Label bidang formulir, tooltip, dan teks di dekatnya dari PDF, serta jawaban deskripsi yang Anda pilih untuk diterjemahkan, dikirim ke layanan AI untuk diproses. Jawaban tidak disimpan.",
   "upload.acknowledge": "Saya mengerti — lanjutkan",
   "upload.analyzing": "Membaca formulir Anda…",
   "upload.error.tooLarge": "File ini terlalu besar. Gunakan PDF di bawah 10 MB.",
@@ -80,7 +80,7 @@
   "validation.glyph.unsupported": "Beberapa karakter dalam jawaban Anda tidak dapat ditulis ke PDF ini. Periksa.",
 
   "review.title": "Tinjau jawaban Anda",
-  "review.privacyNotice": "Jawaban Anda hanya ada di perangkat Anda. Tidak ada yang disimpan atau dikirim setelah mengunduh.",
+  "review.privacyNotice": "Jawaban Anda tetap di browser Anda. Label bidang formulir, tooltip, dan teks di dekatnya dari PDF, serta jawaban deskripsi yang Anda pilih untuk diterjemahkan, dikirim ke layanan AI untuk diproses. Jawaban tidak disimpan.",
   "review.field.status.filled": "Terisi",
   "review.field.status.skipped": "Dilewati",
   "review.field.status.fillYourself": "Isi sendiri",

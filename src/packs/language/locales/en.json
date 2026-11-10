@@ -18,7 +18,7 @@
   "upload.title": "Upload your form",
   "upload.button": "Choose PDF file",
   "upload.dragHint": "or drag a PDF here",
-  "upload.privacyNotice": "Your PDF stays on your device. Only field names and nearby text are sent to the AI — never your answers or the PDF itself.",
+  "upload.privacyNotice": "Your answers stay in your browser. The form field labels, tooltips, and nearby text from the PDF — and any description answer you choose to translate — are sent to the AI service for processing. Answers are not stored.",
   "upload.acknowledge": "I understand — continue",
   "upload.analyzing": "Reading your form…",
   "upload.error.tooLarge": "This file is too large. Please use a PDF under 10 MB.",
@@ -82,7 +82,7 @@
   "validation.glyph.unsupported": "Some characters in your answer cannot be written to this PDF. Please check.",
 
   "review.title": "Review your answers",
-  "review.privacyNotice": "Your answers are only on your device. Nothing is saved or sent after you download.",
+  "review.privacyNotice": "Your answers stay in your browser. The form field labels, tooltips, and nearby text from the PDF — and any description answer you choose to translate — are sent to the AI service for processing. Answers are not stored.",
   "review.field.status.filled": "Filled",
   "review.field.status.skipped": "Skipped",
   "review.field.status.fillYourself": "Fill yourself",

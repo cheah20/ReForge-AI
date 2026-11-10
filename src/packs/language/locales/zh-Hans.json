@@ -18,7 +18,7 @@
   "upload.title": "上传您的表格",
   "upload.button": "选择 PDF 文件",
   "upload.dragHint": "或将 PDF 拖放到此处",
-  "upload.privacyNotice": "您的 PDF 保留在您的设备上。只有字段名称和附近文字会发送给 AI——不会发送您的答案或 PDF 本身。",
+  "upload.privacyNotice": "您的答案保留在您的浏览器中。PDF 中的表单字段标签、提示文字和附近文字，以及您选择翻译的任何描述性答案，会发送给 AI 服务进行处理。答案不会被保存。",
   "upload.acknowledge": "我明白——继续",
   "upload.analyzing": "正在读取您的表格…",
   "upload.error.tooLarge": "此文件太大。请使用 10 MB 以下的 PDF。",
@@ -82,7 +82,7 @@
   "validation.glyph.unsupported": "您答案中的某些字符无法写入此 PDF。请检查。",
 
   "review.title": "审阅您的答案",
-  "review.privacyNotice": "您的答案仅存储在您的设备上。下载后不会保存或发送任何内容。",
+  "review.privacyNotice": "您的答案保留在您的浏览器中。PDF 中的表单字段标签、提示文字和附近文字，以及您选择翻译的任何描述性答案，会发送给 AI 服务进行处理。答案不会被保存。",
   "review.field.status.filled": "已填写",
   "review.field.status.skipped": "已跳过",
   "review.field.status.fillYourself": "自行填写",
