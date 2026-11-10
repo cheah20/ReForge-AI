@@ -1,42 +1,102 @@
 # ReForge AI
 
-**AI-Powered Legacy Web Modernization & Multilingual Form Assistance**
+AI-Powered Legacy Web Modernization and Multilingual Form Assistance.
 
-Built for the **Kiroween 2026** hackathon (Category: **Frankenstein**) using [Kiro](https://kiro.dev).
+**FormBridge** guides users through PDF forms field by field in their chosen language, validates answers, and produces a filled PDF — all without uploading the PDF or personal answers to the backend.
 
-ReForge AI stitches two systems into one assistant:
+Built for Kiroween 2026, category **Frankenstein** — stitching different technologies into one powerful app.
 
-| Module | What it does |
-| --- | --- |
-| **AccessForge** — legacy website makeover | Reads outdated, hard-to-use websites and rebuilds them as a clean, modern, accessible interface that still operates the original site. |
-| **FormBridge** — multilingual form filling for PDFs and web pages | Understands PDF and web forms, asks the user questions in their own language (e.g. Chinese, Malay, English), validates the answers, and fills the form. |
+---
 
-## How it works
+## Public URL
 
-1. The user opens a legacy website (or uploads a PDF form).
-2. **AccessForge** analyzes the page structure — menus, buttons, form fields — and presents a simplified, modern view.
-3. **FormBridge** walks the user through each field in their preferred language and validates the input.
-4. ReForge AI fills the original form. **The user always reviews and confirms before anything is submitted.**
-5. Anything the AI cannot identify safely is flagged for the user to handle manually.
+> To be added after Milestone 1 deploy (task 37.2).
 
-## Status
+---
 
-🚧 In development for Kiroween 2026 (submission deadline: Dec 4, 2026, 2:00 PM PT).
+## Setup
 
-## How Kiro is used
+```bash
+git clone <repo-url>
+cd reforge-ai
+npm install
+wrangler login      # or set CLOUDFLARE_API_TOKEN in .env
+npm run dev         # starts Vite dev server + local Worker
+```
 
-Kiro project files live in [`/.kiro`](.kiro):
+Open [http://localhost:5173](http://localhost:5173).
 
-- **Steering** (`.kiro/steering/`) — product, tech, and structure guidelines Kiro follows.
-- **Specs** (`.kiro/specs/`) — requirements, design, and task plans for each feature.
-- **Hooks** (`.kiro/hooks/`) — automated checks during development.
+### Environment variables
 
-A full write-up of how Kiro was used will be added before submission.
+Copy `.env.example` to `.env`. Workers AI runs via the binding — no API key is needed for inference.
+
+### Run tests
+
+```bash
+npm test                # Vitest unit + property tests
+npm run test:e2e        # Playwright end-to-end tests
+npm run typecheck       # TypeScript type check
+```
+
+### Deploy
+
+```bash
+npm run deploy          # builds + wrangler deploy
+```
+
+---
 
 ## Pre-existing code disclosure
 
-This project was created from scratch during the Kiroween 2026 Submission Period. Open source libraries used will be listed here.
+The following notable libraries are used. All are open-source; see their respective licences.
 
-## License
+| Library | Version | Licence | Use |
+|---------|---------|---------|-----|
+| `react` | 19.3.1 | MIT | UI framework |
+| `react-dom` | 19.3.1 | MIT | DOM renderer |
+| `vite` | 6.x | MIT | Build tool |
+| `@vitejs/plugin-react` | 4.x | MIT | Vite React plugin |
+| `@cloudflare/vite-plugin` | 1.x | MIT | Vite + Workers integration |
+| `wrangler` | 4.x | MIT | Cloudflare Workers CLI |
+| `pdf-lib` | 1.17.1 | MIT | AcroForm PDF reading and writing |
+| `@pdf-lib/fontkit` | 1.1.0 | MIT | Font subsetting for pdf-lib |
+| `pdfjs-dist` | 6.5.438 | Apache-2.0 | PDF rendering and text extraction |
+| `zod` | 4.6.7 | MIT | Runtime schema validation |
+| `libphonenumber-js` | 1.11.x | MIT | International phone number validation |
+| `fast-check` | 4.10.2 | MIT | Property-based testing |
+| `vitest` | 3.x | MIT | Unit test runner |
+| `@playwright/test` | 1.65.0 | Apache-2.0 | End-to-end tests |
+| `@axe-core/playwright` | 4.14.0 | MPL-2.0 | Automated accessibility checks |
+| `typescript` | 5.7.x | Apache-2.0 | Type system (TS 7.x deferred — Vite 6.x compatibility) |
+| Noto Sans fonts | Various | SIL OFL 1.1 | PDF and UI typography |
 
-[MIT](LICENSE)
+No code was copied from other projects.
+
+---
+
+## Supported languages and countries
+
+### Interface languages (Nov 17)
+
+| Language | Status |
+|----------|--------|
+| English (`en`) | Core |
+| Malay (`ms`) | Core |
+| Simplified Chinese (`zh-Hans`) | Core |
+| Traditional Chinese (`zh-Hant`) | Core |
+| Tamil (`ta`) | Core |
+| Spanish (`es`) | Core |
+| Indonesian (`id`) | Experimental |
+
+### Form validation countries (Nov 17)
+
+| Country | Pack |
+|---------|------|
+| Malaysia (`MY`) | IC, phone, postcode |
+| Universal | International phone, email, dates |
+
+---
+
+## Kiro usage log
+
+See [`docs/kiro-usage-log.md`](docs/kiro-usage-log.md).

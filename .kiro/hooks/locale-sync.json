@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Sync core locale files when en.json is saved",
+      "trigger": "PostFileSave",
+      "description": "Diffs en.json keys against core locales and auto-adds [MT] placeholders",
+      "matcher": "src/packs/language/locales/en\\.json$",
+      "action": {
+        "type": "command",
+        "command": "node -e \"\nconst fs = require('fs');\nconst path = require('path');\nconst localesDir = path.join(process.cwd(), 'src', 'packs', 'language', 'locales');\nif (!fs.existsSync(localesDir)) process.exit(0);\nconst enPath = path.join(localesDir, 'en.json');\nif (!fs.existsSync(enPath)) process.exit(0);\nconst en = JSON.parse(fs.readFileSync(enPath, 'utf8'));\nconst enKeys = Object.keys(en);\nconst coreLocales = ['ms', 'zh-Hans', 'zh-Hant', 'ta', 'es'];\nlet missing = [];\nfor (const locale of coreLocales) {\n  const lPath = path.join(localesDir, locale + '.json');\n  if (!fs.existsSync(lPath)) { missing.push(locale + ': FILE MISSING'); continue; }\n  const lData = JSON.parse(fs.readFileSync(lPath, 'utf8'));\n  const lKeys = Object.keys(lData);\n  const missingKeys = enKeys.filter(k => !lKeys.includes(k));\n  if (missingKeys.length) {\n    missing.push(locale + ': missing keys: ' + missingKeys.join(', '));\n    // Auto-add [MT] placeholders\n    for (const k of missingKeys) {\n      lData[k] = '[MT] ' + en[k];\n    }\n    fs.writeFileSync(lPath, JSON.stringify(lData, null, 2) + '\\n');\n  }\n}\nif (missing.length) { console.log('Locale sync:\\n' + missing.join('\\n')); }\nelse { console.log('All core locales in sync.'); }\n\""
+      }
+    }
+  ]
+}

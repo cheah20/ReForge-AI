@@ -1,4 +1,4 @@
-﻿# Implementation Plan: FormBridge PDF
+# Implementation Plan: FormBridge PDF
 
 ## Overview
 
@@ -8,7 +8,7 @@ Build the FormBridge PDF module of ReForge AI: a browser-based form assistant th
 
 ## Prerequisites
 
-Before starting tasks that require Cloudflare access (Spike 1, task 16, task 42, task 44), confirm:
+Before starting tasks that require Cloudflare access (Spike 1 — task 13, fixture cache — task 17, deploy — task 37), confirm:
 - A Cloudflare account with Workers AI available (free plan is sufficient)
 - `wrangler login` completed (or a `CLOUDFLARE_API_TOKEN` env var set)
 - Workers AI binding accessible in `wrangler dev`
@@ -17,8 +17,8 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 
 ## Milestones
 
-- **Milestone 1 — Nov 17:** tasks 1–35, 36 (Nov 17 e2e), 42 (Malaysian fixture cache), 44 (deploy + smoke test). Delivers the Chinese → Malaysian clinic form scenario end-to-end on a live public URL.
-- **Milestone 2 — Dec 1:** tasks 37–41 (US scenario, CJK if Spike 2 passed), 43 (US fixture cache), 45 (redeploy + smoke test). Delivers Spanish → US clinic form and CJK PDF output.
+- **Milestone 1 — Nov 17:** tasks 1–36 (Nov 17 e2e), then task 37.1 (Malaysian fixture cache) and task 37.2 (deploy + smoke test). Delivers the Chinese → Malaysian clinic form scenario end-to-end on a live public URL.
+- **Milestone 2 — Dec 1:** tasks 38–42 (US scenario, CJK if Spike 2 passed), task 43 (README and disclosure). Delivers Spanish → US clinic form and CJK PDF output.
 
 ## Tasks
 
@@ -37,57 +37,57 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 3. Repository scaffold
   - [ ] 3.1 Initialise single-package layout (no npm workspaces): root `package.json`, `vite.config.ts` using `@cloudflare/vite-plugin`, `wrangler.toml` with `compatibility_date` + Workers AI binding + rate-limiting binding, `tsconfig.json` (strict, path aliases for `src/`), `vitest.config.ts` (jsdom for frontend tests, node for worker tests), `playwright.config.ts` (Chromium + Firefox, `axe-playwright`), `.env.example`; create `fixtures/`, `scripts/create-fixtures/`, `src/worker/`, `src/frontend/`, `src/shared/`, `src/packs/`, `src/lib/` directories
     - _Requirements: tech.md_
-  - [ ] 3.2 Add root `README.md` stub: setup steps (`git clone` → `npm install` → `wrangler login` → `npm run dev`), `Pre-existing code disclosure` section placeholder; add `scripts/generate-fixture-cache.ts` stub (runnable, exits 0 with a "not yet implemented" message)
+  - [x] 3.2 Add root `README.md` stub: setup steps (`git clone` → `npm install` → `wrangler login` → `npm run dev`), `Pre-existing code disclosure` section placeholder; add `scripts/generate-fixture-cache.ts` stub (runnable, exits 0 with a "not yet implemented" message)
     - _Requirements: tech.md_
 
-- [ ] 4. Shared Zod schemas
-  - [ ] 4.1 Create `src/shared/schemas.ts` with all schemas from design.md §Zod schemas: `FieldOptionSchema`, `WidgetSchema`, `FieldEvidenceSchema`, `FieldAnalysisSchema`, `AnalyzeRequestSchema` (includes `contentHash`), `AnalyzeResponseSchema`, `RetranslateRequestSchema` (includes `contentHash`), `RetranslateResponseSchema`, `TranslateRequestSchema`, `TranslateResponseSchema`, `ApiErrorSchema` — all string and array bounds enforced
+- [x] 4. Shared Zod schemas
+  - [x] 4.1 Create `src/shared/schemas.ts` with all schemas from design.md §Zod schemas: `FieldOptionSchema`, `WidgetSchema`, `FieldEvidenceSchema`, `FieldAnalysisSchema`, `AnalyzeRequestSchema` (includes `contentHash`), `AnalyzeResponseSchema`, `RetranslateRequestSchema` (includes `contentHash`), `RetranslateResponseSchema`, `TranslateRequestSchema`, `TranslateResponseSchema`, `ApiErrorSchema` — all string and array bounds enforced
     - _Requirements: 4.1, 5.1, 5.4, 5.5_
-  - [ ] 4.2 Create `src/shared/types.ts` — TypeScript types via `z.infer<>` for all schemas
+  - [x] 4.2 Create `src/shared/types.ts` — TypeScript types via `z.infer<>` for all schemas
     - _Requirements: 4.1, 5.4_
-  - [ ] 4.3 Write unit tests confirming schema acceptance and rejection at boundary values (fieldId at 256/257 chars, humanLabel at 40/41 chars, question at 120/121 chars, fields array at 30/31 items)
+  - [x] 4.3 Write unit tests confirming schema acceptance and rejection at boundary values (fieldId at 256/257 chars, humanLabel at 40/41 chars, question at 120/121 chars, fields array at 30/31 items)
     - _Requirements: 5.1, 5.4_
 
 - [ ] 5. Language registry and locale files
-  - [ ] 5.1 Create `src/packs/language/registry.ts` — `LanguageEntry` interface (tag, nativeName, direction, uiFontFamily, pdfFontFamily, status, modelLanguageName) and registry array for all Nov 17 languages: `en`, `ms`, `zh-Hans`, `zh-Hant`, `ta`, `es` (core), `id` (experimental)
+  - [x] 5.1 Create `src/packs/language/registry.ts` — `LanguageEntry` interface (tag, nativeName, direction, uiFontFamily, pdfFontFamily, status, modelLanguageName) and registry array for all Nov 17 languages: `en`, `ms`, `zh-Hans`, `zh-Hant`, `ta`, `es` (core), `id` (experimental)
     - _Requirements: 2-L.1, 2-L.2, 2-L.5_
-  - [ ] 5.2 Create `src/packs/language/locales/en.json` with all UI string keys; create `ms.json`, `zh-Hans.json`, `zh-Hant.json`, `ta.json`, `es.json` with all keys translated; create `id.json` with partial keys (fallback to English for missing)
+  - [x] 5.2 Create `src/packs/language/locales/en.json` with all UI string keys; create `ms.json`, `zh-Hans.json`, `zh-Hant.json`, `ta.json`, `es.json` with all keys translated; create `id.json` with partial keys (fallback to English for missing)
     - _Requirements: 1.4, 2-L.1, 2-L.5_
   - [ ] 5.3 Create React i18n provider (`src/frontend/i18n.tsx`): `useTranslation()` hook, fallback to `en.json` for missing keys, `<html lang={tag}>` update, lazy Noto font load per script on language selection
     - _Requirements: 2-L.1, 2-L.3, 13.4_
 
-- [ ] 6. Country pack registry
-  - [ ] 6.1 Create `src/packs/country/interface.ts` (`ValidationResult`, `CountryPack` interface) and `src/packs/country/registry.ts` (registry map, `getCountryPack()` with universal fallback)
+- [x] 6. Country pack registry
+  - [x] 6.1 Create `src/packs/country/interface.ts` (`ValidationResult`, `CountryPack` interface) and `src/packs/country/registry.ts` (registry map, `getCountryPack()` with universal fallback)
     - _Requirements: 3-C.1_
-  - [ ] 6.2 Create `src/packs/country/universal.ts` — international phone via `libphonenumber-js`, email, permissive date, permissive postcode
+  - [x] 6.2 Create `src/packs/country/universal.ts` — international phone via `libphonenumber-js`, email, permissive date, permissive postcode
     - _Requirements: 3-C.2_
-  - [ ] 6.3 Write unit tests for the universal pack: valid/invalid email, international phone acceptance, date parsing both formats
+  - [x] 6.3 Write unit tests for the universal pack: valid/invalid email, international phone acceptance, date parsing both formats
     - _Requirements: 3-C.2_
 
 - [ ] 7. Latin-script fixtures
-  - [ ] 7.1 Create `fixtures/clinic-registration.pdf` — synthetic Malay-language AcroForm (~22 fields): text (name, IC, phone, email, address, postcode), date, radio groups, checkboxes, dropdown, free-text description, empty `/Sig` field; all labels and nearby text in Malay; no real org names or logos
+  - [x] 7.1 Create `fixtures/clinic-registration.pdf` — synthetic Malay-language AcroForm (~22 fields): text (name, IC, phone, email, address, postcode), date, radio groups, checkboxes, dropdown, free-text description, empty `/Sig` field; all labels and nearby text in Malay; no real org names or logos
     - _Requirements: 14.1_
   - [ ] 7.2 Create `fixtures/school-enrolment.pdf` — synthetic bilingual EN/MS AcroForm: at least one field of each supported type (text, checkbox, radio, dropdown, signature); label some in English, some in Malay
     - _Requirements: 14.2_
-  - [ ] 7.3 Create `fixtures/no-fields.pdf`, `fixtures/xfa-acroform.pdf`, `fixtures/sig-empty.pdf`, `fixtures/sig-populated.pdf`; create dev script `scripts/create-fixtures/encrypted.ts` + commit `fixtures/encrypted.pdf`
-    - _Requirements: 14.3, 14.4, 14.5, 14.6, 14.7_
-  - [ ] 7.4 Create `fixtures/us-community-clinic.pdf` — synthetic English-language US AcroForm: name, phone, ZIP, email, date (MM/DD/YYYY), SSN field; no real agency names
+  - [ ] 7.3 Create `fixtures/no-fields.pdf`, `fixtures/xfa-acroform.pdf`, `fixtures/sig-empty.pdf`, `fixtures/sig-populated.pdf`, `fixtures/prefilled-field.pdf`; create dev script `scripts/create-fixtures/encrypted.ts` + commit `fixtures/encrypted.pdf`
+    - _Requirements: 14.3, 14.4, 14.5, 14.6, 14.7, 14.10_
+  - [x] 7.4 Create `fixtures/us-community-clinic.pdf` — synthetic English-language US AcroForm: name, phone, ZIP, email, date (MM/DD/YYYY), SSN field; no real agency names
     - _Requirements: 14.9_
 
 - [ ] 8. PDF rejection checks
-  - [ ] 8.1 Create `src/lib/pdf-extract/rejection.ts` — all eight rejection checks in order: size > 10 MB → `TOO_LARGE`; load with `ignoreEncryption: true`, check `isEncrypted` → `ENCRYPTED`, load throws → `INVALID_PDF`; `/XFA` non-empty → `XFA`; pages > 20 → `TOO_MANY_PAGES`; fields > 150 → `TOO_MANY_FIELDS`; `/Sig` widget with value → `SIGNED`; fields === 0 → `NO_FIELDS`
+  - [x] 8.1 Create `src/lib/pdf-extract/rejection.ts` — all eight rejection checks in order: size > 10 MB → `TOO_LARGE`; load with `ignoreEncryption: true`, check `isEncrypted` → `ENCRYPTED`, load throws → `INVALID_PDF`; `/XFA` non-empty → `XFA`; pages > 20 → `TOO_MANY_PAGES`; fields > 150 → `TOO_MANY_FIELDS`; `/Sig` widget with value → `SIGNED`; fields === 0 → `NO_FIELDS`
     - _Requirements: 1.1, 1.2, 1.3_
-  - [ ] 8.2 Wire rejection into `src/lib/pdf-extract/index.ts` — `extractFields(pdfBytes: ArrayBuffer): Promise<ExtractionResult>`
+  - [x] 8.2 Wire rejection into `src/lib/pdf-extract/index.ts` — `extractFields(pdfBytes: ArrayBuffer): Promise<ExtractionResult>`
     - _Requirements: 1.3, 1.4_
   - [ ] 8.3 Write unit tests for each rejection code using fixtures; test > 10 MB fake buffer and non-PDF buffer; confirm `fixtures/sig-empty.pdf` is NOT rejected
     - _Requirements: 1.3_
 
 - [ ] 9. Field evidence extraction
-  - [ ] 9.1 Create `src/lib/pdf-extract/acroform.ts` — fully qualified field names, inherited attributes, widget grouping into `widgets[]`, `/Opt` parsing for both string-array and `[exportValue, displayLabel]` forms, multiline flag, `hasValue` for `/Sig`, required/readOnly flags, list boxes as dropdown
+  - [x] 9.1 Create `src/lib/pdf-extract/acroform.ts` — fully qualified field names, inherited attributes, widget grouping into `widgets[]`, `/Opt` parsing for both string-array and `[exportValue, displayLabel]` forms, multiline flag, `hasValue` for `/Sig`, required/readOnly flags, list boxes as dropdown
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
-  - [ ] 9.2 Create `src/lib/pdf-extract/page-text.ts` — per-widget `pageSnippet`: `PDFPageProxy.getTextContent()`, Euclidean distance sort, concatenate nearest items up to 200 chars; **exclude text drawn by form widget annotations** (existing field values must not appear in the snippet, so they are never sent to the AI)
+  - [x] 9.2 Create `src/lib/pdf-extract/page-text.ts` — per-widget `pageSnippet`: `PDFPageProxy.getTextContent()`, Euclidean distance sort, concatenate nearest items up to 200 chars; **exclude text drawn by form widget annotations** (existing field values must not appear in the snippet, so they are never sent to the AI)
     - _Requirements: 4.1, 4.5, 11.1_
-  - [ ] 9.3 Integrate into `src/lib/pdf-extract/index.ts`: compute SHA-256 once via Web Crypto API, assemble `ExtractionResult` with `fileHash` and `pageCount`
+  - [x] 9.3 Integrate into `src/lib/pdf-extract/index.ts`: compute SHA-256 once via Web Crypto API, assemble `ExtractionResult` with `fileHash` and `pageCount`
     - _Requirements: 4.1, 5.8_
   - [ ] 9.4 Write unit tests for extraction using `fixtures/clinic-registration.pdf` and `fixtures/school-enrolment.pdf`: verify field count, names, widget grouping, `pageSnippet` presence, correct `fieldType` per type; **write a test that a prefilled fixture field's value never appears in the `pageSnippet` or in any `FieldEvidence` property** (privacy test)
     - _Requirements: 4.1, 11.1_

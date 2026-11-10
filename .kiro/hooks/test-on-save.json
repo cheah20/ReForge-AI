@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Run tests on source file save",
+      "trigger": "PostFileSave",
+      "description": "Runs vitest on the test counterpart of any saved src file",
+      "matcher": "src[/\\\\].*\\.(ts|tsx)$",
+      "action": {
+        "type": "command",
+        "command": "node -e \"\nconst fs = require('fs');\nconst path = require('path');\nlet data = '';\nprocess.stdin.on('data', d => data += d);\nprocess.stdin.on('end', () => {\n  try {\n    const event = JSON.parse(data);\n    const filePath = event.file || '';\n    // Map src file to test counterpart\n    const testPath = filePath.replace(/src[/\\\\\\\\]/, 'tests/unit/').replace(/\\\\.tsx?$/, '.test.ts');\n    const altTestPath = filePath.replace(/\\\\.tsx?$/, '.test.ts');\n    const exists = fs.existsSync(testPath) || fs.existsSync(altTestPath);\n    if (exists) {\n      const tp = fs.existsSync(testPath) ? testPath : altTestPath;\n      console.log('Running tests for: ' + tp);\n    }\n  } catch {}\n});\n\"\nnpx vitest run --reporter=verbose 2>&1 | tail -30",
+        "timeout": 60
+      }
+    }
+  ]
+}
