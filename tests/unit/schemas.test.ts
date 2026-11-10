@@ -13,7 +13,9 @@ import {
   AnalyzeRequestSchema,
   AnalyzeResponseSchema,
   RetranslateRequestSchema,
+  RetranslateResponseSchema,
   TranslateRequestSchema,
+  TranslateResponseSchema,
   ApiErrorSchema,
 } from '../../src/shared/schemas.js';
 
@@ -281,5 +283,97 @@ describe('ApiErrorSchema', () => {
       error: { code: 'AI_UNAVAILABLE', message: 'Service temporarily unavailable' },
     });
     expect(result.success).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Review item 11: hash format and bounds on every response string and array
+// ---------------------------------------------------------------------------
+
+describe('contentHash format', () => {
+  it('rejects 64 characters that are not lowercase hex', () => {
+    for (const bad of ['g'.repeat(64), 'A'.repeat(64), ' '.repeat(64)]) {
+      expect(AnalyzeRequestSchema.safeParse(makeAnalyzeRequest({ contentHash: bad })).success, bad).toBe(false);
+      expect(
+        RetranslateRequestSchema.safeParse({ contentHash: bad, fields: [{ fieldId: 'a' }], targetLanguage: 'ms' }).success,
+      ).toBe(false);
+    }
+  });
+
+  it('accepts a real SHA-256 hex digest', () => {
+    const hash = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
+    expect(AnalyzeRequestSchema.safeParse(makeAnalyzeRequest({ contentHash: hash })).success).toBe(true);
+  });
+});
+
+describe('response bounds', () => {
+  const response = (overrides: Record<string, unknown> = {}) => ({
+    fields: [makeFieldAnalysis()],
+    formLanguage: 'ms',
+    formLanguageConfidence: 0.9,
+    formCountry: 'MY',
+    formCountryConfidence: 0.9,
+    ...overrides,
+  });
+
+  it('analyze: at most 30 fields per batch response', () => {
+    const fields = (n: number) => Array.from({ length: n }, (_, i) => makeFieldAnalysis({ fieldId: `f${i}` }));
+    expect(AnalyzeResponseSchema.safeParse(response({ fields: fields(30) })).success).toBe(true);
+    expect(AnalyzeResponseSchema.safeParse(response({ fields: fields(31) })).success).toBe(false);
+  });
+
+  it('analyze: language tag and country code are bounded', () => {
+    expect(AnalyzeResponseSchema.safeParse(response({ formLanguage: '' })).success).toBe(false);
+    expect(AnalyzeResponseSchema.safeParse(response({ formLanguage: 'x'.repeat(21) })).success).toBe(false);
+    expect(AnalyzeResponseSchema.safeParse(response({ formCountry: 'M' })).success).toBe(false);
+  });
+
+  it('retranslate: fieldId, label and question are bounded and non-empty', () => {
+    const one = (o: Record<string, unknown>) => ({
+      fields: [{ fieldId: 'a', humanLabel: 'Name', question: 'What is your name?', ...o }],
+    });
+    expect(RetranslateResponseSchema.safeParse(one({})).success).toBe(true);
+    expect(RetranslateResponseSchema.safeParse(one({ fieldId: '' })).success).toBe(false);
+    expect(RetranslateResponseSchema.safeParse(one({ fieldId: 'x'.repeat(257) })).success).toBe(false);
+    expect(RetranslateResponseSchema.safeParse(one({ humanLabel: '' })).success).toBe(false);
+    expect(RetranslateResponseSchema.safeParse(one({ question: 'x'.repeat(121) })).success).toBe(false);
+  });
+
+  it('retranslate: at most 150 fields', () => {
+    const fields = Array.from({ length: 151 }, (_, i) => ({ fieldId: `f${i}`, humanLabel: 'L', question: 'Q' }));
+    expect(RetranslateResponseSchema.safeParse({ fields }).success).toBe(false);
+  });
+
+  it('translate: translation is non-empty and at most 4000 characters', () => {
+    expect(TranslateResponseSchema.safeParse({ translation: '' }).success).toBe(false);
+    expect(TranslateResponseSchema.safeParse({ translation: 'x'.repeat(4000) }).success).toBe(true);
+    expect(TranslateResponseSchema.safeParse({ translation: 'x'.repeat(4001) }).success).toBe(false);
+  });
+
+  it('error: code and message are bounded', () => {
+    expect(ApiErrorSchema.safeParse({ error: { code: 'x'.repeat(65), message: 'm' } }).success).toBe(false);
+    expect(ApiErrorSchema.safeParse({ error: { code: 'E', message: 'x'.repeat(501) } }).success).toBe(false);
+    expect(ApiErrorSchema.safeParse({ error: { code: '', message: 'm' } }).success).toBe(false);
+  });
+});
+
+describe('visible text (found by Property 1)', () => {
+  it('rejects a whitespace-only humanLabel or question', () => {
+    expect(FieldAnalysisSchema.safeParse(makeFieldAnalysis({ humanLabel: '   ' })).success).toBe(false);
+    expect(FieldAnalysisSchema.safeParse(makeFieldAnalysis({ question: '\n\t ' })).success).toBe(false);
+    expect(
+      RetranslateResponseSchema.safeParse({ fields: [{ fieldId: 'a', humanLabel: ' ', question: 'Q' }] }).success,
+    ).toBe(false);
+  });
+});
+
+describe('evidence markers', () => {
+  it('allows an empty widget list only when the page is unresolved', () => {
+    expect(FieldEvidenceSchema.safeParse(makeFieldEvidence({ widgets: [] })).success).toBe(false);
+    expect(FieldEvidenceSchema.safeParse(makeFieldEvidence({ widgets: [], unresolvedPage: true })).success).toBe(true);
+  });
+
+  it('accepts the multiSelect marker', () => {
+    expect(FieldEvidenceSchema.safeParse(makeFieldEvidence({ fieldType: 'dropdown', multiSelect: true })).success).toBe(true);
   });
 });

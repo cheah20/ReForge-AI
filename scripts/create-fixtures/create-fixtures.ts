@@ -1,1323 +1,663 @@
 /**
  * scripts/create-fixtures/create-fixtures.ts
  *
- * Generates all synthetic AcroForm PDF fixtures for FormBridge tests.
- * Run with: npx tsx scripts/create-fixtures/create-fixtures.ts
+ * Generates the synthetic AcroForm fixtures in fixtures/ from the field tables
+ * in the fixture specification. Every organisation, person and value is invented.
  *
- * Each fixture is specified in fixtures-spec.md. This script creates:
- * - fixtures/clinic-registration.pdf (primary Nov 17 fixture)
- * - fixtures/school-enrolment.pdf
- * - fixtures/no-fields.pdf
- * - fixtures/xfa-acroform.pdf
- * - fixtures/sig-empty.pdf
- * - fixtures/sig-populated.pdf
- * - fixtures/prefilled-field.pdf (decision 20 / fixtures-spec §10)
- * - fixtures/us-community-clinic.pdf (Dec 1 fixture)
+ *   npx tsx scripts/create-fixtures/create-fixtures.ts
  *
- * Note: fixtures/encrypted.pdf is created separately by encrypted.ts using qpdf.
- * Note: fixtures/chinese-school-form.pdf is created by the CJK spike (task 41.3).
+ * Properties:
+ * - Real AcroForm fields and widget annotations; dotted names are real
+ *   parent/child dictionaries (parent /T = first part, terminal /T = rest).
+ * - Noto Sans (SIL OFL 1.1, public/fonts/) is embedded in full and used for the
+ *   page text and as the AcroForm default font, so accented answers can be shown.
+ * - Reproducible: no metadata dates, and pdf-lib's random font-name suffix is
+ *   driven by a fixed seed, so the same script gives byte-identical files
+ *   (checked by tests/unit/fixtures.test.ts).
+ *
+ * fixtures/encrypted.pdf is produced by encrypted.ts (needs qpdf), from the
+ * base built by buildEncryptedBase() below.
  */
 
 import {
-  PDFDocument,
-  PDFName,
   PDFArray,
   PDFDict,
-  PDFString,
-  PDFRef,
+  PDFDocument,
   PDFHexString,
-  StandardFonts,
+  PDFName,
+  PDFRef,
+  PDFString,
   rgb,
-  PDFStream,
-  PDFRawStream,
+  type PDFFont,
+  type PDFPage,
 } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import * as fs from 'fs';
 import * as path from 'path';
+import { pathToFileURL } from 'url';
 
-const FIXTURES_DIR = path.join(process.cwd(), 'fixtures');
+const ROOT = process.cwd();
+const FIXTURES_DIR = path.join(ROOT, 'fixtures');
+const FONT_PATH = path.join(ROOT, 'public', 'fonts', 'NotoSans-Regular.ttf');
+const FONT_KEY = 'NotoSans';
 
-// ---------------------------------------------------------------------------
-// Low-level helpers
-// ---------------------------------------------------------------------------
+const A4: [number, number] = [595.28, 841.89];
+const LETTER: [number, number] = [612, 792];
 
-/** Points to mm helper */
-const mm = (v: number) => v * 2.8346;
+/** Field flag values (PDF 32000-1, 12.7). */
+const FF = { READ_ONLY: 1, REQUIRED: 2, MULTILINE: 4096, NO_TOGGLE_OFF: 16384, RADIO: 32768, COMBO: 131072 };
 
-/** A4 dimensions */
-const A4 = { width: 595.28, height: 841.89 };
-/** US Letter dimensions */
-const LETTER = { width: 612, height: 792 };
+/** Top-origin rectangle [left, top, right, bottom], as in the fixture spec tables. */
+type Box = [number, number, number, number];
 
-/**
- * Draws text on a page at the given position using a standard font.
- * top-origin coordinates (will be converted to PDF bottom-origin).
- */
-function drawText(
-  page: ReturnType<PDFDocument['addPage']>,
-  text: string,
-  x: number,
-  yTop: number,
-  opts: { size?: number; color?: [number, number, number] } = {},
-) {
-  const { height } = page.getSize();
-  page.drawText(text, {
-    x,
-    y: height - yTop,
-    size: opts.size ?? 10,
-    color: rgb(...(opts.color ?? [0, 0, 0])),
-  });
+interface Common {
+  name: string;
+  label: string;
+  tu?: string;
+  required?: boolean;
+  readOnly?: boolean;
 }
 
-/**
- * Converts top-origin [left, top, right, bottom] to PDF native [left, bottom, right, top]
- */
-function toNativeRect(
-  rect: [number, number, number, number],
-  pageHeight: number,
-): [number, number, number, number] {
-  const [l, t, r, b] = rect;
-  return [l, pageHeight - b, r, pageHeight - t];
-}
+type FieldSpec =
+  | (Common & {
+      kind: 'text';
+      rect: Box;
+      maxLen?: number;
+      multiline?: boolean;
+      /** /V (and /DV unless noDefault) with a visible appearance unless noAppearance */
+      value?: string;
+      noDefault?: boolean;
+      noAppearance?: boolean;
+    })
+  | (Common & { kind: 'checkbox'; rect: Box; checked?: boolean })
+  | (Common & { kind: 'radio'; labelAt: [number, number]; options: { exportValue: string; label: string; rect: Box }[] })
+  | (Common & {
+      kind: 'dropdown' | 'listbox';
+      rect: Box;
+      options: [string, string][];
+      selected?: number;
+    })
+  | (Common & { kind: 'signature'; rect: Box; populated?: boolean; appearanceText?: string });
 
-/** Add an AcroForm dict to a document, returning the form's field array */
-function initAcroForm(pdfDoc: PDFDocument): PDFArray {
-  const context = pdfDoc.context;
-  const fieldsArray = context.obj([]);
-  const acroForm = context.obj({
-    Fields: fieldsArray,
-  });
-  const catalog = pdfDoc.catalog;
-  catalog.set(PDFName.of('AcroForm'), pdfDoc.context.register(acroForm));
-  return fieldsArray as PDFArray;
-}
-
-// ---------------------------------------------------------------------------
-// Fixture 5: no-fields.pdf
-// ---------------------------------------------------------------------------
-
-async function createNoFieldsPdf() {
-  const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const page = pdfDoc.addPage([A4.width, A4.height]);
-
-  drawText(page, 'Paper Cloud Fictional Office', 36, 60, { size: 12, color: [0.3, 0.3, 0.3] });
-  drawText(page, 'Synthetic non-interactive form', 36, 90, { size: 18 });
-  drawText(page, 'SYNTHETIC TEST ONLY', 36, 120, { size: 11, color: [0.5, 0, 0] });
-  drawText(page, 'Name', 36, 180, { size: 10 });
-  page.drawRectangle({ x: 36, y: A4.height - 210, width: 200, height: 18, borderColor: rgb(0, 0, 0), borderWidth: 0.5 });
-  drawText(page, 'Date', 36, 240, { size: 10 });
-  page.drawRectangle({ x: 36, y: A4.height - 270, width: 200, height: 18, borderColor: rgb(0, 0, 0), borderWidth: 0.5 });
-
-  const bytes = await pdfDoc.save();
-  fs.writeFileSync(path.join(FIXTURES_DIR, 'no-fields.pdf'), bytes);
-  console.log('Created: no-fields.pdf');
+interface FixtureSpec {
+  file: string;
+  size: [number, number];
+  /** Static text lines: [text, x, baseline (top-origin), size] */
+  text: [string, number, number, number][];
+  fields: FieldSpec[];
+  xfa?: string;
+  /** Extra static rectangles drawn on the page (no-fields fixture). */
+  boxes?: Box[];
 }
 
 // ---------------------------------------------------------------------------
-// Fixture 7: xfa-acroform.pdf  (has both AcroForm + XFA)
+// Fixture definitions (from the fixture specification tables)
 // ---------------------------------------------------------------------------
 
-async function createXfaAcroformPdf() {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([A4.width, A4.height]);
-  drawText(page, 'Paper Cloud Fictional Office', 36, 60, { size: 12, color: [0.3, 0.3, 0.3] });
-  drawText(page, 'Synthetic XFA Detection Form', 36, 90, { size: 18 });
-  drawText(page, 'SYNTHETIC TEST ONLY', 36, 120, { size: 11, color: [0.5, 0, 0] });
+const header = (org: string, title: string, notice: string): FixtureSpec['text'] => [
+  [org, 36, 40, 12],
+  [title, 36, 64, 18],
+  [notice, 36, 82, 9],
+];
 
-  // Create the AcroForm + two regular fields
-  const context = pdfDoc.context;
-  const fieldsArray = context.obj([]) as PDFArray;
+const PROBE_NAME: FieldSpec = { kind: 'text', name: 'probe.name', label: 'Test name', rect: [36, 150, 300, 176], maxLen: 40 };
+const PROBE_REFERENCE: FieldSpec = {
+  kind: 'text',
+  name: 'probe.reference',
+  label: 'Test reference',
+  tu: 'Test reference',
+  rect: [36, 230, 300, 256],
+  maxLen: 12,
+};
 
-  // Field 1: probe.name
-  drawText(page, 'Test name', 36, 140, { size: 10 });
-  const nameWidgetRect = toNativeRect([36, 150, 300, 176], A4.height);
-  const nameWidget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Tx'),
-    Rect: context.obj(nameWidgetRect),
-    T: PDFString.of('probe.name'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    MaxLen: 40,
-    P: pdfDoc.getPage(0).ref,
-  });
-  const nameRef = context.register(nameWidget);
-  fieldsArray.push(nameRef);
-
-  // Field 2: probe.reference
-  drawText(page, 'Test reference', 36, 220, { size: 10 });
-  const refWidgetRect = toNativeRect([36, 230, 300, 256], A4.height);
-  const refWidget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Tx'),
-    Rect: context.obj(refWidgetRect),
-    T: PDFString.of('probe.reference'),
-    TU: PDFString.of('Test reference'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    MaxLen: 12,
-    P: pdfDoc.getPage(0).ref,
-  });
-  const refRef = context.register(refWidget);
-  fieldsArray.push(refRef);
-
-  // Add page Annots
-  pdfDoc.getPage(0).node.set(PDFName.of('Annots'), context.obj([nameRef, refRef]));
-
-  // XFA stream — minimal valid XDP document
-  const xfaXml = `<?xml version="1.0" encoding="UTF-8"?>
+const XDP = `<?xml version="1.0" encoding="UTF-8"?>
 <xdp:xdp xmlns:xdp="http://ns.adobe.com/xdp/">
   <template xmlns="http://www.xfa.org/schema/xfa-template/2.8/">
     <subform name="root">
-      <field name="syntheticField">
-        <ui><textEdit/></ui>
-      </field>
+      <field name="syntheticField"><ui><textEdit/></ui></field>
     </subform>
   </template>
 </xdp:xdp>`;
-  const xfaBytes = Buffer.from(xfaXml, 'utf8');
-  const xfaStream = context.stream(xfaXml);
-  const xfaRef = context.register(xfaStream);
 
-  const fieldsRef = context.register(fieldsArray);
-  const acroForm = context.obj({
-    Fields: fieldsRef,
-    XFA: xfaRef,
-  });
-  pdfDoc.catalog.set(PDFName.of('AcroForm'), context.register(acroForm));
+export const FIXTURES: FixtureSpec[] = [
+  {
+    file: 'clinic-registration.pdf',
+    size: A4,
+    text: [
+      ...header(
+        'Klinik Rekaan Awan Ungu',
+        'Borang Pendaftaran Pesakit',
+        'BORANG UJIAN SINTETIK — organisasi dan semua maklumat adalah rekaan.',
+      ),
+      ['Maklumat Pesakit', 36, 104, 12],
+      ['Maklumat Hubungan', 36, 278, 12],
+      ['Maklumat Lawatan', 36, 486, 12],
+      ['Pengesahan', 36, 636, 12],
+    ],
+    fields: [
+      { kind: 'text', name: 'patient.fullName', label: 'Nama penuh', tu: 'Nama penuh seperti dalam dokumen pengenalan', required: true, maxLen: 70, rect: [36, 132, 330, 154] },
+      { kind: 'text', name: 'Text1', label: 'No. Kad Pengenalan', required: true, maxLen: 12, rect: [350, 132, 559, 154] },
+      { kind: 'text', name: 'patient.birthDate', label: 'Tarikh Lahir (DD/MM/YYYY)', tu: 'Tarikh lahir dalam format DD/MM/YYYY', required: true, maxLen: 10, rect: [36, 182, 190, 204] },
+      {
+        kind: 'radio',
+        name: 'patient.gender',
+        label: 'Jantina',
+        tu: 'Pilih satu pilihan jantina',
+        labelAt: [220, 178],
+        options: [
+          { exportValue: 'F', label: 'Perempuan', rect: [220, 184, 234, 198] },
+          { exportValue: 'M', label: 'Lelaki', rect: [320, 184, 334, 198] },
+          { exportValue: 'X', label: 'Tidak dinyatakan', rect: [400, 184, 414, 198] },
+        ],
+      },
+      { kind: 'text', name: 'clinic.branchCode', label: 'Kod cawangan', tu: 'Kod cawangan klinik', readOnly: true, maxLen: 8, rect: [36, 232, 190, 254], value: 'AU-TEST' },
+      { kind: 'text', name: 'Text7', label: 'Rujukan', maxLen: 8, rect: [350, 232, 559, 254] },
+      { kind: 'text', name: 'contact.mobile', label: 'Telefon bimbit', tu: 'Nombor telefon bimbit Malaysia', required: true, maxLen: 13, rect: [36, 304, 285, 326] },
+      { kind: 'text', name: 'contact.homePhone', label: 'Telefon rumah', tu: 'Nombor telefon talian tetap Malaysia', maxLen: 12, rect: [310, 304, 559, 326] },
+      { kind: 'text', name: 'Text3', label: 'E-mel', maxLen: 80, rect: [36, 354, 559, 376] },
+      { kind: 'text', name: 'contact.address', label: 'Alamat surat-menyurat', tu: 'Alamat seperti yang hendak dicetak', required: true, multiline: true, maxLen: 160, rect: [36, 404, 350, 454] },
+      { kind: 'text', name: 'contact.postcode', label: 'Poskod', tu: 'Poskod Malaysia, lima digit', required: true, maxLen: 5, rect: [375, 404, 459, 426] },
+      { kind: 'text', name: 'contact.city', label: 'Bandar', required: true, maxLen: 40, rect: [375, 444, 559, 466] },
+      {
+        kind: 'dropdown',
+        name: 'contact.state',
+        label: 'Negeri / Wilayah',
+        tu: 'Pilih negeri atau wilayah',
+        required: true,
+        rect: [36, 506, 220, 528],
+        options: [['SGR', 'Selangor'], ['KUL', 'Kuala Lumpur'], ['JHR', 'Johor'], ['OTH', 'Lain-lain']],
+      },
+      { kind: 'text', name: 'visit.date', label: 'Tarikh lawatan', required: true, maxLen: 10, rect: [245, 506, 390, 528] },
+      { kind: 'checkbox', name: 'visit.firstVisit', label: 'Lawatan pertama', tu: 'Adakah ini lawatan pertama?', rect: [420, 510, 434, 524] },
+      { kind: 'checkbox', name: 'medical.allergyFlag', label: 'Ada alahan', rect: [36, 553, 50, 567] },
+      { kind: 'text', name: 'medical.description', label: 'Sebab lawatan / gejala', tu: 'Terangkan sebab lawatan atau gejala', multiline: true, maxLen: 180, rect: [220, 552, 559, 610] },
+      { kind: 'text', name: 'emergency.name', label: 'Nama untuk dihubungi semasa kecemasan', tu: 'Nama orang untuk dihubungi semasa kecemasan', maxLen: 70, rect: [36, 654, 285, 676] },
+      { kind: 'text', name: 'emergency.phone', label: 'Telefon kecemasan', tu: 'Nombor telefon kecemasan Malaysia', maxLen: 13, rect: [310, 654, 559, 676] },
+      { kind: 'checkbox', name: 'consent.contact', label: 'Saya bersetuju untuk dihubungi', tu: 'Persetujuan untuk dihubungi', rect: [36, 704, 50, 718], checked: true },
+      { kind: 'text', name: 'visit.shortCode', label: 'Kod ringkas (maksimum 4 aksara)', tu: 'Kod ringkas, maksimum empat aksara', maxLen: 4, rect: [350, 704, 450, 726] },
+      { kind: 'signature', name: 'consent.signature', label: 'Tandatangan pesakit', tu: 'Tandatangan selepas dicetak', rect: [36, 762, 300, 800] },
+    ],
+  },
+  {
+    file: 'school-enrolment.pdf',
+    size: A4,
+    text: [
+      ...header(
+        'Sekolah Rekaan Pelangi Kertas / Paper Rainbow Fictional School',
+        'School Enrolment / Pendaftaran Sekolah',
+        'SYNTHETIC TEST FORM / BORANG UJIAN SINTETIK',
+      ),
+      ['Student / Murid', 36, 106, 12],
+      ['Preferences and Declaration / Pilihan dan Pengakuan', 36, 410, 12],
+    ],
+    fields: [
+      { kind: 'text', name: 'student.name', label: 'Student name / Nama murid', tu: 'Student name / Nama murid', required: true, maxLen: 70, rect: [36, 140, 559, 164] },
+      { kind: 'text', name: 'Text1', label: 'Birth date / Tarikh lahir (DD/MM/YYYY)', required: true, maxLen: 10, rect: [36, 210, 250, 234] },
+      { kind: 'text', name: 'guardian.email', label: 'Guardian email / E-mel penjaga', tu: 'Guardian email / E-mel penjaga', maxLen: 80, rect: [285, 210, 559, 234] },
+      { kind: 'text', name: 'student.notes', label: 'Learning needs / Keperluan pembelajaran', tu: 'Describe learning needs / Terangkan keperluan pembelajaran', multiline: true, maxLen: 180, rect: [36, 285, 559, 365] },
+      {
+        kind: 'radio',
+        name: 'admission.session',
+        label: 'Session / Sesi',
+        tu: 'Choose one session / Pilih satu sesi',
+        required: true,
+        labelAt: [36, 444],
+        options: [
+          { exportValue: 'AM', label: 'Morning / Pagi', rect: [36, 450, 50, 464] },
+          { exportValue: 'PM', label: 'Afternoon / Petang', rect: [285, 450, 299, 464] },
+        ],
+      },
+      { kind: 'dropdown', name: 'admission.year', label: 'Year / Tahun', required: true, rect: [36, 520, 270, 544], options: [['Y1', 'Year 1 / Tahun 1'], ['Y2', 'Year 2 / Tahun 2']] },
+      {
+        kind: 'listbox',
+        name: 'Text7',
+        label: 'Club / Kelab',
+        tu: 'Choose one club / Pilih satu kelab',
+        rect: [310, 520, 559, 592],
+        options: [['ART', 'Art / Seni'], ['SCI', 'Science / Sains'], ['MUS', 'Music / Muzik']],
+      },
+      { kind: 'checkbox', name: 'consent.trip', label: 'Permit school trips / Benarkan lawatan sekolah', rect: [36, 620, 50, 634] },
+      { kind: 'text', name: 'office.code', label: 'Office code / Kod pejabat', tu: 'Office use / Kegunaan pejabat', readOnly: true, maxLen: 8, rect: [36, 690, 250, 714], value: 'SCH-TST' },
+      { kind: 'signature', name: 'consent.signature', label: 'Guardian signature / Tandatangan penjaga', tu: 'Sign after printing / Tandatangan selepas dicetak', rect: [285, 690, 559, 748] },
+    ],
+  },
+  {
+    file: 'us-community-clinic.pdf',
+    size: LETTER,
+    text: [
+      ...header(
+        'Paper Lantern Fictional Community Clinic',
+        'Community Clinic Intake',
+        'SYNTHETIC TEST FORM — fictional organisation and fictional information only.',
+      ),
+      ['Patient', 36, 104, 12],
+      ['Contact', 36, 298, 12],
+      ['Visit', 36, 530, 12],
+      ['Declaration', 36, 648, 12],
+    ],
+    fields: [
+      { kind: 'text', name: 'patient.fullName', label: 'Full name', tu: 'Name exactly as it should appear on the form', required: true, maxLen: 70, rect: [36, 132, 576, 156] },
+      { kind: 'text', name: 'patient.birthDate', label: 'Date of birth (MM/DD/YYYY)', tu: 'Date of birth, MM/DD/YYYY', required: true, maxLen: 10, rect: [36, 202, 270, 226] },
+      { kind: 'text', name: 'Text1', label: 'Social Security number (NNN-NN-NNNN)', tu: 'Format check only; not identity verification', maxLen: 11, rect: [306, 202, 576, 226] },
+      { kind: 'text', name: 'contact.phone', label: 'US phone number', tu: 'US phone number; country code +1 accepted', required: true, maxLen: 14, rect: [36, 326, 270, 350] },
+      { kind: 'text', name: 'Text7', label: 'ZIP code', tu: 'ZIP or ZIP+4', required: true, maxLen: 10, rect: [306, 326, 456, 350] },
+      { kind: 'text', name: 'contact.email', label: 'Email address', maxLen: 80, rect: [36, 396, 576, 420] },
+      { kind: 'text', name: 'contact.address', label: 'Mailing address', tu: 'Address exactly as it should appear on the form', required: true, multiline: true, maxLen: 160, rect: [36, 450, 330, 500] },
+      { kind: 'text', name: 'contact.city', label: 'City', required: true, maxLen: 40, rect: [354, 450, 576, 474] },
+      { kind: 'dropdown', name: 'contact.state', label: 'State', tu: 'Select a state', required: true, rect: [354, 510, 576, 534], options: [['CA', 'California'], ['NY', 'New York'], ['TX', 'Texas']] },
+      { kind: 'text', name: 'visit.date', label: 'Visit date (MM/DD/YYYY)', tu: 'Visit date, MM/DD/YYYY', required: true, maxLen: 10, rect: [36, 548, 220, 572] },
+      {
+        kind: 'radio',
+        name: 'visit.contactMethod',
+        label: 'Preferred contact method',
+        tu: 'Select one contact method',
+        labelAt: [270, 546],
+        options: [
+          { exportValue: 'P', label: 'Phone', rect: [270, 552, 284, 566] },
+          { exportValue: 'E', label: 'Email', rect: [375, 552, 389, 566] },
+          { exportValue: 'N', label: 'Neither', rect: [475, 552, 489, 566] },
+        ],
+      },
+      { kind: 'text', name: 'visit.reason', label: 'Reason for visit', tu: 'Describe the reason for your visit', multiline: true, maxLen: 180, rect: [36, 670, 330, 732] },
+      { kind: 'checkbox', name: 'consent.reminders', label: 'I agree to appointment reminders', rect: [354, 676, 368, 690] },
+      { kind: 'signature', name: 'consent.signature', label: 'Patient signature', tu: 'Sign after printing', rect: [354, 718, 576, 756] },
+    ],
+  },
+  {
+    file: 'prefilled-field.pdf',
+    size: A4,
+    text: [...header('Paper Cloud Fictional Office', 'Prefilled Value Privacy Test', 'SYNTHETIC TEST ONLY'), ['Test fields', 36, 112, 12]],
+    fields: [
+      // Sentinel values live only in /V, /DV and the widget appearance, never in page text.
+      { kind: 'text', name: 'person.name', label: 'Full name', tu: 'Full name', maxLen: 70, rect: [36, 150, 559, 178], value: 'VALUE_ONLY_CANARY_7Q2' },
+      { kind: 'text', name: 'office.code', label: 'Office code', readOnly: true, maxLen: 40, rect: [36, 250, 559, 278], value: 'RO_ONLY_CANARY_9R4' },
+      { kind: 'text', name: 'Text7', label: 'Reference', maxLen: 40, rect: [36, 350, 559, 378], value: 'NO_AP_CANARY_3M8', noDefault: true, noAppearance: true },
+      { kind: 'checkbox', name: 'consent.contact', label: 'Permit contact', rect: [36, 450, 52, 466], checked: true },
+      { kind: 'dropdown', name: 'office.route', label: 'Routing category', tu: 'Select routing category', rect: [36, 550, 300, 578], options: [['A', 'Category A'], ['B', 'Category B']], selected: 1 },
+    ],
+  },
+  {
+    file: 'no-fields.pdf',
+    size: A4,
+    text: [
+      ...header('Paper Cloud Fictional Office', 'Synthetic non-interactive form', 'SYNTHETIC TEST ONLY'),
+      ['Name', 36, 146, 10],
+      ['Date', 36, 226, 10],
+    ],
+    fields: [],
+    boxes: [
+      [36, 150, 300, 176],
+      [36, 230, 300, 256],
+    ],
+  },
+  {
+    file: 'xfa-acroform.pdf',
+    size: A4,
+    text: header('Paper Cloud Fictional Office', 'Synthetic XFA Detection Form', 'SYNTHETIC TEST ONLY'),
+    fields: [PROBE_NAME, PROBE_REFERENCE],
+    xfa: XDP,
+  },
+  {
+    file: 'sig-empty.pdf',
+    size: A4,
+    text: header('Paper Cloud Fictional Office', 'Unsigned Synthetic Form', 'SYNTHETIC TEST ONLY'),
+    fields: [
+      { ...(PROBE_NAME as FieldSpec & { kind: 'text' }), required: true },
+      { kind: 'signature', name: 'probe.signature', label: 'Signature', tu: 'Sign after printing', rect: [36, 260, 350, 310] },
+    ],
+  },
+  {
+    file: 'sig-populated.pdf',
+    size: A4,
+    text: header('Paper Cloud Fictional Office', 'Populated Signature Detection Form', 'SYNTHETIC TEST ONLY'),
+    fields: [
+      PROBE_NAME,
+      {
+        kind: 'signature',
+        name: 'probe.signature',
+        label: 'Signature',
+        tu: 'Synthetic signature detector test',
+        rect: [36, 260, 350, 310],
+        populated: true,
+        appearanceText: 'SYNTHETIC TEST SIGNATURE',
+      },
+    ],
+  },
+];
 
-  const bytes = await pdfDoc.save();
-  fs.writeFileSync(path.join(FIXTURES_DIR, 'xfa-acroform.pdf'), bytes);
-  console.log('Created: xfa-acroform.pdf');
-}
+/** Base for encrypted.pdf (encrypted afterwards with qpdf). */
+export const ENCRYPTED_BASE: FixtureSpec = {
+  file: 'encrypted-base.pdf',
+  size: A4,
+  text: header('Paper Cloud Fictional Office', 'Encrypted Synthetic Form', 'SYNTHETIC TEST ONLY'),
+  fields: [PROBE_NAME, PROBE_REFERENCE],
+};
 
 // ---------------------------------------------------------------------------
-// Shared helper: create a minimal signature field dict
+// Builder
 // ---------------------------------------------------------------------------
 
-function makeSigField(
-  pdfDoc: PDFDocument,
-  name: string,
-  rectNative: [number, number, number, number],
-  pageRef: PDFRef,
-  populated: boolean,
-) {
-  const context = pdfDoc.context;
+class Builder {
+  readonly fieldsArray: PDFArray;
+  private readonly parents = new Map<string, { ref: PDFRef; dict: PDFDict }>();
 
-  const fieldDict: Record<string, any> = {
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Sig'),
-    Rect: context.obj(rectNative),
-    T: PDFString.of(name),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    P: pageRef,
-  };
-
-  if (populated) {
-    // Minimal populated signature dictionary (structural only; not cryptographically valid)
-    const sigDict = context.obj({
-      Type: PDFName.of('Sig'),
-      Filter: PDFName.of('Adobe.PPKLite'),
-      SubFilter: PDFName.of('adbe.pkcs7.detached'),
-      // Non-empty synthetic Contents (hex) — just enough bytes to look populated
-      Contents: PDFHexString.of('AABBCCDDEEFF00112233445566778899'),
-      // ByteRange: covers the whole file minus the Contents hex
-      ByteRange: context.obj([0, 100, 200, 100]),
-    });
-    fieldDict['V'] = context.register(sigDict);
+  constructor(
+    readonly doc: PDFDocument,
+    readonly page: PDFPage,
+    readonly font: PDFFont,
+    readonly height: number,
+  ) {
+    this.fieldsArray = doc.context.obj([]);
   }
 
-  return context.obj(fieldDict);
-}
-
-// ---------------------------------------------------------------------------
-// Fixture 8: sig-empty.pdf
-// ---------------------------------------------------------------------------
-
-async function createSigEmptyPdf() {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([A4.width, A4.height]);
-  drawText(page, 'Paper Cloud Fictional Office', 36, 60, { size: 12, color: [0.3, 0.3, 0.3] });
-  drawText(page, 'Unsigned Synthetic Form', 36, 90, { size: 18 });
-  drawText(page, 'SYNTHETIC TEST ONLY', 36, 120, { size: 11, color: [0.5, 0, 0] });
-
-  const context = pdfDoc.context;
-  const fieldsArray = context.obj([]) as PDFArray;
-
-  // Field: probe.name (required text)
-  drawText(page, 'Test name', 36, 140, { size: 10 });
-  const nameWidgetRect = toNativeRect([36, 150, 300, 176], A4.height);
-  const nameWidget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Tx'),
-    Ff: 2, // Required flag
-    Rect: context.obj(nameWidgetRect),
-    T: PDFString.of('probe.name'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    MaxLen: 40,
-    P: page.ref,
-  });
-  const nameRef = context.register(nameWidget);
-  fieldsArray.push(nameRef);
-
-  // Signature field: probe.signature (no /V)
-  drawText(page, 'Signature', 36, 250, { size: 10 });
-  drawText(page, 'Sign after printing', 36, 268, { size: 9, color: [0.4, 0.4, 0.4] });
-  const sigRectNative = toNativeRect([36, 260, 350, 310], A4.height);
-  const sigWidget = makeSigField(pdfDoc, 'probe.signature', sigRectNative, page.ref, false);
-  const sigRef = context.register(sigWidget);
-  fieldsArray.push(sigRef);
-
-  page.node.set(PDFName.of('Annots'), context.obj([nameRef, sigRef]));
-  const fieldsRef = context.register(fieldsArray);
-  const acroForm = context.obj({ Fields: fieldsRef });
-  pdfDoc.catalog.set(PDFName.of('AcroForm'), context.register(acroForm));
-
-  const bytes = await pdfDoc.save();
-  fs.writeFileSync(path.join(FIXTURES_DIR, 'sig-empty.pdf'), bytes);
-  console.log('Created: sig-empty.pdf');
-}
-
-// ---------------------------------------------------------------------------
-// Fixture 9: sig-populated.pdf
-// ---------------------------------------------------------------------------
-
-async function createSigPopulatedPdf() {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([A4.width, A4.height]);
-  drawText(page, 'Paper Cloud Fictional Office', 36, 60, { size: 12, color: [0.3, 0.3, 0.3] });
-  drawText(page, 'Populated Signature Detection Form', 36, 90, { size: 18 });
-  drawText(page, 'SYNTHETIC TEST ONLY', 36, 120, { size: 11, color: [0.5, 0, 0] });
-
-  const context = pdfDoc.context;
-  const fieldsArray = context.obj([]) as PDFArray;
-
-  // Field: probe.name
-  drawText(page, 'Test name', 36, 140, { size: 10 });
-  const nameWidgetRect = toNativeRect([36, 150, 300, 176], A4.height);
-  const nameWidget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Tx'),
-    Rect: context.obj(nameWidgetRect),
-    T: PDFString.of('probe.name'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    MaxLen: 40,
-    P: page.ref,
-  });
-  const nameRef = context.register(nameWidget);
-  fieldsArray.push(nameRef);
-
-  // Signature field with synthetic populated /V
-  drawText(page, 'Signature', 36, 250, { size: 10 });
-  drawText(page, 'Synthetic signature detector test', 36, 268, { size: 9, color: [0.4, 0.4, 0.4] });
-  // Draw appearance text inside signature rect
-  const ph = A4.height;
-  page.drawText('SYNTHETIC TEST SIGNATURE', {
-    x: 40,
-    y: ph - 290,
-    size: 9,
-    color: rgb(0.3, 0.3, 0.3),
-  });
-  const sigRectNative = toNativeRect([36, 260, 350, 310], A4.height);
-  const sigWidget = makeSigField(pdfDoc, 'probe.signature', sigRectNative, page.ref, true);
-  const sigRef = context.register(sigWidget);
-  fieldsArray.push(sigRef);
-
-  page.node.set(PDFName.of('Annots'), context.obj([nameRef, sigRef]));
-  const fieldsRef = context.register(fieldsArray);
-  const acroForm = context.obj({ Fields: fieldsRef });
-  pdfDoc.catalog.set(PDFName.of('AcroForm'), context.register(acroForm));
-
-  const bytes = await pdfDoc.save();
-  fs.writeFileSync(path.join(FIXTURES_DIR, 'sig-populated.pdf'), bytes);
-  console.log('Created: sig-populated.pdf');
-}
-
-// ---------------------------------------------------------------------------
-// Fixture 10: prefilled-field.pdf (decision 20 / fixtures-spec §10)
-// ---------------------------------------------------------------------------
-
-async function createPrefilledFieldPdf() {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([A4.width, A4.height]);
-  drawText(page, 'Paper Cloud Fictional Office', 36, 60, { size: 12, color: [0.3, 0.3, 0.3] });
-  drawText(page, 'Prefilled Value Privacy Test', 36, 90, { size: 18 });
-  drawText(page, 'SYNTHETIC TEST ONLY', 36, 120, { size: 11, color: [0.5, 0, 0] });
-  drawText(page, 'Test fields', 36, 100, { size: 12 });
-
-  const context = pdfDoc.context;
-  const fieldsArray = context.obj([]) as PDFArray;
-  const annots: PDFRef[] = [];
-
-  // Helper to build a minimal appearance stream (shows the field value text)
-  function makeTextAppearance(value: string): PDFRef {
-    const streamContent = `BT /Helv 10 Tf 0 0 Td (${value}) Tj ET`;
-    const ap = context.stream(streamContent, { Subtype: PDFName.of('Form') });
-    return context.register(ap);
+  get ctx() {
+    return this.doc.context;
   }
 
-  // Field 1: person.name — editable, has /V + /DV + visible appearance
-  // CRITICAL: sentinel VALUE_ONLY_CANARY_7Q2 is ONLY in field /V, never in labels/tooltips/nearby text
-  drawText(page, 'Full name', 36, 140, { size: 10 });
-  const nameRect = toNativeRect([36, 150, 559, 178], A4.height);
-  const nameApRef = makeTextAppearance('VALUE_ONLY_CANARY_7Q2');
-  const nameWidget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Tx'),
-    Rect: context.obj(nameRect),
-    T: PDFString.of('person.name'),
-    TU: PDFString.of('Full name'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    MaxLen: 70,
-    V: PDFString.of('VALUE_ONLY_CANARY_7Q2'),
-    DV: PDFString.of('VALUE_ONLY_CANARY_7Q2'),
-    AP: context.obj({ N: nameApRef }),
-    P: page.ref,
-  });
-  const nameRef = context.register(nameWidget);
-  fieldsArray.push(nameRef);
-  annots.push(nameRef);
+  /** Native PDF rect [l, b, r, t] from a top-origin box. */
+  native([l, t, r, b]: Box): [number, number, number, number] {
+    return [l, this.height - b, r, this.height - t];
+  }
 
-  // Field 2: office.code — read-only, has /V + /DV + visible appearance
-  drawText(page, 'Office code', 36, 240, { size: 10 });
-  const officeRect = toNativeRect([36, 250, 559, 278], A4.height);
-  const officeApRef = makeTextAppearance('RO_ONLY_CANARY_9R4');
-  const officeWidget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Tx'),
-    Ff: 1, // ReadOnly
-    Rect: context.obj(officeRect),
-    T: PDFString.of('office.code'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    MaxLen: 40,
-    V: PDFString.of('RO_ONLY_CANARY_9R4'),
-    DV: PDFString.of('RO_ONLY_CANARY_9R4'),
-    AP: context.obj({ N: officeApRef }),
-    P: page.ref,
-  });
-  const officeRef = context.register(officeWidget);
-  fieldsArray.push(officeRef);
-  annots.push(officeRef);
+  text(str: string, x: number, baseline: number, size: number): void {
+    this.page.drawText(str, { x, y: this.height - baseline, size, font: this.font, color: rgb(0, 0, 0) });
+  }
 
-  // Field 3: Text7 — editable, has /V but NO /AP, NO /DV
-  drawText(page, 'Reference', 36, 340, { size: 10 });
-  const text7Rect = toNativeRect([36, 350, 559, 378], A4.height);
-  const text7Widget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Tx'),
-    Rect: context.obj(text7Rect),
-    T: PDFString.of('Text7'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    MaxLen: 40,
-    V: PDFString.of('NO_AP_CANARY_3M8'),
-    // Intentionally NO /AP and NO /DV
-    P: page.ref,
-  });
-  const text7Ref = context.register(text7Widget);
-  fieldsArray.push(text7Ref);
-  annots.push(text7Ref);
+  border(box: Box): void {
+    const [l, b, r, t] = this.native(box);
+    this.page.drawRectangle({ x: l, y: b, width: r - l, height: t - b, borderColor: rgb(0.25, 0.25, 0.25), borderWidth: 0.75 });
+  }
 
-  // Field 4: consent.contact — checkbox, initially /Yes
-  drawText(page, 'Permit contact', 54, 452, { size: 10 });
-  const cbRect = toNativeRect([36, 450, 52, 466], A4.height);
-  const cbWidget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Btn'),
-    Rect: context.obj(cbRect),
-    T: PDFString.of('consent.contact'),
-    V: PDFName.of('Yes'),
-    AS: PDFName.of('Yes'),
-    AP: context.obj({
-      N: context.obj({
-        Yes: context.register(context.stream('0.5 g\n0 0 12 12 re\nf\n0 g\n2 2 8 8 re\nf', { Subtype: PDFName.of('Form') })),
-        Off: context.register(context.stream('0 g\n0 0 12 12 re\nS', { Subtype: PDFName.of('Form') })),
-      }),
-    }),
-    P: page.ref,
-  });
-  const cbRef = context.register(cbWidget);
-  fieldsArray.push(cbRef);
-  annots.push(cbRef);
+  /** A form XObject appearance stream of the given size. */
+  appearance(width: number, height: number, content: string, withFont = false): PDFRef {
+    const dict: Record<string, unknown> = {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, width, height],
+    };
+    if (withFont) {
+      dict['Resources'] = this.ctx.obj({ Font: this.ctx.obj({ [FONT_KEY]: this.font.ref }) });
+    }
+    return this.ctx.register(this.ctx.stream(content, dict as never));
+  }
 
-  // Field 5: office.route — dropdown with initial /V=B, /I=[1]
-  drawText(page, 'Routing category', 36, 540, { size: 10 });
-  const routeRect = toNativeRect([36, 550, 300, 578], A4.height);
-  const routeWidget = context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Widget'),
-    FT: PDFName.of('Ch'),
-    Ff: 131072, // Combo flag
-    Rect: context.obj(routeRect),
-    T: PDFString.of('office.route'),
-    TU: PDFString.of('Select routing category'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    Opt: context.obj([
-      context.obj([PDFString.of('A'), PDFString.of('Category A')]),
-      context.obj([PDFString.of('B'), PDFString.of('Category B')]),
-    ]),
-    V: PDFString.of('B'),
-    I: context.obj([1]),
-    P: page.ref,
-  });
-  const routeRef = context.register(routeWidget);
-  fieldsArray.push(routeRef);
-  annots.push(routeRef);
+  /** Text appearance showing `value` on one line. */
+  textAppearance(w: number, h: number, value: string): PDFRef {
+    const hex = (this.font.encodeText(value) as PDFHexString).toString();
+    const y = (h - 10) / 2 + 2.5;
+    return this.appearance(w, h, `/Tx BMC q BT /${FONT_KEY} 10 Tf 0 g 3 ${y.toFixed(2)} Td ${hex} Tj ET Q EMC`, true);
+  }
 
-  page.node.set(PDFName.of('Annots'), context.obj(annots));
-  const fieldsRef = context.register(fieldsArray);
-  const acroForm = context.obj({ Fields: fieldsRef });
-  pdfDoc.catalog.set(PDFName.of('AcroForm'), context.register(acroForm));
+  /** Parent node for a dotted name (created once), and the terminal's partial name. */
+  parentFor(name: string): { parent?: { ref: PDFRef; dict: PDFDict }; partial: string } {
+    const dot = name.indexOf('.');
+    if (dot < 0) return { partial: name };
+    const head = name.slice(0, dot);
+    let parent = this.parents.get(head);
+    if (!parent) {
+      const dict = this.ctx.obj({ T: PDFString.of(head), Kids: this.ctx.obj([]) });
+      const ref = this.ctx.register(dict);
+      this.fieldsArray.push(ref);
+      parent = { ref, dict };
+      this.parents.set(head, parent);
+    }
+    return { parent, partial: name.slice(dot + 1) };
+  }
 
-  const bytes = await pdfDoc.save();
-  fs.writeFileSync(path.join(FIXTURES_DIR, 'prefilled-field.pdf'), bytes);
-  console.log('Created: prefilled-field.pdf');
-}
-
-// ---------------------------------------------------------------------------
-// Fixture 2: school-enrolment.pdf
-// ---------------------------------------------------------------------------
-
-async function createSchoolEnrolmentPdf() {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([A4.width, A4.height]);
-
-  drawText(page, 'Sekolah Rekaan Pelangi Kertas / Paper Rainbow Fictional School', 36, 60, { size: 11, color: [0.3, 0.3, 0.3] });
-  drawText(page, 'School Enrolment / Pendaftaran Sekolah', 36, 82, { size: 16 });
-  drawText(page, 'SYNTHETIC TEST FORM / BORANG UJIAN SINTETIK', 36, 105, { size: 10, color: [0.5, 0, 0] });
-  drawText(page, 'Student / Murid', 36, 130, { size: 12 });
-  drawText(page, 'Preferences and Declaration / Pilihan dan Pengakuan', 36, 425, { size: 12 });
-
-  const context = pdfDoc.context;
-  const fieldsArray = context.obj([]) as PDFArray;
-  const annots: PDFRef[] = [];
-
-  function addField(fieldDict: Record<string, any>): PDFRef {
-    const widget = context.obj(fieldDict);
-    const ref = context.register(widget);
-    fieldsArray.push(ref);
-    annots.push(ref);
+  /** Register a terminal field node, attach it to its parent or /Fields, and list widgets in /Annots. */
+  addField(name: string, entries: Record<string, unknown>, widgets: PDFRef[] | 'self'): PDFRef {
+    const { parent, partial } = this.parentFor(name);
+    const dict = this.ctx.obj({
+      T: PDFString.of(partial),
+      ...(parent ? { Parent: parent.ref } : {}),
+      ...entries,
+    } as never) as unknown as PDFDict;
+    const ref = this.ctx.register(dict);
+    if (parent) parent.dict.lookup(PDFName.of('Kids'), PDFArray).push(ref);
+    else this.fieldsArray.push(ref);
+    this.annots.push(...(widgets === 'self' ? [ref] : widgets));
     return ref;
   }
 
-  // 1. student.name
-  drawText(page, 'Student name / Nama murid', 36, 150, { size: 10 });
-  const snRef = addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2, // Required
-    Rect: context.obj(toNativeRect([36, 160, 559, 184], A4.height)),
-    T: PDFString.of('student.name'), TU: PDFString.of('Student name / Nama murid'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 70, P: page.ref,
-  });
+  readonly annots: PDFRef[] = [];
 
-  // 2. Text1 — birth date
-  drawText(page, 'Birth date / Tarikh lahir (DD/MM/YYYY)', 36, 200, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2,
-    Rect: context.obj(toNativeRect([36, 210, 250, 234], A4.height)),
-    T: PDFString.of('Text1'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 10, P: page.ref,
-  });
+  widgetEntries(box: Box, extra: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      Type: PDFName.of('Annot'),
+      Subtype: PDFName.of('Widget'),
+      Rect: this.ctx.obj(this.native(box)),
+      F: 4, // Print
+      P: this.page.ref,
+      ...extra,
+    };
+  }
 
-  // 3. guardian.email
-  drawText(page, 'Guardian email / E-mel penjaga', 285, 200, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Rect: context.obj(toNativeRect([285, 210, 559, 234], A4.height)),
-    T: PDFString.of('guardian.email'), TU: PDFString.of('Guardian email / E-mel penjaga'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 80, P: page.ref,
-  });
+  flags(spec: Common, extra = 0): number {
+    return (spec.readOnly ? FF.READ_ONLY : 0) | (spec.required ? FF.REQUIRED : 0) | extra;
+  }
 
-  // 4. student.notes — multiline
-  drawText(page, 'Learning needs / Keperluan pembelajaran', 36, 258, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 4096, // Multiline
-    Rect: context.obj(toNativeRect([36, 268, 559, 348], A4.height)),
-    T: PDFString.of('student.notes'),
-    TU: PDFString.of('Describe learning needs / Terangkan keperluan pembelajaran'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 180, P: page.ref,
-  });
+  common(spec: Common): Record<string, unknown> {
+    return spec.tu ? { TU: PDFString.of(spec.tu) } : {};
+  }
 
-  // 5. admission.session — radio group
-  drawText(page, 'Session / Sesi', 36, 452, { size: 10 });
-  drawText(page, 'Morning / Pagi', 54, 468, { size: 10 });
-  drawText(page, 'Afternoon / Petang', 299, 468, { size: 10 });
-  // Radio parent field
-  const sessionParent = context.obj({
-    FT: PDFName.of('Btn'),
-    Ff: 32768, // Radio
-    T: PDFString.of('admission.session'),
-    TU: PDFString.of('Choose one session / Pilih satu sesi'),
-    Ff2: 2, // Required
-    Kids: context.obj([]),
-  });
-  const sessionParentRef = context.register(sessionParent);
-  fieldsArray.push(sessionParentRef);
+  /**
+   * Label baseline 6pt above the field. Closer labels would have their descent
+   * within the 2pt privacy margin of the widget and be dropped from snippets.
+   */
+  labelAbove(label: string, box: Box): void {
+    this.text(label, box[0], box[1] - 6, 10);
+  }
 
-  const sessionKids = sessionParent.get(PDFName.of('Kids')) as PDFArray;
+  labelRight(label: string, box: Box): void {
+    this.text(label, box[2] + 4, (box[1] + box[3]) / 2 + 3.5, 10);
+  }
 
-  const amWidget = context.obj({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'),
-    Parent: sessionParentRef,
-    Rect: context.obj(toNativeRect([36, 460, 50, 474], A4.height)),
-    AS: PDFName.of('Off'),
-    AP: context.obj({ N: context.obj({ AM: context.register(context.stream('0 g\n3 3 6 6 re\nf')), Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')) }) }),
-    P: page.ref,
-  });
-  const amRef = context.register(amWidget);
-  sessionKids.push(amRef);
-  annots.push(amRef);
-
-  const pmWidget = context.obj({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'),
-    Parent: sessionParentRef,
-    Rect: context.obj(toNativeRect([285, 460, 299, 474], A4.height)),
-    AS: PDFName.of('Off'),
-    AP: context.obj({ N: context.obj({ PM: context.register(context.stream('0 g\n3 3 6 6 re\nf')), Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')) }) }),
-    P: page.ref,
-  });
-  const pmRef = context.register(pmWidget);
-  sessionKids.push(pmRef);
-  annots.push(pmRef);
-
-  // 6. admission.year — dropdown
-  drawText(page, 'Year / Tahun', 36, 510, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Ch'),
-    Ff: 131074, // Combo + Required
-    Rect: context.obj(toNativeRect([36, 520, 270, 544], A4.height)),
-    T: PDFString.of('admission.year'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    Opt: context.obj([
-      context.obj([PDFString.of('Y1'), PDFString.of('Year 1 / Tahun 1')]),
-      context.obj([PDFString.of('Y2'), PDFString.of('Year 2 / Tahun 2')]),
-    ]),
-    P: page.ref,
-  });
-
-  // 7. Text7 — single-select list box (Ch, no Combo flag)
-  drawText(page, 'Club / Kelab', 310, 510, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Ch'),
-    Ff: 0, // No Combo, no MultiSelect
-    Rect: context.obj(toNativeRect([310, 520, 559, 592], A4.height)),
-    T: PDFString.of('Text7'),
-    TU: PDFString.of('Choose one club / Pilih satu kelab'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    Opt: context.obj([
-      context.obj([PDFString.of('ART'), PDFString.of('Art / Seni')]),
-      context.obj([PDFString.of('SCI'), PDFString.of('Science / Sains')]),
-      context.obj([PDFString.of('MUS'), PDFString.of('Music / Muzik')]),
-    ]),
-    P: page.ref,
-  });
-
-  // 8. consent.trip — checkbox
-  drawText(page, 'Permit school trips / Benarkan lawatan sekolah', 54, 634, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Btn'),
-    Rect: context.obj(toNativeRect([36, 620, 50, 634], A4.height)),
-    T: PDFString.of('consent.trip'),
-    V: PDFName.of('Off'), AS: PDFName.of('Off'),
-    AP: context.obj({ N: context.obj({
-      Yes: context.register(context.stream('0.5 g\n0 0 12 12 re\nf\n0 g\n2 2 8 8 re\nf')),
-      Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')),
-    })}),
-    P: page.ref,
-  });
-
-  // 9. office.code — read-only
-  drawText(page, 'Office code / Kod pejabat', 36, 700, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 1, // ReadOnly
-    Rect: context.obj(toNativeRect([36, 710, 250, 734], A4.height)),
-    T: PDFString.of('office.code'),
-    TU: PDFString.of('Office use / Kegunaan pejabat'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    MaxLen: 8, V: PDFString.of('SCH-TST'), DV: PDFString.of('SCH-TST'),
-    P: page.ref,
-  });
-
-  // 10. consent.signature — signature
-  drawText(page, 'Guardian signature / Tandatangan penjaga', 285, 700, { size: 10 });
-  const sigRectNative = toNativeRect([285, 710, 559, 768], A4.height);
-  const sigWidget = makeSigField(pdfDoc, 'consent.signature', sigRectNative, page.ref, false);
-  const sigRef = context.register(sigWidget);
-  fieldsArray.push(sigRef);
-  annots.push(sigRef);
-
-  page.node.set(PDFName.of('Annots'), context.obj(annots));
-  const fieldsRef = context.register(fieldsArray);
-  const acroForm = context.obj({ Fields: fieldsRef });
-  pdfDoc.catalog.set(PDFName.of('AcroForm'), context.register(acroForm));
-
-  const bytes = await pdfDoc.save();
-  fs.writeFileSync(path.join(FIXTURES_DIR, 'school-enrolment.pdf'), bytes);
-  console.log('Created: school-enrolment.pdf');
+  add(spec: FieldSpec): void {
+    const ctx = this.ctx;
+    switch (spec.kind) {
+      case 'text': {
+        this.labelAbove(spec.label, spec.rect);
+        this.border(spec.rect);
+        const [l, t, r, b] = spec.rect;
+        const entries: Record<string, unknown> = {
+          FT: PDFName.of('Tx'),
+          Ff: this.flags(spec, spec.multiline ? FF.MULTILINE : 0),
+          DA: PDFString.of(`/${FONT_KEY} 10 Tf 0 g`),
+          ...this.common(spec),
+          ...(spec.maxLen ? { MaxLen: spec.maxLen } : {}),
+          ...this.widgetEntries(spec.rect),
+        };
+        if (spec.value !== undefined) {
+          entries['V'] = PDFString.of(spec.value);
+          if (!spec.noDefault) entries['DV'] = PDFString.of(spec.value);
+          if (!spec.noAppearance) entries['AP'] = ctx.obj({ N: this.textAppearance(r - l, b - t, spec.value) });
+        }
+        this.addField(spec.name, entries, 'self');
+        return;
+      }
+      case 'checkbox': {
+        this.labelRight(spec.label, spec.rect);
+        const [l, t, r, b] = spec.rect;
+        const w = r - l;
+        const h = b - t;
+        const box = `0 G 0.75 w 0.5 0.5 ${w - 1} ${h - 1} re S`;
+        const tick = `${box} 0 g 1.5 w ${w * 0.2} ${h * 0.5} m ${w * 0.42} ${h * 0.25} l ${w * 0.8} ${h * 0.8} l S`;
+        const state = spec.checked ? 'Yes' : 'Off';
+        this.addField(
+          spec.name,
+          {
+            FT: PDFName.of('Btn'),
+            Ff: this.flags(spec),
+            ...this.common(spec),
+            V: PDFName.of(state),
+            AS: PDFName.of(state),
+            AP: ctx.obj({ N: ctx.obj({ Yes: this.appearance(w, h, tick), Off: this.appearance(w, h, box) }) }),
+            ...this.widgetEntries(spec.rect),
+          },
+          'self',
+        );
+        return;
+      }
+      case 'radio': {
+        this.text(spec.label, spec.labelAt[0], spec.labelAt[1], 10);
+        const widgetRefs: PDFRef[] = [];
+        const fieldRef = this.addField(
+          spec.name,
+          {
+            FT: PDFName.of('Btn'),
+            Ff: this.flags(spec, FF.RADIO | FF.NO_TOGGLE_OFF),
+            ...this.common(spec),
+            V: PDFName.of('Off'),
+            Kids: ctx.obj([]),
+          },
+          widgetRefs,
+        );
+        const fieldDict = ctx.lookup(fieldRef, PDFDict);
+        const kids = fieldDict.lookup(PDFName.of('Kids'), PDFArray);
+        for (const opt of spec.options) {
+          this.labelRight(opt.label, opt.rect);
+          const [l, t, r, b] = opt.rect;
+          const w = r - l;
+          const h = b - t;
+          const ring = `0 G 0.75 w 0.5 0.5 ${w - 1} ${h - 1} re S`;
+          const on = `${ring} 0 g ${w * 0.25} ${h * 0.25} ${w * 0.5} ${h * 0.5} re f`;
+          const n = ctx.obj({});
+          n.set(PDFName.of(opt.exportValue), this.appearance(w, h, on));
+          n.set(PDFName.of('Off'), this.appearance(w, h, ring));
+          const ref = ctx.register(
+            ctx.obj({ ...this.widgetEntries(opt.rect), Parent: fieldRef, AS: PDFName.of('Off'), AP: ctx.obj({ N: n }) } as never),
+          );
+          kids.push(ref);
+          widgetRefs.push(ref);
+        }
+        this.annots.push(...widgetRefs);
+        return;
+      }
+      case 'dropdown':
+      case 'listbox': {
+        this.labelAbove(spec.label, spec.rect);
+        this.border(spec.rect);
+        const entries: Record<string, unknown> = {
+          FT: PDFName.of('Ch'),
+          Ff: this.flags(spec, spec.kind === 'dropdown' ? FF.COMBO : 0),
+          DA: PDFString.of(`/${FONT_KEY} 10 Tf 0 g`),
+          ...this.common(spec),
+          Opt: ctx.obj(spec.options.map(([e, d]) => ctx.obj([PDFString.of(e), PDFString.of(d)]))),
+          ...this.widgetEntries(spec.rect),
+        };
+        if (spec.selected !== undefined) {
+          entries['V'] = PDFString.of(spec.options[spec.selected]![0]);
+          entries['I'] = ctx.obj([spec.selected]);
+        }
+        this.addField(spec.name, entries, 'self');
+        return;
+      }
+      case 'signature': {
+        this.labelAbove(spec.label, spec.rect);
+        this.border(spec.rect);
+        const [l, t, r, b] = spec.rect;
+        const entries: Record<string, unknown> = {
+          FT: PDFName.of('Sig'),
+          Ff: this.flags(spec),
+          ...this.common(spec),
+          ...this.widgetEntries(spec.rect),
+        };
+        if (spec.populated) {
+          // Structurally populated signature dictionary. It is not a cryptographic
+          // signature; the detector rejects on a /V dictionary, not on validity.
+          entries['V'] = ctx.register(
+            ctx.obj({
+              Type: PDFName.of('Sig'),
+              Filter: PDFName.of('Adobe.PPKLite'),
+              SubFilter: PDFName.of('adbe.pkcs7.detached'),
+              Contents: PDFHexString.of('30'.padEnd(512, '0')),
+              ByteRange: ctx.obj([0, 1000, 1514, 1000]),
+            }),
+          );
+        }
+        if (spec.appearanceText) {
+          entries['AP'] = ctx.obj({ N: this.textAppearance(r - l, b - t, spec.appearanceText) });
+        }
+        this.addField(spec.name, entries, 'self');
+        return;
+      }
+    }
+  }
 }
 
-// ---------------------------------------------------------------------------
-// Fixture 1: clinic-registration.pdf (primary Nov 17)
-// ---------------------------------------------------------------------------
-
-async function createClinicRegistrationPdf() {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([A4.width, A4.height]);
-
-  // Page header
-  drawText(page, 'Klinik Rekaan Awan Ungu', 36, 48, { size: 12, color: [0.3, 0.3, 0.3] });
-  drawText(page, 'Borang Pendaftaran Pesakit', 36, 68, { size: 18 });
-  drawText(page, 'BORANG UJIAN SINTETIK — organisasi dan semua maklumat adalah rekaan.', 36, 90, { size: 9, color: [0.5, 0, 0] });
-
-  // Section headings (at approx y positions per spec)
-  drawText(page, 'Maklumat Pesakit', 36, 112, { size: 12 });
-  drawText(page, 'Maklumat Hubungan', 36, 284, { size: 12 });
-  drawText(page, 'Maklumat Lawatan', 36, 486, { size: 12 });
-  drawText(page, 'Pengesahan', 36, 634, { size: 12 });
-
-  const context = pdfDoc.context;
-  const fieldsArray = context.obj([]) as PDFArray;
-  const annots: PDFRef[] = [];
-
-  function addField(fd: Record<string, any>): PDFRef {
-    const w = context.obj(fd);
-    const r = context.register(w);
-    fieldsArray.push(r);
-    annots.push(r);
-    return r;
+/** Run `fn` with Math.random replaced by a fixed-seed generator (mulberry32). */
+async function withSeededRandom<T>(seed: number, fn: () => Promise<T>): Promise<T> {
+  const original = Math.random;
+  let a = seed >>> 0;
+  Math.random = () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  try {
+    return await fn();
+  } finally {
+    Math.random = original;
   }
-
-  // --- Patient info section ---
-
-  // patient.fullName (hierarchy: parent T=patient, child T=fullName)
-  drawText(page, 'Nama penuh', 36, 122, { size: 10 });
-  const patientParent = context.obj({ T: PDFString.of('patient'), Kids: context.obj([]) });
-  const patientParentRef = context.register(patientParent);
-  fieldsArray.push(patientParentRef);
-
-  const patientKids = patientParent.get(PDFName.of('Kids')) as PDFArray;
-
-  const fullNameWidget = context.obj({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: patientParentRef,
-    Ff: 2, // Required
-    Rect: context.obj(toNativeRect([36, 132, 330, 154], A4.height)),
-    T: PDFString.of('fullName'),
-    TU: PDFString.of('Nama penuh seperti dalam dokumen pengenalan'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 70, P: page.ref,
-  });
-  const fullNameRef = context.register(fullNameWidget);
-  patientKids.push(fullNameRef);
-  annots.push(fullNameRef);
-
-  // Text1 — IC number (no meaningful parent, flat field)
-  drawText(page, 'No. Kad Pengenalan', 350, 122, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2,
-    Rect: context.obj(toNativeRect([350, 132, 559, 154], A4.height)),
-    T: PDFString.of('Text1'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 12, P: page.ref,
-  });
-
-  // patient.birthDate
-  drawText(page, 'Tarikh Lahir (DD/MM/YYYY)', 36, 172, { size: 10 });
-  const birthDateWidget = context.obj({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: patientParentRef,
-    Ff: 2,
-    Rect: context.obj(toNativeRect([36, 182, 190, 204], A4.height)),
-    T: PDFString.of('birthDate'),
-    TU: PDFString.of('Tarikh lahir dalam format DD/MM/YYYY'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 10, P: page.ref,
-  });
-  const birthDateRef = context.register(birthDateWidget);
-  patientKids.push(birthDateRef);
-  annots.push(birthDateRef);
-
-  // patient.gender — radio group
-  drawText(page, 'Jantina', 36, 174, { size: 10 });
-  drawText(page, 'Perempuan', 238, 192, { size: 10 });
-  drawText(page, 'Lelaki', 338, 192, { size: 10 });
-  drawText(page, 'Tidak dinyatakan', 418, 192, { size: 10 });
-  const genderParent = context.obj({
-    FT: PDFName.of('Btn'), Ff: 32768, // Radio
-    Parent: patientParentRef,
-    T: PDFString.of('gender'),
-    TU: PDFString.of('Pilih satu pilihan jantina'),
-    Kids: context.obj([]),
-  });
-  const genderParentRef = context.register(genderParent);
-  patientKids.push(genderParentRef);
-
-  const genderKids = genderParent.get(PDFName.of('Kids')) as PDFArray;
-  for (const [xLeft, exportVal] of [[220, 'F'], [320, 'M'], [400, 'X']] as [number, string][]) {
-    const w = context.obj({
-      Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'),
-      Parent: genderParentRef,
-      Rect: context.obj(toNativeRect([xLeft, 184, xLeft + 14, 198], A4.height)),
-      AS: PDFName.of('Off'),
-      AP: context.obj({ N: context.obj({
-        [exportVal]: context.register(context.stream('0 g\n3 3 6 6 re\nf')),
-        Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')),
-      })}),
-      P: page.ref,
-    });
-    const wRef = context.register(w);
-    genderKids.push(wRef);
-    annots.push(wRef);
-  }
-
-  // clinic.branchCode — read-only, flat field
-  drawText(page, 'Kod cawangan', 36, 222, { size: 10 });
-  const clinicParent = context.obj({ T: PDFString.of('clinic'), Kids: context.obj([]) });
-  const clinicParentRef = context.register(clinicParent);
-  fieldsArray.push(clinicParentRef);
-  const branchCodeWidget = context.obj({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 1, // ReadOnly
-    Rect: context.obj(toNativeRect([36, 232, 190, 254], A4.height)),
-    Parent: clinicParentRef,
-    T: PDFString.of('branchCode'),
-    TU: PDFString.of('Kod cawangan klinik'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 8,
-    V: PDFString.of('AU-TEST'), DV: PDFString.of('AU-TEST'),
-    P: page.ref,
-  });
-  const branchCodeRef = context.register(branchCodeWidget);
-  (clinicParent.get(PDFName.of('Kids')) as PDFArray).push(branchCodeRef);
-  annots.push(branchCodeRef);
-
-  // Text7 — reference code (flat, no /TU)
-  drawText(page, 'Rujukan', 350, 222, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Rect: context.obj(toNativeRect([350, 232, 559, 254], A4.height)),
-    T: PDFString.of('Text7'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 8, P: page.ref,
-  });
-
-  // --- Contact info section ---
-
-  // contact.mobile
-  drawText(page, 'Telefon bimbit', 36, 294, { size: 10 });
-  const contactParent = context.obj({ T: PDFString.of('contact'), Kids: context.obj([]) });
-  const contactParentRef = context.register(contactParent);
-  fieldsArray.push(contactParentRef);
-  const contactKids = contactParent.get(PDFName.of('Kids')) as PDFArray;
-
-  function addContactField(fd: Record<string, any>): PDFRef {
-    const w = context.obj(fd);
-    const r = context.register(w);
-    contactKids.push(r);
-    annots.push(r);
-    return r;
-  }
-
-  addContactField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: contactParentRef,
-    Ff: 2,
-    Rect: context.obj(toNativeRect([36, 304, 285, 326], A4.height)),
-    T: PDFString.of('mobile'),
-    TU: PDFString.of('Nombor telefon bimbit Malaysia'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 13, P: page.ref,
-  });
-
-  // contact.homePhone
-  drawText(page, 'Telefon rumah', 310, 294, { size: 10 });
-  addContactField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: contactParentRef,
-    Rect: context.obj(toNativeRect([310, 304, 559, 326], A4.height)),
-    T: PDFString.of('homePhone'),
-    TU: PDFString.of('Nombor telefon talian tetap Malaysia'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 12, P: page.ref,
-  });
-
-  // Text3 — email (flat, no /TU)
-  drawText(page, 'E-mel', 36, 344, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Rect: context.obj(toNativeRect([36, 354, 559, 376], A4.height)),
-    T: PDFString.of('Text3'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 80, P: page.ref,
-  });
-
-  // contact.address — multiline
-  drawText(page, 'Alamat surat-menyurat', 36, 394, { size: 10 });
-  addContactField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: contactParentRef,
-    Ff: 4098, // Multiline + Required
-    Rect: context.obj(toNativeRect([36, 404, 350, 454], A4.height)),
-    T: PDFString.of('address'),
-    TU: PDFString.of('Alamat seperti yang hendak dicetak'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 160, P: page.ref,
-  });
-
-  // contact.postcode
-  drawText(page, 'Poskod', 375, 394, { size: 10 });
-  addContactField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: contactParentRef,
-    Ff: 2,
-    Rect: context.obj(toNativeRect([375, 404, 459, 426], A4.height)),
-    T: PDFString.of('postcode'),
-    TU: PDFString.of('Poskod Malaysia, lima digit'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 5, P: page.ref,
-  });
-
-  // contact.city
-  drawText(page, 'Bandar', 375, 434, { size: 10 });
-  addContactField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: contactParentRef,
-    Ff: 2,
-    Rect: context.obj(toNativeRect([375, 444, 559, 466], A4.height)),
-    T: PDFString.of('city'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 40, P: page.ref,
-  });
-
-  // contact.state — dropdown
-  drawText(page, 'Negeri / Wilayah', 36, 496, { size: 10 });
-  addContactField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Ch'),
-    Parent: contactParentRef,
-    Ff: 131074, // Combo + Required
-    Rect: context.obj(toNativeRect([36, 506, 220, 528], A4.height)),
-    T: PDFString.of('state'),
-    TU: PDFString.of('Pilih negeri atau wilayah'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    Opt: context.obj([
-      context.obj([PDFString.of('SGR'), PDFString.of('Selangor')]),
-      context.obj([PDFString.of('KUL'), PDFString.of('Kuala Lumpur')]),
-      context.obj([PDFString.of('JHR'), PDFString.of('Johor')]),
-      context.obj([PDFString.of('OTH'), PDFString.of('Lain-lain')]),
-    ]),
-    P: page.ref,
-  });
-
-  // --- Visit info section ---
-  const visitParent = context.obj({ T: PDFString.of('visit'), Kids: context.obj([]) });
-  const visitParentRef = context.register(visitParent);
-  fieldsArray.push(visitParentRef);
-  const visitKids = visitParent.get(PDFName.of('Kids')) as PDFArray;
-
-  function addVisitField(fd: Record<string, any>): PDFRef {
-    const w = context.obj(fd);
-    const r = context.register(w);
-    visitKids.push(r);
-    annots.push(r);
-    return r;
-  }
-
-  // visit.date
-  drawText(page, 'Tarikh lawatan', 245, 496, { size: 10 });
-  addVisitField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: visitParentRef,
-    Ff: 2,
-    Rect: context.obj(toNativeRect([245, 506, 390, 528], A4.height)),
-    T: PDFString.of('date'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 10, P: page.ref,
-  });
-
-  // visit.firstVisit — checkbox
-  drawText(page, 'Lawatan pertama', 438, 504, { size: 10 });
-  addVisitField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Btn'),
-    Parent: visitParentRef,
-    Rect: context.obj(toNativeRect([420, 510, 434, 524], A4.height)),
-    T: PDFString.of('firstVisit'),
-    TU: PDFString.of('Adakah ini lawatan pertama?'),
-    V: PDFName.of('Off'), AS: PDFName.of('Off'),
-    AP: context.obj({ N: context.obj({
-      Yes: context.register(context.stream('0.5 g\n0 0 12 12 re\nf\n0 g\n2 2 8 8 re\nf')),
-      Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')),
-    })}),
-    P: page.ref,
-  });
-
-  // visit.shortCode
-  drawText(page, 'Kod ringkas (maksimum 4 aksara)', 350, 694, { size: 10 });
-  addVisitField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: visitParentRef,
-    Rect: context.obj(toNativeRect([350, 704, 450, 726], A4.height)),
-    T: PDFString.of('shortCode'),
-    TU: PDFString.of('Kod ringkas, maksimum empat aksara'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 4, P: page.ref,
-  });
-
-  // --- Medical info ---
-  const medParent = context.obj({ T: PDFString.of('medical'), Kids: context.obj([]) });
-  const medParentRef = context.register(medParent);
-  fieldsArray.push(medParentRef);
-  const medKids = medParent.get(PDFName.of('Kids')) as PDFArray;
-
-  // medical.allergyFlag
-  drawText(page, 'Ada alahan', 54, 555, { size: 10 });
-  const allergyWidget = context.obj({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Btn'),
-    Parent: medParentRef,
-    Rect: context.obj(toNativeRect([36, 553, 50, 567], A4.height)),
-    T: PDFString.of('allergyFlag'),
-    V: PDFName.of('Off'), AS: PDFName.of('Off'),
-    AP: context.obj({ N: context.obj({
-      Yes: context.register(context.stream('0.5 g\n0 0 12 12 re\nf\n0 g\n2 2 8 8 re\nf')),
-      Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')),
-    })}),
-    P: page.ref,
-  });
-  const allergyRef = context.register(allergyWidget);
-  medKids.push(allergyRef);
-  annots.push(allergyRef);
-
-  // medical.description — multiline
-  drawText(page, 'Sebab lawatan / gejala', 220, 542, { size: 10 });
-  const descWidget = context.obj({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: medParentRef,
-    Ff: 4096, // Multiline
-    Rect: context.obj(toNativeRect([220, 552, 559, 610], A4.height)),
-    T: PDFString.of('description'),
-    TU: PDFString.of('Terangkan sebab lawatan atau gejala'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 180, P: page.ref,
-  });
-  const descRef = context.register(descWidget);
-  medKids.push(descRef);
-  annots.push(descRef);
-
-  // --- Emergency contact ---
-  const emergParent = context.obj({ T: PDFString.of('emergency'), Kids: context.obj([]) });
-  const emergParentRef = context.register(emergParent);
-  fieldsArray.push(emergParentRef);
-  const emergKids = emergParent.get(PDFName.of('Kids')) as PDFArray;
-
-  function addEmergField(fd: Record<string, any>): PDFRef {
-    const w = context.obj(fd);
-    const r = context.register(w);
-    emergKids.push(r);
-    annots.push(r);
-    return r;
-  }
-
-  drawText(page, 'Nama untuk dihubungi semasa kecemasan', 36, 644, { size: 10 });
-  addEmergField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: emergParentRef,
-    Rect: context.obj(toNativeRect([36, 654, 285, 676], A4.height)),
-    T: PDFString.of('name'),
-    TU: PDFString.of('Nama orang untuk dihubungi semasa kecemasan'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 70, P: page.ref,
-  });
-
-  drawText(page, 'Telefon kecemasan', 310, 644, { size: 10 });
-  addEmergField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Parent: emergParentRef,
-    Rect: context.obj(toNativeRect([310, 654, 559, 676], A4.height)),
-    T: PDFString.of('phone'),
-    TU: PDFString.of('Nombor telefon kecemasan Malaysia'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 13, P: page.ref,
-  });
-
-  // --- Consent section ---
-  const consentParent = context.obj({ T: PDFString.of('consent'), Kids: context.obj([]) });
-  const consentParentRef = context.register(consentParent);
-  fieldsArray.push(consentParentRef);
-  const consentKids = consentParent.get(PDFName.of('Kids')) as PDFArray;
-
-  // consent.contact — initially checked
-  drawText(page, 'Saya bersetuju untuk dihubungi', 54, 706, { size: 10 });
-  const consentContactWidget = context.obj({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Btn'),
-    Parent: consentParentRef,
-    Rect: context.obj(toNativeRect([36, 704, 50, 718], A4.height)),
-    T: PDFString.of('contact'),
-    TU: PDFString.of('Persetujuan untuk dihubungi'),
-    V: PDFName.of('Yes'), AS: PDFName.of('Yes'),
-    AP: context.obj({ N: context.obj({
-      Yes: context.register(context.stream('0.5 g\n0 0 12 12 re\nf\n0 g\n2 2 8 8 re\nf')),
-      Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')),
-    })}),
-    P: page.ref,
-  });
-  const consentContactRef = context.register(consentContactWidget);
-  consentKids.push(consentContactRef);
-  annots.push(consentContactRef);
-
-  // consent.signature
-  drawText(page, 'Tandatangan pesakit', 36, 752, { size: 10 });
-  drawText(page, 'Tandatangan selepas dicetak', 36, 766, { size: 9, color: [0.4, 0.4, 0.4] });
-  const consentSigRectNative = toNativeRect([36, 762, 300, 800], A4.height);
-  const consentSigWidget = makeSigField(pdfDoc, 'signature', consentSigRectNative, page.ref, false);
-  consentSigWidget.set(PDFName.of('Parent'), consentParentRef);
-  const consentSigRef = context.register(consentSigWidget);
-  consentKids.push(consentSigRef);
-  annots.push(consentSigRef);
-
-  page.node.set(PDFName.of('Annots'), context.obj(annots));
-  const fieldsRef = context.register(fieldsArray);
-  const acroForm = context.obj({ Fields: fieldsRef });
-  pdfDoc.catalog.set(PDFName.of('AcroForm'), context.register(acroForm));
-
-  const bytes = await pdfDoc.save();
-  fs.writeFileSync(path.join(FIXTURES_DIR, 'clinic-registration.pdf'), bytes);
-  console.log('Created: clinic-registration.pdf (22 logical fields)');
 }
 
-// ---------------------------------------------------------------------------
-// Fixture 3: us-community-clinic.pdf
-// ---------------------------------------------------------------------------
+export async function buildFixture(spec: FixtureSpec, fontBytes: Uint8Array): Promise<Uint8Array> {
+  return withSeededRandom(20261117, async () => {
+    const doc = await PDFDocument.create({ updateMetadata: false });
+    doc.registerFontkit(fontkit);
+    const font = await doc.embedFont(fontBytes, { subset: false });
+    const page = doc.addPage(spec.size);
+    const b = new Builder(doc, page, font, spec.size[1]);
 
-async function createUsClinicPdf() {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([LETTER.width, LETTER.height]);
+    for (const [str, x, y, size] of spec.text) b.text(str, x, y, size);
+    for (const box of spec.boxes ?? []) b.border(box);
+    for (const f of spec.fields) b.add(f);
 
-  drawText(page, 'Paper Lantern Fictional Community Clinic', 36, 56, { size: 12, color: [0.3, 0.3, 0.3] });
-  drawText(page, 'Community Clinic Intake', 36, 74, { size: 18 });
-  drawText(page, 'SYNTHETIC TEST FORM — fictional organisation and fictional information only.', 36, 94, { size: 9, color: [0.5, 0, 0] });
+    if (spec.fields.length > 0 || spec.xfa) {
+      const ctx = doc.context;
+      const acroForm: Record<string, unknown> = {
+        Fields: b.fieldsArray,
+        DA: PDFString.of(`/${FONT_KEY} 10 Tf 0 g`),
+        DR: ctx.obj({ Font: ctx.obj({ [FONT_KEY]: font.ref }) }),
+      };
+      if (spec.xfa) acroForm['XFA'] = ctx.register(ctx.stream(spec.xfa));
+      doc.catalog.set(PDFName.of('AcroForm'), ctx.register(ctx.obj(acroForm as never)));
+      if (b.annots.length > 0) page.node.set(PDFName.of('Annots'), ctx.obj(b.annots));
+    }
 
-  // Section headings
-  drawText(page, 'Patient', 36, 112, { size: 12 });
-  drawText(page, 'Contact', 36, 306, { size: 12 });
-  drawText(page, 'Visit', 36, 495, { size: 12 });
-  drawText(page, 'Declaration', 36, 640, { size: 12 });
-
-  const context = pdfDoc.context;
-  const fieldsArray = context.obj([]) as PDFArray;
-  const annots: PDFRef[] = [];
-
-  function addField(fd: Record<string, any>): PDFRef {
-    const w = context.obj(fd);
-    const r = context.register(w);
-    fieldsArray.push(r);
-    annots.push(r);
-    return r;
-  }
-
-  // patient.fullName
-  drawText(page, 'Full name', 36, 122, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2, // Required
-    Rect: context.obj(toNativeRect([36, 132, 576, 156], LETTER.height)),
-    T: PDFString.of('patient.fullName'),
-    TU: PDFString.of('Name exactly as it should appear on the form'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 70, P: page.ref,
+    return doc.save({ updateFieldAppearances: false });
   });
-
-  // patient.birthDate
-  drawText(page, 'Date of birth (MM/DD/YYYY)', 36, 192, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2,
-    Rect: context.obj(toNativeRect([36, 202, 270, 226], LETTER.height)),
-    T: PDFString.of('patient.birthDate'),
-    TU: PDFString.of('Date of birth, MM/DD/YYYY'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 10, P: page.ref,
-  });
-
-  // Text1 — SSN
-  drawText(page, 'Social Security number (NNN-NN-NNNN)', 306, 192, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Rect: context.obj(toNativeRect([306, 202, 576, 226], LETTER.height)),
-    T: PDFString.of('Text1'),
-    TU: PDFString.of('Format check only; not identity verification'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 11, P: page.ref,
-  });
-
-  // contact.phone
-  drawText(page, 'US phone number', 36, 316, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2,
-    Rect: context.obj(toNativeRect([36, 326, 270, 350], LETTER.height)),
-    T: PDFString.of('contact.phone'),
-    TU: PDFString.of('US phone number; country code +1 accepted'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 14, P: page.ref,
-  });
-
-  // Text7 — ZIP code
-  drawText(page, 'ZIP code', 306, 316, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2,
-    Rect: context.obj(toNativeRect([306, 326, 456, 350], LETTER.height)),
-    T: PDFString.of('Text7'),
-    TU: PDFString.of('ZIP or ZIP+4'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 10, P: page.ref,
-  });
-
-  // contact.email
-  drawText(page, 'Email address', 36, 386, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Rect: context.obj(toNativeRect([36, 396, 576, 420], LETTER.height)),
-    T: PDFString.of('contact.email'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 80, P: page.ref,
-  });
-
-  // contact.address — multiline
-  drawText(page, 'Mailing address', 36, 440, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 4098, // Multiline + Required
-    Rect: context.obj(toNativeRect([36, 450, 330, 500], LETTER.height)),
-    T: PDFString.of('contact.address'),
-    TU: PDFString.of('Address exactly as it should appear on the form'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 160, P: page.ref,
-  });
-
-  // contact.city
-  drawText(page, 'City', 354, 440, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2,
-    Rect: context.obj(toNativeRect([354, 450, 576, 474], LETTER.height)),
-    T: PDFString.of('contact.city'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 40, P: page.ref,
-  });
-
-  // contact.state — dropdown
-  drawText(page, 'State', 354, 500, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Ch'),
-    Ff: 131074, // Combo + Required
-    Rect: context.obj(toNativeRect([354, 510, 576, 534], LETTER.height)),
-    T: PDFString.of('contact.state'),
-    TU: PDFString.of('Select a state'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'),
-    Opt: context.obj([
-      context.obj([PDFString.of('CA'), PDFString.of('California')]),
-      context.obj([PDFString.of('NY'), PDFString.of('New York')]),
-      context.obj([PDFString.of('TX'), PDFString.of('Texas')]),
-    ]),
-    P: page.ref,
-  });
-
-  // visit.date
-  drawText(page, 'Visit date (MM/DD/YYYY)', 36, 538, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 2,
-    Rect: context.obj(toNativeRect([36, 548, 220, 572], LETTER.height)),
-    T: PDFString.of('visit.date'),
-    TU: PDFString.of('Visit date, MM/DD/YYYY'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 10, P: page.ref,
-  });
-
-  // visit.contactMethod — radio
-  drawText(page, 'Preferred contact method', 270, 542, { size: 10 });
-  drawText(page, 'Phone', 286, 558, { size: 10 });
-  drawText(page, 'Email', 391, 558, { size: 10 });
-  drawText(page, 'Neither', 491, 558, { size: 10 });
-  const contactMethodParent = context.obj({
-    FT: PDFName.of('Btn'), Ff: 32768,
-    T: PDFString.of('visit.contactMethod'),
-    TU: PDFString.of('Select one contact method'),
-    Kids: context.obj([]),
-  });
-  const contactMethodRef = context.register(contactMethodParent);
-  fieldsArray.push(contactMethodRef);
-  const methodKids = contactMethodParent.get(PDFName.of('Kids')) as PDFArray;
-  for (const [xLeft, exportVal] of [[270, 'P'], [375, 'E'], [475, 'N']] as [number, string][]) {
-    const w = context.obj({
-      Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'),
-      Parent: contactMethodRef,
-      Rect: context.obj(toNativeRect([xLeft, 552, xLeft + 14, 566], LETTER.height)),
-      AS: PDFName.of('Off'),
-      AP: context.obj({ N: context.obj({
-        [exportVal]: context.register(context.stream('0 g\n3 3 6 6 re\nf')),
-        Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')),
-      })}),
-      P: page.ref,
-    });
-    const wRef = context.register(w);
-    methodKids.push(wRef);
-    annots.push(wRef);
-  }
-
-  // visit.reason — multiline
-  drawText(page, 'Reason for visit', 36, 660, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Tx'),
-    Ff: 4096, // Multiline
-    Rect: context.obj(toNativeRect([36, 670, 330, 732], LETTER.height)),
-    T: PDFString.of('visit.reason'),
-    TU: PDFString.of('Describe the reason for your visit'),
-    DA: PDFString.of('/Helv 10 Tf 0 g'), MaxLen: 180, P: page.ref,
-  });
-
-  // consent.reminders — checkbox
-  drawText(page, 'I agree to appointment reminders', 368, 668, { size: 10 });
-  addField({
-    Type: PDFName.of('Annot'), Subtype: PDFName.of('Widget'), FT: PDFName.of('Btn'),
-    Rect: context.obj(toNativeRect([354, 676, 368, 690], LETTER.height)),
-    T: PDFString.of('consent.reminders'),
-    V: PDFName.of('Off'), AS: PDFName.of('Off'),
-    AP: context.obj({ N: context.obj({
-      Yes: context.register(context.stream('0.5 g\n0 0 12 12 re\nf\n0 g\n2 2 8 8 re\nf')),
-      Off: context.register(context.stream('0 g\n0 0 12 12 re\nS')),
-    })}),
-    P: page.ref,
-  });
-
-  // consent.signature
-  drawText(page, 'Patient signature', 354, 708, { size: 10 });
-  drawText(page, 'Sign after printing', 354, 722, { size: 9, color: [0.4, 0.4, 0.4] });
-  const usSigRectNative = toNativeRect([354, 718, 576, 756], LETTER.height);
-  const usSigWidget = makeSigField(pdfDoc, 'consent.signature', usSigRectNative, page.ref, false);
-  const usSigRef = context.register(usSigWidget);
-  fieldsArray.push(usSigRef);
-  annots.push(usSigRef);
-
-  page.node.set(PDFName.of('Annots'), context.obj(annots));
-  const fieldsRef = context.register(fieldsArray);
-  const acroForm = context.obj({ Fields: fieldsRef });
-  pdfDoc.catalog.set(PDFName.of('AcroForm'), context.register(acroForm));
-
-  const bytes = await pdfDoc.save();
-  fs.writeFileSync(path.join(FIXTURES_DIR, 'us-community-clinic.pdf'), bytes);
-  console.log('Created: us-community-clinic.pdf (14 logical fields)');
 }
 
-// ---------------------------------------------------------------------------
-// Entry point
-// ---------------------------------------------------------------------------
+export function loadFixtureFont(): Uint8Array {
+  return new Uint8Array(fs.readFileSync(FONT_PATH));
+}
+
+/** Build every fixture in memory: file name -> bytes. */
+export async function buildFixtures(): Promise<Map<string, Uint8Array>> {
+  const font = loadFixtureFont();
+  const out = new Map<string, Uint8Array>();
+  for (const spec of FIXTURES) out.set(spec.file, await buildFixture(spec, font));
+  return out;
+}
+
+export async function buildEncryptedBase(): Promise<Uint8Array> {
+  return buildFixture(ENCRYPTED_BASE, loadFixtureFont());
+}
 
 async function main() {
-  if (!fs.existsSync(FIXTURES_DIR)) {
-    fs.mkdirSync(FIXTURES_DIR, { recursive: true });
+  fs.mkdirSync(FIXTURES_DIR, { recursive: true });
+  for (const [file, bytes] of await buildFixtures()) {
+    fs.writeFileSync(path.join(FIXTURES_DIR, file), bytes);
+    console.log(`Created fixtures/${file} (${bytes.byteLength} bytes)`);
   }
-
-  await createNoFieldsPdf();
-  await createXfaAcroformPdf();
-  await createSigEmptyPdf();
-  await createSigPopulatedPdf();
-  await createPrefilledFieldPdf();
-  await createSchoolEnrolmentPdf();
-  await createClinicRegistrationPdf();
-  await createUsClinicPdf();
-
-  console.log('\nAll fixtures created successfully.');
 }
 
-main().catch((err) => {
-  console.error('Error creating fixtures:', err);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error('Error creating fixtures:', err);
+    process.exit(1);
+  });
+}

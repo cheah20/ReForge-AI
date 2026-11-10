@@ -1,401 +1,214 @@
 /**
  * src/lib/pdf-extract/acroform.ts
  *
- * AcroForm traversal and field evidence extraction.
+ * Builds FieldEvidence from the shared logical-field traversal (fields.ts).
  *
- * Extracts fully-qualified field names, field types, options (with export/display
- * pairs), required/readOnly flags, maxLength, multiline, widget bboxes, and
- * hasValue for signature fields.
- *
- * Per decisions in 00-decisions.md:
- * - Decision 8:  Single-select list boxes → answerType dropdown, preserve PDF widget type
- * - Decision 13: Use low-level APIs for /Opt export/display pairs; always read export values
- * - Decision 14: Use high-level typed getters where available; fall back to raw dict
- * - Decision 18: Never forward /V, /DV, selected indices, widget answer state
+ * - One evidence record per logical field; every widget carries its own page and rect.
+ * - Pushbuttons are not answer fields and are left out.
+ * - Multi-select choice fields keep `multiSelect: true` (the wizard shows them as
+ *   "fill this yourself"). Single-select list boxes are treated as dropdowns (decision 8).
+ * - Radio export values come from /Opt (mapped to widgets in order) when present,
+ *   otherwise from the widgets' appearance state names (decision 13).
+ * - A field with no widget on a resolvable page gets `unresolvedPage: true`
+ *   instead of being placed on page 1.
+ * - Field values are never read into evidence: no /V, /DV, /I, /AS or appearance
+ *   text (decision 18). The only value-derived flag is `hasValue` for signatures.
  */
 
-import {
-  PDFDocument,
-  PDFName,
-  PDFDict,
-  PDFArray,
-  PDFRef,
-  PDFString,
-  PDFHexString,
-  PDFNumber,
-  PDFBool,
-} from 'pdf-lib';
+import { PDFArray, PDFDict, type PDFDocument, type PDFPage } from 'pdf-lib';
 import type { FieldEvidence, FieldOption, Widget } from '../../shared/types.js';
+import {
+  FF,
+  fieldKind,
+  isAnswerField,
+  isSignaturePopulated,
+  type LogicalField,
+  type WidgetNode,
+} from './fields.js';
+import {
+  decodeName,
+  getAny,
+  getRect,
+  getText,
+  resolveAny,
+  resolveAs,
+  textOf,
+  type PdfRect,
+} from './pdf-objects.js';
 
-/** Resolve a potentially indirect PDFObject to a PDFDict, or undefined */
-function resolveDict(
-  pdfDoc: PDFDocument,
-  obj: unknown,
-): PDFDict | undefined {
-  if (obj instanceof PDFRef) {
-    const resolved = pdfDoc.context.lookupMaybe(obj, PDFDict);
-    return resolved instanceof PDFDict ? resolved : undefined;
-  }
-  if (obj instanceof PDFDict) return obj;
-  return undefined;
+const MAX_WIDGETS = 20;
+const MAX_OPTIONS = 50;
+const MAX_TEXT = 200;
+
+/** A widget in native PDF user space, aligned with `evidence.widgets` by index. */
+export interface PdfWidget {
+  pageIndex: number;
+  rect: PdfRect;
 }
 
-/** Decode a PDFString or PDFHexString to a JS string */
-function decodeString(obj: unknown): string | undefined {
-  if (obj instanceof PDFString) return obj.decodeText();
-  if (obj instanceof PDFHexString) return obj.decodeText();
-  return undefined;
+export interface ExtractedField {
+  evidence: FieldEvidence;
+  pdfWidgets: PdfWidget[];
 }
 
-/** Extract text value from a PDFName (strip leading /) */
-function nameString(obj: unknown): string | undefined {
-  if (obj instanceof PDFName) return obj.asString().replace(/^\//, "");
-  return undefined;
-}
-
-/**
- * Collect all terminal field dicts with their fully-qualified names.
- * Also resolves inherited attributes (/FT, /Ff, /DA).
- */
-interface TerminalFieldInfo {
-  dict: PDFDict;
-  fullyQualifiedName: string;
-  /** Inherited field type PDFName (e.g. 'Tx', 'Btn', 'Ch', 'Sig') */
-  ft: string;
-  /** Inherited Ff integer (field flags) */
-  ff: number;
-  /** All widget annotation dicts for this field */
-  widgets: { dict: PDFDict; ref: PDFRef }[];
-}
-
-function collectTerminals(
-  pdfDoc: PDFDocument,
-  fieldsArray: PDFArray,
-  parentName: string,
-  inheritedFt: string | undefined,
-  inheritedFf: number,
-  result: TerminalFieldInfo[],
-): void {
-  for (let i = 0; i < fieldsArray.size(); i++) {
-    const item = fieldsArray.get(i);
-    let ref: PDFRef | undefined;
-    let fieldDict: PDFDict | undefined;
-
-    if (item instanceof PDFRef) {
-      ref = item;
-      fieldDict = resolveDict(pdfDoc, item);
-    } else if (item instanceof PDFDict) {
-      fieldDict = item;
-    }
-    if (!fieldDict) continue;
-
-    // Local /T is the partial name component
-    const tObj = fieldDict.lookup(PDFName.of('T'));
-    const partialName = decodeString(tObj) ?? '';
-
-    const qualifiedName = parentName
-      ? partialName
-        ? `${parentName}.${partialName}`
-        : parentName
-      : partialName;
-
-    // Resolve /FT — may be inherited from parent
-    const ftObj = fieldDict.lookup(PDFName.of('FT'));
-    const localFt = nameString(ftObj) ?? inheritedFt;
-
-    // Resolve /Ff — may be inherited
-    const ffObj = fieldDict.lookup(PDFName.of('Ff'));
-    const localFf =
-      ffObj instanceof PDFNumber ? ffObj.asNumber() : inheritedFf;
-
-    // Check /Kids
-    const kidsObj = fieldDict.lookupMaybe(PDFName.of('Kids'), PDFArray);
-
-    if (kidsObj instanceof PDFArray && kidsObj.size() > 0) {
-      // Check if children are widgets or sub-fields
-      const firstKid = kidsObj.get(0);
-      const firstKidDict = resolveDict(pdfDoc, firstKid);
-      const isRadioOrCheckbox = localFt === 'Btn' && (localFf & 32768) !== 0;
-
-      if (firstKidDict && isRadioOrCheckbox) {
-        // Radio group: parent is the terminal field, kids are widget annotations
-        const widgetDicts: { dict: PDFDict; ref: PDFRef }[] = [];
-        for (let k = 0; k < kidsObj.size(); k++) {
-          const kItem = kidsObj.get(k);
-          const kRef = kItem instanceof PDFRef ? kItem : undefined;
-          const kDict = resolveDict(pdfDoc, kItem);
-          if (kDict && kRef) {
-            widgetDicts.push({ dict: kDict, ref: kRef });
-          }
-        }
-        if (localFt) {
-          result.push({
-            dict: fieldDict,
-            fullyQualifiedName: qualifiedName,
-            ft: localFt,
-            ff: localFf,
-            widgets: widgetDicts,
-          });
-        }
-      } else {
-        // Sub-fields: recurse
-        collectTerminals(pdfDoc, kidsObj, qualifiedName, localFt, localFf, result);
-      }
-    } else if (localFt) {
-      // Terminal field — the dict itself is both field and widget annotation
-      const widgetRef = ref ?? (fieldDict ? undefined : undefined);
-      result.push({
-        dict: fieldDict,
-        fullyQualifiedName: qualifiedName,
-        ft: localFt,
-        ff: localFf,
-        widgets: ref ? [{ dict: fieldDict, ref }] : [],
-      });
-    }
-  }
-}
-
-/** Extract /Opt entries as export/display pairs */
-function extractOptions(
-  pdfDoc: PDFDocument,
-  fieldDict: PDFDict,
-): FieldOption[] {
-  const optObj = fieldDict.lookupMaybe(PDFName.of('Opt'), PDFArray);
-  if (!(optObj instanceof PDFArray)) return [];
-
+/** /Opt entries of a choice field as export/display pairs. */
+function choiceOptions(pdfDoc: PDFDocument, dict: PDFDict): FieldOption[] {
+  const opt = resolveAs(pdfDoc.context, getAny(dict, 'Opt'), PDFArray);
+  if (!opt) return [];
   const options: FieldOption[] = [];
-  for (let i = 0; i < optObj.size(); i++) {
-    const entry = optObj.get(i);
-    const entryResolved =
-      entry instanceof PDFRef ? pdfDoc.context.lookup(entry) : entry;
-
-    if (entryResolved instanceof PDFArray && entryResolved.size() >= 2) {
-      // [exportValue, displayLabel] pair
-      const exportVal = decodeString(entryResolved.get(0));
-      const displayLabel = decodeString(entryResolved.get(1));
-      if (exportVal !== undefined && displayLabel !== undefined) {
-        options.push({ exportValue: exportVal, displayLabel });
-      } else if (exportVal !== undefined) {
-        options.push({ exportValue: exportVal, displayLabel: exportVal });
-      }
+  for (let i = 0; i < opt.size() && options.length < MAX_OPTIONS; i++) {
+    const ctx = pdfDoc.context;
+    const entry = resolveAny(ctx, opt.get(i));
+    let exportValue: string | undefined;
+    let displayLabel: string | undefined;
+    if (entry instanceof PDFArray) {
+      exportValue = textOf(resolveAny(ctx, entry.get(0)));
+      displayLabel = entry.size() > 1 ? textOf(resolveAny(ctx, entry.get(1))) : undefined;
     } else {
-      // Simple string — export value = display label
-      const val = decodeString(entryResolved);
-      if (val !== undefined) {
-        options.push({ exportValue: val, displayLabel: val });
-      }
+      exportValue = textOf(entry);
     }
+    if (!exportValue || exportValue.length > MAX_TEXT) continue;
+    const label = (displayLabel && displayLabel.trim()) || exportValue;
+    options.push({ exportValue, displayLabel: label.slice(0, MAX_TEXT) });
   }
   return options;
 }
 
-/** Extract radio on-state values from widget /AP dicts */
-function extractRadioOptions(
-  pdfDoc: PDFDocument,
-  widgets: { dict: PDFDict; ref: PDFRef }[],
-): FieldOption[] {
-  const options: FieldOption[] = [];
+/** Appearance on-state name of a radio or checkbox widget (anything except Off). */
+function onStateName(pdfDoc: PDFDocument, widget: PDFDict): string | undefined {
+  const ap = resolveAs(pdfDoc.context, getAny(widget, 'AP'), PDFDict);
+  if (!ap) return undefined;
+  const normal = resolveAs(pdfDoc.context, getAny(ap, 'N'), PDFDict);
+  if (!normal) return undefined;
+  for (const key of normal.keys()) {
+    const name = decodeName(key);
+    if (name !== 'Off') return name;
+  }
+  return undefined;
+}
+
+/** Radio export values: /Opt strings mapped to widgets in order, else on-state names. */
+function radioOptions(pdfDoc: PDFDocument, field: LogicalField): FieldOption[] {
+  const opt = resolveAs(pdfDoc.context, getAny(field.dict, 'Opt'), PDFArray);
+  const values: string[] = [];
+  if (opt && opt.size() > 0) {
+    for (let i = 0; i < Math.min(opt.size(), field.widgets.length); i++) {
+      const v = textOf(resolveAny(pdfDoc.context, opt.get(i)));
+      if (v) values.push(v);
+    }
+  } else {
+    for (const w of field.widgets) {
+      const v = onStateName(pdfDoc, w.dict);
+      if (v) values.push(v);
+    }
+  }
   const seen = new Set<string>();
-
-  for (const { dict: widgetDict } of widgets) {
-    // Check /AP/N for export values
-    const apObj = widgetDict.lookupMaybe(PDFName.of('AP'), PDFDict);
-    if (apObj instanceof PDFDict) {
-      const normalAp = resolveDict(pdfDoc, apObj.lookup(PDFName.of('N')));
-      if (normalAp instanceof PDFDict) {
-        for (const key of normalAp.keys()) {
-          const keyStr = key.asString().replace(/^\//, "");
-          if (keyStr !== 'Off' && !seen.has(keyStr)) {
-            seen.add(keyStr);
-            options.push({ exportValue: keyStr, displayLabel: keyStr });
-          }
-        }
-      }
-    }
+  const options: FieldOption[] = [];
+  for (const v of values) {
+    if (seen.has(v) || v.length > MAX_TEXT || options.length >= MAX_OPTIONS) continue;
+    seen.add(v);
+    options.push({ exportValue: v, displayLabel: v });
   }
   return options;
 }
 
-/** Map pdf-lib field type string to our FieldEvidence fieldType */
-function mapFieldType(ft: string, ff: number): FieldEvidence['fieldType'] {
-  switch (ft) {
-    case 'Tx':
-      return 'text';
-    case 'Btn':
-      // Radio: Ff bit 15 (32768) set; Pushbutton: bit 16 (65536) set
-      if ((ff & 32768) !== 0) return 'radio';
-      return 'checkbox';
-    case 'Ch':
-      return 'dropdown'; // Both Combo and ListBox map to dropdown (decision 8)
-    case 'Sig':
-      return 'signature';
-    default:
-      return 'text';
+/** Page geometry needed to express a rect in top-origin page coordinates. */
+interface PageBox {
+  x: number;
+  top: number;
+}
+
+function pageBox(page: PDFPage): PageBox {
+  try {
+    const crop = page.getCropBox();
+    return { x: crop.x, top: crop.y + crop.height };
+  } catch {
+    return { x: 0, top: page.getHeight() };
   }
 }
 
-/** Extract widget bounding boxes (top-origin coordinates) */
-function extractWidgetBbox(
-  pdfDoc: PDFDocument,
-  widgetDict: PDFDict,
-  pageIndex: number,
-): Widget['bbox'] {
-  const rectObj = widgetDict.lookupMaybe(PDFName.of('Rect'), PDFArray);
-  if (!(rectObj instanceof PDFArray) || rectObj.size() < 4) {
-    return { left: 0, top: 0, right: 0, bottom: 0 };
-  }
-
-  const page = pdfDoc.getPage(pageIndex);
-  const pageH = page.getHeight();
-
-  const left = (rectObj.get(0) as PDFNumber).asNumber();
-  const pdfBottom = (rectObj.get(1) as PDFNumber).asNumber();
-  const right = (rectObj.get(2) as PDFNumber).asNumber();
-  const pdfTop = (rectObj.get(3) as PDFNumber).asNumber();
-
-  // Convert from PDF bottom-origin to top-origin
+/** Convert a native PDF rect to the top-origin bbox used in evidence. */
+function topOriginBbox(rect: PdfRect, box: PageBox): Widget['bbox'] {
   return {
-    left,
-    top: pageH - pdfTop,
-    right,
-    bottom: pageH - pdfBottom,
+    left: rect.left - box.x,
+    top: box.top - rect.top,
+    right: rect.right - box.x,
+    bottom: box.top - rect.bottom,
   };
 }
 
-/** Find which page a widget annotation belongs to */
-function findPageIndex(
-  pdfDoc: PDFDocument,
-  widgetRef: PDFRef | undefined,
-): number {
-  if (!widgetRef) return 0;
-  for (let p = 0; p < pdfDoc.getPageCount(); p++) {
-    const page = pdfDoc.getPage(p);
-    const annotsArray = page.node.lookupMaybe(PDFName.of('Annots'), PDFArray);
-    if (!(annotsArray instanceof PDFArray)) continue;
-    for (let j = 0; j < annotsArray.size(); j++) {
-      const annot = annotsArray.get(j);
-      if (annot instanceof PDFRef && annot.objectNumber === widgetRef.objectNumber) {
-        return p;
-      }
-    }
+/** Widgets that have both a resolved page and a valid /Rect. */
+function locatedWidgets(pdfDoc: PDFDocument, widgets: WidgetNode[]): PdfWidget[] {
+  const out: PdfWidget[] = [];
+  for (const w of widgets) {
+    if (w.pageIndex === undefined) continue;
+    const rect = getRect(pdfDoc.context, w.dict);
+    if (!rect) continue;
+    out.push({ pageIndex: w.pageIndex, rect });
   }
-  return 0;
+  return out;
 }
 
-/**
- * Check whether a signature field's /V is populated.
- * Structural detection only — no cryptographic validation.
- */
-function isSigPopulated(fieldDict: PDFDict): boolean {
-  // lookup() resolves indirect references, so /V may be a ref to the signature dict
-  const v = fieldDict.lookup(PDFName.of('V'));
-  if (v instanceof PDFDict) {
-    return (
-      v.lookup(PDFName.of('Filter')) !== undefined ||
-      v.lookup(PDFName.of('Contents')) !== undefined
-    );
-  }
-  return false;
-}
-/**
- * Extract all terminal fields from an already-loaded PDFDocument.
- * Requires that the document has passed rejection checks (not encrypted, not XFA, etc.)
- *
- * Per decision 18: Never forward /V, /DV, selected indices, or widget answer state.
- */
-export function extractAcroFormFields(pdfDoc: PDFDocument): FieldEvidence[] {
-  const catalogDict = pdfDoc.catalog;
-  const acroFormRef = catalogDict.lookup(PDFName.of('AcroForm'));
-  const acroFormDict = resolveDict(pdfDoc, acroFormRef);
-  if (!acroFormDict) return [];
-
-  const fieldsVal = acroFormDict.lookupMaybe(PDFName.of('Fields'), PDFArray);
-  if (!(fieldsVal instanceof PDFArray)) return [];
-
-  const terminals: TerminalFieldInfo[] = [];
-  collectTerminals(pdfDoc, fieldsVal, '', undefined, 0, terminals);
-
-  const result: FieldEvidence[] = [];
-
-  for (const { dict, fullyQualifiedName, ft, ff, widgets } of terminals) {
-    if (!fullyQualifiedName) continue; // skip unnamed fields
-
-    const fieldType = mapFieldType(ft, ff);
-
-    // Required: Ff bit 1 (value 2)
-    const required = (ff & 2) !== 0;
-    // ReadOnly: Ff bit 0 (value 1)
-    const readOnly = (ff & 1) !== 0;
-
-    // /TU — tooltip
-    const tuObj = dict.lookup(PDFName.of('TU'));
-    const tooltip = decodeString(tuObj);
-
-    // /MaxLen
-    const maxLenObj = dict.lookupMaybe(PDFName.of('MaxLen'), PDFNumber);
-    const maxLength =
-      maxLenObj instanceof PDFNumber ? maxLenObj.asNumber() : undefined;
-
-    // Multiline: Ff bit 12 (value 4096)
-    const multiline = fieldType === 'text' ? (ff & 4096) !== 0 : undefined;
-
-    // Options (do NOT include current /V)
-    let options: FieldOption[] | undefined;
-    if (fieldType === 'dropdown') {
-      const opts = extractOptions(pdfDoc, dict);
-      options = opts.length > 0 ? opts : undefined;
-    } else if (fieldType === 'radio') {
-      const opts = extractRadioOptions(pdfDoc, widgets);
-      options = opts.length > 0 ? opts : undefined;
+/** Build one evidence record per logical answer field. Never throws for malformed fields. */
+export function buildEvidence(pdfDoc: PDFDocument, fields: LogicalField[]): ExtractedField[] {
+  const pages = pdfDoc.getPages();
+  const boxes = new Map<number, PageBox>();
+  const boxFor = (i: number) => {
+    let b = boxes.get(i);
+    if (!b) {
+      b = pageBox(pages[i]!);
+      boxes.set(i, b);
     }
+    return b;
+  };
 
-    // hasValue: for signature fields, structural check only
-    const hasValue = fieldType === 'signature' ? isSigPopulated(dict) : false;
+  const result: ExtractedField[] = [];
+  for (const field of fields) {
+    if (!isAnswerField(field)) continue;
+    const kind = fieldKind(field)!;
+    if (kind === 'pushbutton') continue;
 
-    // Build widget list — one per widget annotation
-    const widgetList: Widget[] = [];
-    for (const { dict: wDict, ref: wRef } of widgets) {
-      const pageIndex = findPageIndex(pdfDoc, wRef);
-      const bbox = extractWidgetBbox(pdfDoc, wDict, pageIndex);
-      widgetList.push({
-        pageNumber: pageIndex + 1,
-        bbox,
-        pageSnippet: '', // filled in by page-text.ts
-      });
-    }
-
-    // For single-widget fields, use the field dict's own /Rect
-    if (widgetList.length === 0) {
-      const pageIndex = 0;
-      const rectObj = dict.lookupMaybe(PDFName.of('Rect'), PDFArray);
-      if (rectObj instanceof PDFArray && rectObj.size() >= 4) {
-        const bbox = extractWidgetBbox(pdfDoc, dict, pageIndex);
-        widgetList.push({
-          pageNumber: pageIndex + 1,
-          bbox,
-          pageSnippet: '',
-        });
-      }
-    }
-
-    if (widgetList.length === 0) continue; // skip fields with no locatable widget
+    const pdfWidgets = locatedWidgets(pdfDoc, field.widgets).slice(0, MAX_WIDGETS);
+    const widgets: Widget[] = pdfWidgets.map((w) => ({
+      pageNumber: w.pageIndex + 1,
+      bbox: topOriginBbox(w.rect, boxFor(w.pageIndex)),
+      pageSnippet: '',
+    }));
 
     const evidence: FieldEvidence = {
-      fieldId: fullyQualifiedName,
-      fieldType,
-      required,
-      readOnly,
-      hasValue,
-      widgets: widgetList,
+      fieldId: field.name,
+      fieldType: kind,
+      required: (field.ff & FF.REQUIRED) !== 0,
+      readOnly: (field.ff & FF.READ_ONLY) !== 0,
+      hasValue: kind === 'signature' ? isSignaturePopulated(field) : false,
+      widgets,
     };
 
-    if (tooltip !== undefined) evidence.tooltip = tooltip.substring(0, 200);
-    if (maxLength !== undefined) evidence.maxLength = maxLength;
-    if (multiline !== undefined && multiline) evidence.multiline = multiline;
-    if (options !== undefined && options.length > 0) evidence.options = options.slice(0, 50);
+    if (widgets.length === 0) evidence.unresolvedPage = true;
 
-    result.push(evidence);
+    const tooltip = getText(field.dict, 'TU');
+    if (tooltip && tooltip.trim()) evidence.tooltip = tooltip.slice(0, MAX_TEXT);
+
+    if (kind === 'text') {
+      const max = field.maxLen;
+      if (max !== undefined && Number.isInteger(max) && max > 0 && max <= 32767) {
+        evidence.maxLength = max;
+      }
+      if (field.ff & FF.MULTILINE) evidence.multiline = true;
+    }
+
+    if (kind === 'dropdown') {
+      if (field.ff & FF.MULTI_SELECT) evidence.multiSelect = true;
+      const options = choiceOptions(pdfDoc, field.dict);
+      if (options.length > 0) evidence.options = options;
+    }
+
+    if (kind === 'radio') {
+      const options = radioOptions(pdfDoc, field);
+      if (options.length > 0) evidence.options = options;
+    }
+
+    result.push({ evidence, pdfWidgets });
   }
-
   return result;
 }

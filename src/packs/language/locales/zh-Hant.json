@@ -68,6 +68,7 @@
   "validation.ic.invalidBirthplace": "這不是可識別的出生地代碼。請檢查該號碼。",
   "validation.ic.wrongLength": "身分證號碼必須有 12 位數字。",
   "validation.phone.invalid": "這不像是有效的電話號碼。請檢查。",
+  "validation.phone.needsCountry": "這個電話號碼屬於哪個國家？請加上國家代碼，例如 +60。",
   "validation.postcode.invalid": "請輸入有效的郵遞區號。",
   "validation.postcode.my.invalid": "馬來西亞郵遞區號必須恰好為 5 位數字。",
   "validation.date.invalid": "這不是有效的日期。請檢查。",

@@ -2,13 +2,13 @@
   "version": "v1",
   "hooks": [
     {
-      "name": "Sync core locale files when en.json is saved",
+      "name": "Translate missing locale keys when en.json changes",
       "trigger": "PostFileSave",
-      "description": "Diffs en.json keys against core locales and auto-adds [MT] placeholders",
-      "matcher": "src/packs/language/locales/en\\.json$",
+      "description": "After en.json is saved, list missing core-locale keys and translate them for real",
+      "matcher": "(^|[\\\\/])locales[\\\\/]en\\.json$",
       "action": {
-        "type": "command",
-        "command": "node -e \"\nconst fs = require('fs');\nconst path = require('path');\nconst localesDir = path.join(process.cwd(), 'src', 'packs', 'language', 'locales');\nif (!fs.existsSync(localesDir)) process.exit(0);\nconst enPath = path.join(localesDir, 'en.json');\nif (!fs.existsSync(enPath)) process.exit(0);\nconst en = JSON.parse(fs.readFileSync(enPath, 'utf8'));\nconst enKeys = Object.keys(en);\nconst coreLocales = ['ms', 'zh-Hans', 'zh-Hant', 'ta', 'es'];\nlet missing = [];\nfor (const locale of coreLocales) {\n  const lPath = path.join(localesDir, locale + '.json');\n  if (!fs.existsSync(lPath)) { missing.push(locale + ': FILE MISSING'); continue; }\n  const lData = JSON.parse(fs.readFileSync(lPath, 'utf8'));\n  const lKeys = Object.keys(lData);\n  const missingKeys = enKeys.filter(k => !lKeys.includes(k));\n  if (missingKeys.length) {\n    missing.push(locale + ': missing keys: ' + missingKeys.join(', '));\n    // Auto-add [MT] placeholders\n    for (const k of missingKeys) {\n      lData[k] = '[MT] ' + en[k];\n    }\n    fs.writeFileSync(lPath, JSON.stringify(lData, null, 2) + '\\n');\n  }\n}\nif (missing.length) { console.log('Locale sync:\\n' + missing.join('\\n')); }\nelse { console.log('All core locales in sync.'); }\n\""
+        "type": "agent",
+        "prompt": "en.json was saved. Run `node scripts/hooks/locale-sync.cjs`. For every key it lists, write a real translation into that core locale file (ms, zh-Hans, zh-Hant, ta, es), matching the tone of the existing strings. Never copy the English text and never add \"[MT]\" placeholders. Run the script again until it reports every core locale complete."
       }
     }
   ]

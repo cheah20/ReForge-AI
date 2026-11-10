@@ -68,6 +68,7 @@
   "validation.ic.invalidBirthplace": "Ini bukan kod tempat lahir yang dikenali. Sila semak nombor tersebut.",
   "validation.ic.wrongLength": "Nombor IC mesti mempunyai 12 digit.",
   "validation.phone.invalid": "Ini bukan nombor telefon yang sah. Sila semak.",
+  "validation.phone.needsCountry": "Nombor telefon ini dari negara mana? Tambah kod negara, contohnya +60.",
   "validation.postcode.invalid": "Sila masukkan poskod yang sah.",
   "validation.postcode.my.invalid": "Poskod Malaysia mesti mempunyai tepat 5 digit.",
   "validation.date.invalid": "Ini bukan tarikh yang sah. Sila semak.",

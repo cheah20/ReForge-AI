@@ -5,13 +5,47 @@
  * Handles international phone numbers (via libphonenumber-js), email,
  * permissive dates, and permissive postcodes.
  *
- * This is a permissive fallback — it accepts what it cannot clearly reject
- * rather than blocking users on unfamiliar formats.
+ * Postcodes are permissive (unfamiliar formats are kept as typed). Phone numbers
+ * are checked against numbering metadata and need a country for national input.
  */
 
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
+import { isSupportedCountry, parsePhoneNumberWithError } from 'libphonenumber-js';
 import type { CountryCode } from 'libphonenumber-js';
-import type { CountryPack, ValidationResult } from './interface.js';
+import type { CountryPack, ValidationContext, ValidationResult } from './interface.js';
+
+/** Digits, spaces, hyphens, dots, parentheses and one leading plus. Nothing else. */
+const PHONE_CHARS = /^\+?[0-9\s().-]+$/;
+
+/**
+ * International phone validation through libphonenumber-js.
+ * - "+<country code>..." is checked against that country's numbering metadata.
+ * - A national number is checked only when the form country is known; otherwise
+ *   the result asks for the country (`needs: 'country'`) instead of guessing.
+ * - Letters or other characters are rejected outright.
+ * Passing means the number has a valid structure, not that it is in service.
+ */
+export function validateInternationalPhone(value: string, context?: ValidationContext): ValidationResult {
+  const invalid: ValidationResult = { valid: false, messageKey: 'validation.phone.invalid' };
+  const v = value.trim();
+  if (!v || !PHONE_CHARS.test(v)) return invalid;
+
+  let country: CountryCode | undefined;
+  if (!v.startsWith('+')) {
+    const hint = context?.country?.toUpperCase();
+    if (!hint || !isSupportedCountry(hint)) {
+      return { valid: false, needs: 'country', messageKey: 'validation.phone.needsCountry' };
+    }
+    country = hint;
+  }
+
+  try {
+    const phone = parsePhoneNumberWithError(v, country);
+    if (!phone.isValid()) return invalid;
+    return { valid: true, normalizedValue: phone.format('INTERNATIONAL') };
+  } catch {
+    return invalid;
+  }
+}
 
 /** Simple email regex — RFC 5321 simplified, good enough for format check */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -91,32 +125,8 @@ function detectFormatHint(
 export const universalPack: CountryPack = {
   code: 'universal',
 
-  validatePhone(value: string): ValidationResult {
-    // Requires a country hint for best results; without it use isPossiblePhoneNumber
-    try {
-      const phone = parsePhoneNumber(value);
-      if (phone && phone.isValid()) {
-        return { valid: true, normalizedValue: phone.format('INTERNATIONAL') };
-      }
-    } catch {
-      // Fall through
-    }
-
-    // Try without country context — permissive
-    if (isValidPhoneNumber(value)) {
-      return { valid: true, normalizedValue: value.trim() };
-    }
-
-    // Permissive fallback: if it has at least 7 digits, accept it as-is
-    const digits = value.replace(/\D/g, '');
-    if (digits.length >= 7) {
-      return { valid: true, normalizedValue: value.trim() };
-    }
-
-    return {
-      valid: false,
-      messageKey: 'validation.phone.invalid',
-    };
+  validatePhone(value: string, context?: ValidationContext): ValidationResult {
+    return validateInternationalPhone(value, context);
   },
 
   validatePostcode(value: string): ValidationResult {

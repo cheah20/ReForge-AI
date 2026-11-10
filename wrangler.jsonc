@@ -1,16 +1,25 @@
 {
-  // Wrangler configuration for ReForge AI
-  // Use JSONC format as recommended by decision 15
+  // Wrangler configuration for ReForge AI (JSONC, decision 15)
   "name": "reforge-ai",
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-11-09",
 
-  // AI binding — remote: true required for local dev (no local simulation)
+  // Workers AI binding. There is no local AI simulation: in local dev the
+  // binding reaches Cloudflare and spends real neurons, hence remote: true.
   "ai": {
-    "binding": "AI"
+    "binding": "AI",
+    "remote": true
   },
 
-  // Rate limiting binding (per-IP, 10 requests per 60 seconds)
+  // Decision 11: the mock provider is the default everywhere. Real AI runs only
+  // when AI_MODE is "real" (set for the deployed Worker and for explicit
+  // smoke tests, e.g. `wrangler deploy --var AI_MODE:real`).
+  "vars": {
+    "AI_MODE": "mock"
+  },
+
+  // Rate limiting binding, keyed per IP. The period can only be 10 or 60 seconds
+  // and counts are approximate per Cloudflare location (decision 16).
   "ratelimits": [
     {
       "name": "RATE_LIMITER",
@@ -22,14 +31,14 @@
     }
   ],
 
-  // SPA routing: API routes run worker first, everything else serves SPA
+  // SPA routing: API routes run the Worker first, everything else serves the SPA.
   "assets": {
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"],
     "binding": "ASSETS"
   },
 
-  // Observability: log only operational metadata, never request/response bodies
+  // Observability: only operational metadata is logged, never bodies.
   "observability": {
     "enabled": true,
     "logs": {

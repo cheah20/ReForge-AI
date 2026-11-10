@@ -1,25 +1,30 @@
 /**
  * src/lib/pdf-extract/rejection.ts
  *
- * PDF pre-flight rejection checks. All eight checks are performed in order:
- * 1. TOO_LARGE    — file > 10,485,760 bytes (10 MiB, per decision 7)
- * 2. ENCRYPTED    — /Encrypt present (checked via ignoreEncryption + isEncrypted)
- * 3. INVALID_PDF  — PDFDocument.load throws
- * 4. XFA          — /AcroForm has a nonempty /XFA entry (checked before getForm())
- * 5. TOO_MANY_PAGES — pages > 20
- * 6. TOO_MANY_FIELDS — terminal fields > 150
- * 7. SIGNED       — any /Sig widget with a populated /V
- * 8. NO_FIELDS    — zero terminal interactive fields
+ * PDF pre-flight rejection checks, in order:
+ * 1. TOO_LARGE       file > 10,485,760 bytes (10 MiB, decision 7)
+ * 2. INVALID_PDF     PDFDocument.load throws
+ * 3. ENCRYPTED       the document has /Encrypt
+ * 4. XFA             /AcroForm has a non-empty /XFA (checked before any getForm() call,
+ *                    because getForm() deletes XFA in pdf-lib 1.17.1; decision 12)
+ * 5. TOO_MANY_PAGES  more than 20 pages
+ * 6. TOO_MANY_FIELDS more than 150 logical answer fields
+ * 7. SIGNED          a signature field whose /V resolves to a dictionary
+ * 8. NO_FIELDS       zero logical answer fields
  *
- * Per decision 12: XFA is inspected using the low-level dictionary API BEFORE
- * calling getForm(), because getForm() deletes XFA in pdf-lib 1.17.1.
- * Per decision 7: 10 MB = 10,485,760 bytes.
+ * Fields are counted with the same traversal the extraction uses (fields.ts),
+ * so a radio group with many widgets counts once and pushbuttons count nowhere.
+ * This module never throws for malformed input.
  */
 
-import { PDFDocument, PDFName, PDFDict, PDFArray, PDFRef, PDFNull, PDFStream } from 'pdf-lib';
+import { PDFArray, PDFDict, PDFDocument, PDFStream } from 'pdf-lib';
+import { collectLogicalFields, isAnswerField, isSignaturePopulated, type LogicalField } from './fields.js';
+import { getAny, resolveAs, streamSize } from './pdf-objects.js';
 
-/** Maximum allowed file size in bytes (10 MiB) */
+/** Maximum allowed file size in bytes (10 MiB). */
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10,485,760
+export const MAX_PAGES = 20;
+export const MAX_FIELDS = 150;
 
 export type RejectionCode =
   | 'TOO_LARGE'
@@ -41,11 +46,12 @@ export interface RejectionResult {
 export interface AcceptedResult {
   rejected: false;
   pdfDoc: PDFDocument;
+  /** Logical answer fields (pushbuttons excluded), in document order. */
+  fields: LogicalField[];
 }
 
 export type CheckResult = RejectionResult | AcceptedResult;
 
-/** Map rejection codes to i18n message keys */
 const MESSAGE_KEYS: Record<RejectionCode, string> = {
   TOO_LARGE: 'upload.error.tooLarge',
   ENCRYPTED: 'upload.error.encrypted',
@@ -57,155 +63,52 @@ const MESSAGE_KEYS: Record<RejectionCode, string> = {
   NO_FIELDS: 'upload.error.noFields',
 };
 
-function reject(code: RejectionCode): RejectionResult {
+export function rejection(code: RejectionCode): RejectionResult {
   return { rejected: true, code, messageKey: MESSAGE_KEYS[code] };
 }
 
 /**
- * Check if a /Sig field widget has a populated /V (structural detection only —
- * no cryptographic validation).
+ * True when the AcroForm carries XFA content. An empty array or a stream with
+ * zero bytes is not XFA.
  */
-function isSignaturePopulated(fieldDict: PDFDict): boolean {
-  const v = fieldDict.lookupMaybe(PDFName.of('V'), PDFDict);
-  if (v instanceof PDFDict) {
-    // Check for /Contents and /ByteRange — indicators of a real signature
-    const contents = v.lookup(PDFName.of('Contents'));
-    const byteRange = v.lookup(PDFName.of('ByteRange'));
-    if (contents && byteRange) return true;
-    // Also accept if /Filter is present (indicates a signature dict)
-    const filter = v.lookup(PDFName.of('Filter'));
-    if (filter) return true;
-  }
+export function hasXfa(pdfDoc: PDFDocument): boolean {
+  const context = pdfDoc.context;
+  const acroForm = resolveAs(context, getAny(pdfDoc.catalog, 'AcroForm'), PDFDict);
+  if (!acroForm) return false;
+  const xfa = getAny(acroForm, 'XFA');
+  if (xfa instanceof PDFArray) return xfa.size() > 0;
+  if (xfa instanceof PDFStream) return (streamSize(xfa) ?? 1) > 0;
   return false;
 }
 
-/**
- * Recursively collect all terminal fields from an AcroForm /Fields array.
- * Terminal fields are those with /FT set (not just parent container nodes).
- */
-function collectTerminalFields(
-  pdfDoc: PDFDocument,
-  fieldsArray: PDFArray,
-  result: PDFDict[],
-): void {
-  for (let i = 0; i < fieldsArray.size(); i++) {
-    const item = fieldsArray.get(i);
-    // Resolve indirect references
-    let fieldDict: PDFDict | undefined;
-    try {
-      if (item instanceof PDFRef) {
-        const resolved = pdfDoc.context.lookupMaybe(item, PDFDict);
-        if (resolved instanceof PDFDict) fieldDict = resolved;
-      } else if (item instanceof PDFDict) {
-        fieldDict = item;
-      }
-    } catch {
-      continue;
-    }
+/** Run all rejection checks. Returns the loaded document and its fields when accepted. */
+export async function checkPdf(fileBytes: ArrayBuffer | Uint8Array): Promise<CheckResult> {
+  if (fileBytes.byteLength > MAX_FILE_SIZE_BYTES) return rejection('TOO_LARGE');
 
-    if (!fieldDict) continue;
-
-    const ft = fieldDict.lookup(PDFName.of('FT'));
-    const kids = fieldDict.lookupMaybe(PDFName.of('Kids'), PDFArray);
-
-    if (kids instanceof PDFArray) {
-      // This is a parent node — recurse into children
-      collectTerminalFields(pdfDoc, kids, result);
-    } else if (ft) {
-      // This is a terminal field (has /FT)
-      result.push(fieldDict);
-    }
-  }
-}
-
-/**
- * Run all eight rejection checks in order.
- * Returns a RejectionResult if any check fails, or AcceptedResult with the
- * loaded PDFDocument if all checks pass.
- */
-export async function checkPdf(
-  fileBytes: ArrayBuffer | Uint8Array,
-): Promise<CheckResult> {
-  // Check 1: file size
-  const byteLength =
-    fileBytes instanceof ArrayBuffer ? fileBytes.byteLength : fileBytes.byteLength;
-  if (byteLength > MAX_FILE_SIZE_BYTES) {
-    return reject('TOO_LARGE');
-  }
-
-  // Check 2 + 3: encrypted / invalid PDF
-  // Load with ignoreEncryption: true so we can inspect isEncrypted
   let pdfDoc: PDFDocument;
   try {
     pdfDoc = await PDFDocument.load(fileBytes, {
       ignoreEncryption: true,
       updateMetadata: false,
+      throwOnInvalidObject: false,
     });
   } catch {
-    return reject('INVALID_PDF');
+    return rejection('INVALID_PDF');
   }
 
-  if (pdfDoc.isEncrypted) {
-    return reject('ENCRYPTED');
-  }
+  try {
+    if (pdfDoc.isEncrypted) return rejection('ENCRYPTED');
+    if (hasXfa(pdfDoc)) return rejection('XFA');
+    if (pdfDoc.getPageCount() > MAX_PAGES) return rejection('TOO_MANY_PAGES');
 
-  // Check 4: XFA — inspect before getForm() (which deletes XFA in pdf-lib 1.17.1)
-  // Per decision 12: check /AcroForm → /XFA using low-level dict API
-  const catalogDict = pdfDoc.catalog;
-  const acroFormRef = catalogDict.lookup(PDFName.of('AcroForm'));
-  let acroFormDict: PDFDict | undefined;
-  if (acroFormRef instanceof PDFRef) {
-    const resolved = pdfDoc.context.lookupMaybe(acroFormRef, PDFDict);
-    if (resolved instanceof PDFDict) acroFormDict = resolved;
-  } else if (acroFormRef instanceof PDFDict) {
-    acroFormDict = acroFormRef;
-  }
+    const fields = collectLogicalFields(pdfDoc).filter(isAnswerField);
+    if (fields.length > MAX_FIELDS) return rejection('TOO_MANY_FIELDS');
+    if (fields.some(isSignaturePopulated)) return rejection('SIGNED');
+    if (fields.length === 0) return rejection('NO_FIELDS');
 
-  if (acroFormDict) {
-    const xfa = acroFormDict.lookup(PDFName.of('XFA'));
-    // /XFA exists and is nonempty (not null, not an empty array/stream)
-    if (xfa && xfa !== PDFNull) {
-      if (xfa instanceof PDFArray && xfa.size() === 0) {
-        // empty array — not XFA
-      } else {
-        return reject('XFA');
-      }
-    }
+    return { rejected: false, pdfDoc, fields };
+  } catch {
+    // A structure pdf-lib could load but not walk is treated as an unreadable PDF.
+    return rejection('INVALID_PDF');
   }
-
-  // Check 5: page count
-  if (pdfDoc.getPageCount() > 20) {
-    return reject('TOO_MANY_PAGES');
-  }
-
-  // Collect terminal fields for checks 6, 7, 8
-  const terminalFields: PDFDict[] = [];
-  if (acroFormDict) {
-    const fieldsVal = acroFormDict.lookupMaybe(PDFName.of('Fields'), PDFArray);
-    if (fieldsVal instanceof PDFArray) {
-      collectTerminalFields(pdfDoc, fieldsVal, terminalFields);
-    }
-  }
-
-  // Check 6: too many fields
-  if (terminalFields.length > 150) {
-    return reject('TOO_MANY_FIELDS');
-  }
-
-  // Check 7: signed — any /Sig widget with populated /V
-  for (const field of terminalFields) {
-    const ft = field.lookup(PDFName.of('FT'));
-    if (ft instanceof PDFName && ft.asString() === '/Sig') {
-      if (isSignaturePopulated(field)) {
-        return reject('SIGNED');
-      }
-    }
-  }
-
-  // Check 8: no fields
-  if (terminalFields.length === 0) {
-    return reject('NO_FIELDS');
-  }
-
-  return { rejected: false, pdfDoc };
 }

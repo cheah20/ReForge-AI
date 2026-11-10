@@ -68,6 +68,7 @@
   "validation.ic.invalidBirthplace": "这不是可识别的出生地代码。请检查该号码。",
   "validation.ic.wrongLength": "身份证号码必须有 12 位数字。",
   "validation.phone.invalid": "这不像是有效的电话号码。请检查。",
+  "validation.phone.needsCountry": "这个电话号码属于哪个国家？请加上国家代码，例如 +60。",
   "validation.postcode.invalid": "请输入有效的邮政编码。",
   "validation.postcode.my.invalid": "马来西亚邮政编码必须恰好为 5 位数字。",
   "validation.date.invalid": "这不是有效的日期。请检查。",

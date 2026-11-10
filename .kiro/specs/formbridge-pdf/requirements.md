@@ -51,7 +51,7 @@ ReForge AI is a global product for people completing essential forms across a la
 
 **2-L.2** Each registry entry contains:
 - BCP 47 tag (e.g. `zh-Hans`)
-- Native name (e.g. `简体中文`)
+- Native name (the language's name written in that language, e.g. "Simplified Chinese" written in Simplified Chinese)
 - Text direction (`ltr` or `rtl`)
 - Font family (Noto family for the script)
 - Translation status: `core` or `experimental`

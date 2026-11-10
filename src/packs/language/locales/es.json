@@ -68,6 +68,7 @@
   "validation.ic.invalidBirthplace": "Este no es un código de lugar de nacimiento reconocido. Revisa el número.",
   "validation.ic.wrongLength": "Un número de IC debe tener 12 dígitos.",
   "validation.phone.invalid": "Esto no parece un número de teléfono válido. Revísalo.",
+  "validation.phone.needsCountry": "¿De qué país es este número de teléfono? Añade el código de país, por ejemplo +60.",
   "validation.postcode.invalid": "Introduce un código postal válido.",
   "validation.postcode.my.invalid": "Un código postal de Malasia debe tener exactamente 5 dígitos.",
   "validation.date.invalid": "Esta no es una fecha válida. Revísala.",

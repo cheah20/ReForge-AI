@@ -1,152 +1,117 @@
 /**
  * src/lib/pdf-extract/page-text.ts
  *
- * Per-widget page snippet extraction using pdf.js.
- * For each widget, finds the nearest text items on the same page and
- * concatenates up to 200 characters of context.
+ * Per-widget page snippets: the static page text nearest to each widget, up to
+ * 200 characters, sent to the AI as evidence.
  *
- * Per decision 18 / requirement 11.1:
- * Text drawn by form widget annotations (existing field values) must NOT appear
- * in the snippet. We exclude text items whose bounding box intersects the
- * widget's bounding box, so pre-filled values never reach the AI.
- *
- * Uses pdf.js (pdfjs-dist) for text extraction — it runs in Node.js via the
- * legacy build.
+ * Privacy rule (requirement 11.1, decision 18): text that may belong to a field
+ * value must never enter a snippet. All geometry here is in native PDF user
+ * space, the space of both pdf.js text transforms and widget /Rect values, so
+ * no coordinate conversion happens. A text item is dropped when:
+ * - its transform is not axis-aligned (b or c is not 0) or is mirrored,
+ * - its width or height is missing, non-finite or not positive (uncertain bounds),
+ * - its box, including descent below the baseline, touches any widget rect on
+ *   the page after that rect is expanded by 2pt on every side.
+ * Pages that are rotated or whose crop box does not start at (0,0) get no
+ * snippets at all (the caller enforces this; see index.ts).
  */
 
-import type { Widget } from '../../shared/types.js';
+import type { PdfRect } from './pdf-objects.js';
 
-/** A simplified text item from pdf.js */
-interface TextItem {
+export const MAX_SNIPPET_LENGTH = 200;
+/** Widget rects are expanded by this many points before the intersection test. */
+export const WIDGET_MARGIN = 2;
+/** Descent below the baseline as a fraction of the text height. */
+export const DESCENT_RATIO = 0.3;
+
+/** A text item as reported by pdf.js getTextContent(). */
+export interface TextItem {
   str: string;
-  transform: number[]; // [a, b, c, d, tx, ty]
+  /** [a, b, c, d, tx, ty] in PDF user space */
+  transform: number[];
   width: number;
   height: number;
 }
 
-/** Approximate bounding box from a pdf.js text item (PDF-space, bottom-origin) */
-function textItemBbox(item: TextItem): {
-  left: number;
-  bottom: number;
-  right: number;
-  top: number;
-} {
-  const tx = item.transform[4] ?? 0;
-  const ty = item.transform[5] ?? 0;
+/** Box of an axis-aligned text item including descent, or undefined if uncertain. */
+export function textItemBox(item: TextItem): PdfRect | undefined {
+  const t = item.transform;
+  if (!Array.isArray(t) || t.length !== 6 || !t.every((v) => Number.isFinite(v))) return undefined;
+  const [a, b, c, d, tx, ty] = t as [number, number, number, number, number, number];
+  if (b !== 0 || c !== 0 || a <= 0 || d <= 0) return undefined;
+  const { width, height } = item;
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return undefined;
+  }
   return {
     left: tx,
-    bottom: ty,
-    right: tx + (item.width ?? 0),
-    top: ty + (item.height ?? 0),
+    right: tx + width,
+    bottom: ty - DESCENT_RATIO * height,
+    top: ty + height,
   };
 }
 
-/** True if two rectangles (bottom-origin PDF space) overlap */
-function rectsOverlap(
-  a: { left: number; bottom: number; right: number; top: number },
-  b: { left: number; bottom: number; right: number; top: number },
-): boolean {
-  return a.left < b.right && a.right > b.left && a.bottom < b.top && a.top > b.bottom;
+function expand(r: PdfRect, m: number): PdfRect {
+  return { left: r.left - m, bottom: r.bottom - m, right: r.right + m, top: r.top + m };
 }
 
-/** Euclidean distance from a point to the centre of a widget bbox */
-function distToCentre(
-  tx: number,
-  ty: number,
-  widget: Widget,
-  pageHeight: number,
-): number {
-  // Widget bbox is top-origin; convert to bottom-origin for comparison with text
-  const cx = (widget.bbox.left + widget.bbox.right) / 2;
-  const cy = pageHeight - (widget.bbox.top + widget.bbox.bottom) / 2;
-  return Math.sqrt((tx - cx) ** 2 + (ty - cy) ** 2);
+/** Closed-interval overlap: touching edges count as overlapping. */
+function touches(a: PdfRect, b: PdfRect): boolean {
+  return a.left <= b.right && a.right >= b.left && a.bottom <= b.top && a.top >= b.bottom;
+}
+
+function centre(r: PdfRect): [number, number] {
+  return [(r.left + r.right) / 2, (r.bottom + r.top) / 2];
 }
 
 /**
- * Compute page snippets for all widgets on a given page.
- * Returns a map from widget index (within the widgets array) to snippet string.
- *
- * @param textItems - pdf.js text items for the page (bottom-origin PDF space)
- * @param widgets - widgets on this page (top-origin coordinates)
- * @param pageHeight - page height in PDF user units
- * @param widgetBboxesBottomOrigin - precomputed bottom-origin bboxes for each widget
- *   (used to exclude text that intersects a field — privacy rule)
+ * Shortest distance between two rectangles (0 when they overlap). Wide fields
+ * have their labels near an edge, far from their centre, so edge distance
+ * ranks a field's own label ahead of labels from neighbouring rows.
  */
-export function computePageSnippets(
-  textItems: TextItem[],
-  widgets: Widget[],
-  pageHeight: number,
-  widgetBboxesBottomOrigin: Array<{
-    left: number;
-    bottom: number;
-    right: number;
-    top: number;
-  }>,
-): string[] {
-  const snippets = widgets.map(() => '');
+export function rectDistance(a: PdfRect, b: PdfRect): number {
+  const dx = Math.max(0, b.left - a.right, a.left - b.right);
+  const dy = Math.max(0, b.bottom - a.top, a.bottom - b.top);
+  return Math.hypot(dx, dy);
+}
 
-  for (let wi = 0; wi < widgets.length; wi++) {
-    const widget = widgets[wi];
-    const widgetBbox = widgetBboxesBottomOrigin[wi];
-    if (!widget || !widgetBbox) continue;
+/**
+ * Compute one snippet per widget rect. `widgetRects` must contain every widget on
+ * the page, since each one excludes the text it touches from all snippets.
+ */
+export function computePageSnippets(items: TextItem[], widgetRects: PdfRect[]): string[] {
+  const guards = widgetRects.map((r) => expand(r, WIDGET_MARGIN));
 
-    // Filter: exclude text that overlaps any widget bbox (privacy + accuracy)
-    const usableItems = textItems.filter((item) => {
-      if (!item.str.trim()) return false;
-      const ib = textItemBbox(item);
-      // Exclude if this text item intersects any widget bbox on the page
-      for (const wb of widgetBboxesBottomOrigin) {
-        if (rectsOverlap(ib, wb)) return false;
-      }
-      return true;
-    });
-
-    // Sort by distance from widget centre
-    const sorted = usableItems
-      .map((item) => ({
-        item,
-        dist: distToCentre(
-          item.transform[4] ?? 0,
-          item.transform[5] ?? 0,
-          widget,
-          pageHeight,
-        ),
-      }))
-      .sort((a, b) => a.dist - b.dist);
-
-    // Concatenate until 200 chars
-    let snippet = '';
-    for (const { item } of sorted) {
-      const word = item.str.trim();
-      if (!word) continue;
-      const candidate = snippet ? `${snippet} ${word}` : word;
-      if (candidate.length <= 200) {
-        snippet = candidate;
-      } else {
-        // Add as much as we can
-        const remaining = 200 - snippet.length - 1;
-        if (remaining > 3) snippet = `${snippet} ${word.substring(0, remaining)}`;
-        break;
-      }
-    }
-
-    snippets[wi] = snippet.substring(0, 200);
+  const usable: { str: string; box: PdfRect }[] = [];
+  for (const item of items) {
+    const str = typeof item.str === 'string' ? item.str.trim() : '';
+    if (!str) continue;
+    const box = textItemBox(item);
+    if (!box) continue;
+    if (guards.some((g) => touches(box, g))) continue;
+    usable.push({ str, box });
   }
 
-  return snippets;
-}
+  return widgetRects.map((rect) => {
+    const [cx, cy] = centre(rect);
+    const sorted = usable
+      .map((u) => {
+        const [x, y] = centre(u.box);
+        return { str: u.str, edge: rectDistance(u.box, rect), mid: Math.hypot(x - cx, y - cy) };
+      })
+      .sort((p, q) => p.edge - q.edge || p.mid - q.mid);
 
-/**
- * Convert a widget's top-origin bbox to bottom-origin PDF space.
- */
-export function toBboxBottomOrigin(
-  widget: Widget,
-  pageHeight: number,
-): { left: number; bottom: number; right: number; top: number } {
-  return {
-    left: widget.bbox.left,
-    bottom: pageHeight - widget.bbox.bottom,
-    right: widget.bbox.right,
-    top: pageHeight - widget.bbox.top,
-  };
+    let snippet = '';
+    for (const { str } of sorted) {
+      const next = snippet ? `${snippet} ${str}` : str;
+      if (next.length <= MAX_SNIPPET_LENGTH) {
+        snippet = next;
+        continue;
+      }
+      const room = MAX_SNIPPET_LENGTH - snippet.length - (snippet ? 1 : 0);
+      if (room > 3) snippet = snippet ? `${snippet} ${str.slice(0, room)}` : str.slice(0, room);
+      break;
+    }
+    return snippet.slice(0, MAX_SNIPPET_LENGTH);
+  });
 }

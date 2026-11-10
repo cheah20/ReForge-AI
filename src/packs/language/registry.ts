@@ -104,7 +104,7 @@ const ENTRIES: readonly RegistryEntryInput[] = [
   },
 ];
 
-/** Native name from the language's own locale file; throws if the key is missing. */
+/** Native name from the language's own locale file; throws at load time if the key is missing. */
 function nativeNameFor(tag: string): string {
   const name = LOCALES[tag]?.['language.nativeName'];
   if (!name) {
@@ -118,9 +118,40 @@ export const LANGUAGE_REGISTRY: readonly LanguageEntry[] = ENTRIES.map((e) => ({
   nativeName: nativeNameFor(e.tag),
 }));
 
-/** Locale strings for a registered tag, or undefined if no locale file exists. */
-export function getLocaleStrings(tag: string): Readonly<Record<string, string>> | undefined {
+export const FALLBACK_LANGUAGE = 'en';
+
+/**
+ * The keys a locale file actually contains, without fallback. Used by the
+ * locale completeness test; UI code should use getLocaleStrings or translate.
+ */
+export function getOwnLocaleStrings(tag: string): Readonly<Record<string, string>> | undefined {
   return LOCALES[tag];
+}
+
+const merged = new Map<string, Readonly<Record<string, string>>>();
+
+/**
+ * UI strings for a tag: the locale's own strings over the English ones, so any
+ * key missing from the locale shows in English. An unknown tag gives English.
+ */
+export function getLocaleStrings(tag: string): Readonly<Record<string, string>> {
+  let strings = merged.get(tag);
+  if (!strings) {
+    strings = Object.freeze({ ...LOCALES[FALLBACK_LANGUAGE], ...(LOCALES[tag] ?? {}) });
+    merged.set(tag, strings);
+  }
+  return strings;
+}
+
+/**
+ * Translate one key, filling `{name}` placeholders from `params`.
+ * A key missing everywhere returns the key itself so the gap is visible.
+ */
+export function translate(tag: string, key: string, params: Record<string, string | number> = {}): string {
+  const template = getLocaleStrings(tag)[key] ?? key;
+  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
+    Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match,
+  );
 }
 
 /** Look up a language entry by BCP 47 tag. Returns undefined if not found. */

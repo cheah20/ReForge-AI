@@ -27,15 +27,15 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - _Requirements: tech.md (Vitest)_
   - [ ] 1.2 Create a PostFileSave hook that, when `src/packs/language/locales/en.json` is saved, diffs its keys against every other core locale file, lists missing or changed keys, and auto-updates core locale files with machine-translated placeholder values (labelled `[MT]` so translators can find them)
     - _Requirements: 2-L.1, 2-L.6_
-  - [ ] 1.3 Create a PreToolUse (or manual trigger) hook that checks staged files for: secrets or API key patterns, files named `local-*`, files from `.local/`, and non-English text in source code, comments, or docs (locale files and `fixtures/` are exempt); block commit and report violations
+  - [x] 1.3 Create a PreToolUse (or manual trigger) hook that checks staged files for: secrets or API key patterns, files named `local-*`, files from `.local/`, and non-English text in source code, comments, or docs (locale files and `fixtures/` are exempt); block commit and report violations
     - _Requirements: local-kiroween-rules.md_
 
 - [ ] 2. MCP configuration
   - [ ] 2.1 Add Context7 MCP server to `.kiro/settings/mcp.json` for up-to-date documentation for pdf-lib, pdf.js, Cloudflare Workers, and Workers AI; record the first real usage (e.g. "looked up pdf-lib AcroForm API") as a row in `docs/kiro-usage-log.md`
     - _Requirements: tech.md_
 
-- [ ] 3. Repository scaffold
-  - [ ] 3.1 Initialise single-package layout (no npm workspaces): root `package.json`, `vite.config.ts` using `@cloudflare/vite-plugin`, `wrangler.toml` with `compatibility_date` + Workers AI binding + rate-limiting binding, `tsconfig.json` (strict, path aliases for `src/`), `vitest.config.ts` (jsdom for frontend tests, node for worker tests), `playwright.config.ts` (Chromium + Firefox, `axe-playwright`), `.env.example`; create `fixtures/`, `scripts/create-fixtures/`, `src/worker/`, `src/frontend/`, `src/shared/`, `src/packs/`, `src/lib/` directories
+- [x] 3. Repository scaffold
+  - [x] 3.1 Initialise single-package layout (no npm workspaces): root `package.json`, `vite.config.ts` using `@cloudflare/vite-plugin`, `wrangler.toml` with `compatibility_date` + Workers AI binding + rate-limiting binding, `tsconfig.json` (strict, path aliases for `src/`), `vitest.config.ts` (jsdom for frontend tests, node for worker tests), `playwright.config.ts` (Chromium + Firefox, `axe-playwright`), `.env.example`; create `fixtures/`, `scripts/create-fixtures/`, `src/worker/`, `src/frontend/`, `src/shared/`, `src/packs/`, `src/lib/` directories
     - _Requirements: tech.md_
   - [x] 3.2 Add root `README.md` stub: setup steps (`git clone` → `npm install` → `wrangler login` → `npm run dev`), `Pre-existing code disclosure` section placeholder; add `scripts/generate-fixture-cache.ts` stub (runnable, exits 0 with a "not yet implemented" message)
     - _Requirements: tech.md_
@@ -48,12 +48,12 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 4.3 Write unit tests confirming schema acceptance and rejection at boundary values (fieldId at 256/257 chars, humanLabel at 40/41 chars, question at 120/121 chars, fields array at 30/31 items)
     - _Requirements: 5.1, 5.4_
 
-- [ ] 5. Language registry and locale files
+- [x] 5. Language registry and locale files
   - [x] 5.1 Create `src/packs/language/registry.ts` — `LanguageEntry` interface (tag, nativeName, direction, uiFontFamily, pdfFontFamily, status, modelLanguageName) and registry array for all Nov 17 languages: `en`, `ms`, `zh-Hans`, `zh-Hant`, `ta`, `es` (core), `id` (experimental)
     - _Requirements: 2-L.1, 2-L.2, 2-L.5_
   - [x] 5.2 Create `src/packs/language/locales/en.json` with all UI string keys; create `ms.json`, `zh-Hans.json`, `zh-Hant.json`, `ta.json`, `es.json` with all keys translated; create `id.json` with partial keys (fallback to English for missing)
     - _Requirements: 1.4, 2-L.1, 2-L.5_
-  - [ ] 5.3 Create React i18n provider (`src/frontend/i18n.tsx`): `useTranslation()` hook, fallback to `en.json` for missing keys, `<html lang={tag}>` update, lazy Noto font load per script on language selection
+  - [x] 5.3 Create React i18n provider (`src/frontend/i18n.tsx`): `useTranslation()` hook, fallback to `en.json` for missing keys, `<html lang={tag}>` update, lazy Noto font load per script on language selection
     - _Requirements: 2-L.1, 2-L.3, 13.4_
 
 - [x] 6. Country pack registry
@@ -67,43 +67,43 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 7. Latin-script fixtures
   - [x] 7.1 Create `fixtures/clinic-registration.pdf` — synthetic Malay-language AcroForm (~22 fields): text (name, IC, phone, email, address, postcode), date, radio groups, checkboxes, dropdown, free-text description, empty `/Sig` field; all labels and nearby text in Malay; no real org names or logos
     - _Requirements: 14.1_
-  - [ ] 7.2 Create `fixtures/school-enrolment.pdf` — synthetic bilingual EN/MS AcroForm: at least one field of each supported type (text, checkbox, radio, dropdown, signature); label some in English, some in Malay
+  - [x] 7.2 Create `fixtures/school-enrolment.pdf` — synthetic bilingual EN/MS AcroForm: at least one field of each supported type (text, checkbox, radio, dropdown, signature); label some in English, some in Malay
     - _Requirements: 14.2_
   - [ ] 7.3 Create `fixtures/no-fields.pdf`, `fixtures/xfa-acroform.pdf`, `fixtures/sig-empty.pdf`, `fixtures/sig-populated.pdf`, `fixtures/prefilled-field.pdf`; create dev script `scripts/create-fixtures/encrypted.ts` + commit `fixtures/encrypted.pdf`
     - _Requirements: 14.3, 14.4, 14.5, 14.6, 14.7, 14.10_
   - [x] 7.4 Create `fixtures/us-community-clinic.pdf` — synthetic English-language US AcroForm: name, phone, ZIP, email, date (MM/DD/YYYY), SSN field; no real agency names
     - _Requirements: 14.9_
 
-- [ ] 8. PDF rejection checks
+- [x] 8. PDF rejection checks
   - [x] 8.1 Create `src/lib/pdf-extract/rejection.ts` — all eight rejection checks in order: size > 10 MB → `TOO_LARGE`; load with `ignoreEncryption: true`, check `isEncrypted` → `ENCRYPTED`, load throws → `INVALID_PDF`; `/XFA` non-empty → `XFA`; pages > 20 → `TOO_MANY_PAGES`; fields > 150 → `TOO_MANY_FIELDS`; `/Sig` widget with value → `SIGNED`; fields === 0 → `NO_FIELDS`
     - _Requirements: 1.1, 1.2, 1.3_
   - [x] 8.2 Wire rejection into `src/lib/pdf-extract/index.ts` — `extractFields(pdfBytes: ArrayBuffer): Promise<ExtractionResult>`
     - _Requirements: 1.3, 1.4_
-  - [ ] 8.3 Write unit tests for each rejection code using fixtures; test > 10 MB fake buffer and non-PDF buffer; confirm `fixtures/sig-empty.pdf` is NOT rejected
+  - [x] 8.3 Write unit tests for each rejection code using fixtures; test > 10 MB fake buffer and non-PDF buffer; confirm `fixtures/sig-empty.pdf` is NOT rejected
     - _Requirements: 1.3_
 
-- [ ] 9. Field evidence extraction
+- [x] 9. Field evidence extraction
   - [x] 9.1 Create `src/lib/pdf-extract/acroform.ts` — fully qualified field names, inherited attributes, widget grouping into `widgets[]`, `/Opt` parsing for both string-array and `[exportValue, displayLabel]` forms, multiline flag, `hasValue` for `/Sig`, required/readOnly flags, list boxes as dropdown
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
   - [x] 9.2 Create `src/lib/pdf-extract/page-text.ts` — per-widget `pageSnippet`: `PDFPageProxy.getTextContent()`, Euclidean distance sort, concatenate nearest items up to 200 chars; **exclude text drawn by form widget annotations** (existing field values must not appear in the snippet, so they are never sent to the AI)
     - _Requirements: 4.1, 4.5, 11.1_
   - [x] 9.3 Integrate into `src/lib/pdf-extract/index.ts`: compute SHA-256 once via Web Crypto API, assemble `ExtractionResult` with `fileHash` and `pageCount`
     - _Requirements: 4.1, 5.8_
-  - [ ] 9.4 Write unit tests for extraction using `fixtures/clinic-registration.pdf` and `fixtures/school-enrolment.pdf`: verify field count, names, widget grouping, `pageSnippet` presence, correct `fieldType` per type; **write a test that a prefilled fixture field's value never appears in the `pageSnippet` or in any `FieldEvidence` property** (privacy test)
+  - [x] 9.4 Write unit tests for extraction using `fixtures/clinic-registration.pdf` and `fixtures/school-enrolment.pdf`: verify field count, names, widget grouping, `pageSnippet` presence, correct `fieldType` per type; **write a test that a prefilled fixture field's value never appears in the `pageSnippet` or in any `FieldEvidence` property** (privacy test)
     - _Requirements: 4.1, 11.1_
 
-- [ ] 10. Extraction property tests
-  - [ ] 10.1 Write Property 1 (field completeness) test using fast-check: run `extractFields` on `fixtures/clinic-registration.pdf`, then feed the real extracted field IDs into a generated `AnalyzeResponse`; for any such response, every extracted field is either mapped or fill-yourself — none silently dropped. The generator must produce omissions to allow the property to fail.
+- [x] 10. Extraction property tests
+  - [x] 10.1 Write Property 1 (field completeness) test using fast-check: run `extractFields` on `fixtures/clinic-registration.pdf`, then feed the real extracted field IDs into a generated `AnalyzeResponse`; for any such response, every extracted field is either mapped or fill-yourself — none silently dropped. The generator must produce omissions to allow the property to fail.
     - **Property 1: Field completeness — no silent drops**
     - **Validates: Requirements 5.5, 6.2, 15.1**
-  - [ ] 10.2 Write Property 7 (page snippet length) test using fast-check: generate arbitrary pdf.js text content arrays and widget bboxes; the returned `pageSnippet` is always ≤ 200 characters
+  - [x] 10.2 Write Property 7 (page snippet length) test using fast-check: generate arbitrary pdf.js text content arrays and widget bboxes; the returned `pageSnippet` is always ≤ 200 characters
     - **Property 7: Page snippet length invariant**
     - **Validates: Requirements 4.5**
-  - [ ] 10.3 Write Property 8 (batch count) test using fast-check: implement `batchFields(fields, 30)` as a pure function (used later in session state); for any field count N in [1, 150], the result has exactly ⌈N ÷ 30⌉ batches, each ≤ 30 fields, every field in exactly one batch
+  - [x] 10.3 Write Property 8 (batch count) test using fast-check: implement `batchFields(fields, 30)` as a pure function (used later in session state); for any field count N in [1, 150], the result has exactly ⌈N ÷ 30⌉ batches, each ≤ 30 fields, every field in exactly one batch
     - **Property 8: Batch count invariant**
     - **Validates: Requirements 5.1**
 
-- [ ] 11. Checkpoint — extraction and fixtures
+- [x] 11. Checkpoint — extraction and fixtures
   - Build with `tsc --noEmit`; run all Vitest tests added so far (tasks 4–10). All pass. Fixtures exist and open in a PDF viewer. Ask the developer to confirm before continuing.
 
 - [ ] 12. Minimal Worker with AI binding [needs CF access]
@@ -122,7 +122,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - _Gates: tasks 14 (CfWorkersAiProvider model ID), 15 (analyze route)_
 
 - [ ] 14. Spike 2 — CJK font embedding prototype
-  - Create `src/lib/pdf-fill/cjk-prototype.ts` as a standalone runnable script; load `fixtures/school-enrolment.pdf`, embed subsetted Noto Sans SC via `@pdf-lib/fontkit`, write `"张伟"` into one text field using `field.updateAppearances(cjkFont)`, save with `{ updateFieldAppearances: false }`, read back and assert value, render with pdf.js and screenshot in headless Chromium and Firefox; use `font.hasGlyphForCodePoint` (not `encodeText`) for glyph check; record pass/fail and Option A/B in `## CJK Prototype Result` in design.md
+  - Create `src/lib/pdf-fill/cjk-prototype.ts` as a standalone runnable script; load `fixtures/school-enrolment.pdf`, embed subsetted Noto Sans SC via `@pdf-lib/fontkit`, write a Chinese test name (two Simplified Chinese characters) into one text field using `field.updateAppearances(cjkFont)`, save with `{ updateFieldAppearances: false }`, read back and assert value, render with pdf.js and screenshot in headless Chromium and Firefox; use `font.hasGlyphForCodePoint` (not `encodeText`) for glyph check; record pass/fail and Option A/B in `## CJK Prototype Result` in design.md
   - If Spike 2 fails: add a "Chinese-language forms are not supported yet" message to the ConfirmLanguage screen when `formLanguage` is `zh-Hans` or `zh-Hant`; add a unit test that this message is shown and that `fillPdf` is never called for CJK form output
   - _Gates: tasks 37, 38 (CJK output, if pass); Chinese-fallback message (if fail)_
 
@@ -211,6 +211,8 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 24. Cross-pack validation (date, email, required, max length)
   - [ ] 24.1 `validateDate` (universal): DD/MM/YYYY and YYYY-MM-DD; use explicit format from tooltip/nearby text if available; ask user to confirm format if ambiguous; reject invalid dates; check formatted result against `MaxLen`
     - _Requirements: 7.5_
+  - [ ] 24.4 Dates need an explicitly confirmed format (review 1, item 19): `validateDate` parses only the confirmed or explicitly hinted format; never fall back to another format and never guess an ambiguous value such as `03/04/2026`; return `needs: 'format'` ("needs format confirmation") when no format is known. Unit tests for each case
+    - _Requirements: 7.5_
   - [ ] 24.2 `validateEmail`, `validateRequired`, `validateMaxLength` in universal pack: never silently truncate
     - _Requirements: 7.6, 7.7, 7.9_
   - [ ] 24.3 Unit tests: valid/invalid email; required field blank; required with answer; at max length; one char over max length
@@ -235,6 +237,9 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [ ] 28.1 `src/frontend/screens/Upload.tsx`: file input, privacy notice (exact wording from requirements §Overview), "Continue" gated on acknowledgement; trigger `extractFields()`; show rejection errors in active language
     - _Requirements: 1.3, 1.4, 9.5, 11.4_
   - [ ] 28.2 On rejection: show error card with i18n message key and "Try another file"; never crash
+  - [ ] 28.3 Configure the pdf.js worker for the browser (`pdfjs-dist/build/pdf.worker.min.mjs?url` → `GlobalWorkerOptions.workerSrc`) and add a browser extraction check (Playwright: upload a fixture, see its fields extracted) (review 1, item 20)
+    - _Requirements: 4.1, 4.5_
+  - [ ] 28.4 **Demo 1 (non-blocking):** run the dev server; write the URL and exact try-it steps into `.local/kiro-progress.md` under "Demos ready": pick a language, upload each fixture, see the extracted fields listed or the right rejection message
 
 - [ ] 29. Analysis loading screen
   - [ ] 29.1 `src/frontend/screens/AnalysisLoading.tsx`: batch progress "Analyzing batch N of M"; `DemoModeBanner` if mock provider; on complete navigate to ConfirmLanguage if confidence < 0.7 else QuestionWizard
@@ -247,6 +252,8 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 31. Question wizard screen
   - [ ] 31.1 `src/frontend/screens/QuestionWizard.tsx`: one field per step, step counter, skip read-only/fill-yourself, "Skip this field", "← Back"/"Next →", inline validation, navigate to Review when done
     - _Requirements: 4.3, 6.2, 6.3, 6.4_
+  - [ ] 31.6 Fields marked `multiSelect` or `unresolvedPage` show as "fill this yourself" (never asked, listed in review) (review 1, item 21); date questions ask the user to confirm the date format before validating when the field gives none (review 1, item 19)
+    - _Requirements: 6.2, 7.5, 15.1_
   - [ ] 31.2 `src/frontend/components/FieldQuestion.tsx`: `humanLabel`/`question`, `MachineTranslatedLabel` badge, original PDF label (tooltip or snippet, never fabricated); low-confidence confirmation flow; description translation flow — **translate button is the only trigger for the translate API call**, never automatic
     - _Requirements: 2-L.6, 2-L.7, 5.7, 6.1, 8.6, 11.1_
   - [ ] 31.3 `MachineTranslatedLabel.tsx`, `ValidationMessage.tsx` (linked via `aria-describedby`, announced via `aria-live="polite"`)
@@ -263,6 +270,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 33. Download confirmation screen
   - [ ] 33.1 `src/frontend/screens/DownloadConfirm.tsx`: call `fillPdf()`; handle `CharacterNotRepresentableError` and `TextOverflowError`; trigger browser download as `<name>-filled.pdf`
     - _Requirements: 8.7, 10.1, 10.2, 10.4_
+  - [ ] 33.2 **Demo 2 (non-blocking):** full local flow with the mock AI (language → upload clinic form → answer → review → download, then open the PDF); write step-by-step instructions with the synthetic answers from the fixture spec into `.local/kiro-progress.md` under "Demos ready"
 
 - [ ] 34. Design tokens and visual polish
   - [ ] 34.1 `src/frontend/tokens.css`: CSS custom properties for color palette and type scale from design.md; `font-family: 'Noto Sans', sans-serif`; max-width 560px on wizard; 68ch line length; CSS logical properties throughout; WCAG AA contrast confirmed for each color pair
@@ -289,6 +297,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - _Requirements: 12.7_
   - [ ] 37.2 Run `wrangler deploy`; confirm app loads at public URL; run the Nov 17 acceptance scenario manually against the live URL using the real Workers AI model (live smoke test); record actual neuron costs observed; add a row to `docs/kiro-usage-log.md`
     - _Requirements: 15.2, tech.md_
+  - [ ] 37.3 **Demo 3 (non-blocking):** live public URL with real AI; write try-it steps for desktop and phone into `.local/kiro-progress.md` under "Demos ready"
 
 - [ ] 38. US validation pack (Dec 1 gate)
   - Confirm the US pack from task 23 is fully wired into the country pack registry and e2e path: `getCountryPack("US")` returns the US pack, ZIP and phone validation active in the wizard for US forms
@@ -317,6 +326,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 42. Milestone 2 — Deploy and smoke test [needs CF access]
   - [ ] 42.1 Run `scripts/generate-fixture-cache.ts` for `fixtures/us-community-clinic.pdf` × core languages; commit new precomputed JSON files; run `wrangler deploy`; smoke-test Dec 1 acceptance scenario on the live URL; add a row to `docs/kiro-usage-log.md`
     - _Requirements: 12.7, 15.3, tech.md_
+  - [ ] 42.2 **Demo 4 (non-blocking):** Spanish → US form and (if Spike 2 passed) the Chinese form on the live URL; write try-it steps into `.local/kiro-progress.md` under "Demos ready"
 
 - [ ] 43. README and disclosure
   - [ ] 43.1 Complete `README.md`: public URL, full setup steps, completed `Pre-existing code disclosure` section listing all notable libraries; update `docs/kiro-usage-log.md` with rows for hooks, MCP usage, and PBT results that actually happened (one row per milestone)

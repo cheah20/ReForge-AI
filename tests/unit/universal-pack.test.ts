@@ -67,19 +67,36 @@ describe('universalPack.validatePhone', () => {
     expect(r.valid).toBe(true);
   });
 
-  it('permissively accepts 7+ digits without country context', () => {
+  // Review item 9: the old fallback accepted any string with 7+ digits.
+  it('rejects text with letters, even when it contains 7+ digits', () => {
+    const r = universalPack.validatePhone('garbage1234567');
+    expect(r).toMatchObject({ valid: false, messageKey: 'validation.phone.invalid' });
+    expect(r.needs).toBeUndefined();
+  });
+
+  it('asks for the country when a national number has no country context', () => {
     const r = universalPack.validatePhone('1234567');
-    expect(r.valid).toBe(true);
+    expect(r).toMatchObject({ valid: false, needs: 'country', messageKey: 'validation.phone.needsCountry' });
   });
 
-  it('rejects too-short input', () => {
-    const r = universalPack.validatePhone('12');
-    expect(r.valid).toBe(false);
+  it('checks a national number against the given country', () => {
+    expect(universalPack.validatePhone('012-345 6789', { country: 'MY' })).toMatchObject({
+      valid: true,
+      normalizedValue: '+60 12 345 6789',
+    });
+    expect(universalPack.validatePhone('(202) 555-0123', { country: 'US' }).valid).toBe(true);
   });
 
-  it('returns message key on failure', () => {
-    const r = universalPack.validatePhone('12');
-    expect(r.messageKey).toBe('validation.phone.invalid');
+  it('rejects a national number that is not valid for the given country', () => {
+    expect(universalPack.validatePhone('1234567', { country: 'MY' }).valid).toBe(false);
+  });
+
+  it('ignores an unsupported country hint and asks for the country instead', () => {
+    expect(universalPack.validatePhone('0123456789', { country: 'ZZ' }).needs).toBe('country');
+  });
+
+  it('rejects too-short international input', () => {
+    expect(universalPack.validatePhone('+12').valid).toBe(false);
   });
 });
 

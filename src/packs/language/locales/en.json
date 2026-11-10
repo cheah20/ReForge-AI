@@ -68,6 +68,7 @@
   "validation.ic.invalidBirthplace": "This is not a recognised birthplace code. Please check the number.",
   "validation.ic.wrongLength": "An IC number must have 12 digits.",
   "validation.phone.invalid": "This does not look like a valid phone number. Please check.",
+  "validation.phone.needsCountry": "Which country is this phone number from? Add the country code, for example +60.",
   "validation.postcode.invalid": "Please enter a valid postcode.",
   "validation.postcode.my.invalid": "A Malaysian postcode must be exactly 5 digits.",
   "validation.date.invalid": "This is not a valid date. Please check.",
