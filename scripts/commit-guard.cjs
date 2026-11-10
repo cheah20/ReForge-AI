@@ -52,6 +52,8 @@ function allowsNonEnglish(p) {
     norm.startsWith('src/packs/language/locales/') ||
     norm.startsWith('fixtures/') ||
     norm.startsWith('scripts/create-fixtures/') ||
+    // Schema-validated AI questions per interface language (requirement 12.7).
+    norm.startsWith('src/worker/cache/precomputed/') ||
     norm.startsWith('tests/')
   );
 }

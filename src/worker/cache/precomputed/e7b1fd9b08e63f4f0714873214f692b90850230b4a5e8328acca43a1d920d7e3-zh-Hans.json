@@ -1,0 +1,106 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "患者姓名",
+      "question": "请填写患者的完整姓名",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "出生日期",
+      "question": "请填写您的出生日期（月/日/年）",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "社会安全号码",
+      "question": "请输入您的社会安全号码 (SSN)",
+      "answerType": "ic",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "contact.phone",
+      "humanLabel": "联系电话",
+      "question": "请输入您的联系电话",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.email",
+      "humanLabel": "电子邮箱",
+      "question": "请输入您的电子邮箱地址",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "通讯地址",
+      "question": "请输入您的详细通讯地址",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "城市",
+      "question": "请输入您所在的城市",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "州",
+      "question": "请选择您所在的州",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "邮政编码",
+      "question": "请输入您的邮政编码",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "就诊日期",
+      "question": "请填写您的就诊日期（月/日/年）",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.contactMethod",
+      "humanLabel": "首选联系方式",
+      "question": "您希望我们通过哪种方式联系您？",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.reason",
+      "humanLabel": "就诊原因",
+      "question": "请描述您本次就诊的原因",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.reminders",
+      "humanLabel": "预约提醒同意",
+      "question": "您是否同意接收预约提醒？",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "患者签名",
+      "question": "请在此处签名",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "zh-Hans",
+  "formLanguageConfidence": 1,
+  "formCountry": "US",
+  "formCountryConfidence": 0.95
+}

@@ -9,6 +9,7 @@
 
 import { AnalyzeResponseSchema } from '../../shared/schemas.js';
 import type { AnalyzeResponse } from '../../shared/types.js';
+import { cacheKey } from './cache-key.js';
 
 /** Bundled at build time. Empty until the cache has been generated (task 37.1). */
 const BUNDLED = import.meta.glob<unknown>('./precomputed/*.json', { eager: true, import: 'default' });
@@ -27,9 +28,7 @@ export function bundledStore(files: Record<string, unknown> = BUNDLED): FixtureC
 
 const DEFAULT_STORE = bundledStore();
 
-export function cacheKey(contentHash: string, interfaceLanguage: string): string {
-  return `${contentHash}-${interfaceLanguage}`;
-}
+export { cacheKey };
 
 /**
  * Cached analysis for (hash, language), marked `servedFromCache: true`, or null

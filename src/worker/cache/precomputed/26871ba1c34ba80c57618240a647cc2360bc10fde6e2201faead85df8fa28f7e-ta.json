@@ -1,0 +1,162 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "நோயாளி பெயர்",
+      "question": "உங்கள் முழுப் பெயரை அடையாள அட்டையில் உள்ளபடி குறிப்பிடவும்",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "பிறந்த தேதி",
+      "question": "உங்கள் பிறந்த தேதியை DD/MM/YYYY என்ற வடிவில் குறிப்பிடவும்",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.gender",
+      "humanLabel": "பாலினம்",
+      "question": "உங்கள் பாலினத்தைத் தேர்ந்தெடுக்கவும்",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "அடையாள அட்டை எண்",
+      "question": "உங்கள் அடையாள அட்டை எண்ணை உள்ளிடவும்",
+      "answerType": "ic",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "clinic.branchCode",
+      "humanLabel": "கிளினிக் கிளை குறியீடு",
+      "question": "கிளினிக் கிளையின் குறியீட்டை உள்ளிடவும்",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "குறிப்பு எண்",
+      "question": "குறிப்பு எண்ணை உள்ளிடவும்",
+      "answerType": "text",
+      "confidence": 0.7
+    },
+    {
+      "fieldId": "contact.mobile",
+      "humanLabel": "கைபேசி எண்",
+      "question": "உங்கள் கைபேசி எண்ணை உள்ளிடவும்",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.homePhone",
+      "humanLabel": "வீட்டுத் தொலைபேசி எண்",
+      "question": "உங்கள் வீட்டுத் தொலைபேசி எண்ணை உள்ளிடவும்",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "முகவரி",
+      "question": "உங்கள் தபால் முகவரியை முழுமையாக எழுதவும்",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.postcode",
+      "humanLabel": "அஞ்சல் குறியீடு",
+      "question": "உங்கள் பகுதியின் அஞ்சல் குறியீட்டை உள்ளிடவும்",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "நகரம்",
+      "question": "உங்கள் ஊர் அல்லது நகரத்தின் பெயரை உள்ளிடவும்",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "மாநிலம்",
+      "question": "நீங்கள் வசிக்கும் மாநிலத்தைத் தேர்ந்தெடுக்கவும்",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text3",
+      "humanLabel": "மின்னஞ்சல் முகவரி",
+      "question": "உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடவும்",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "வருகை தேதி",
+      "question": "மருத்துவமனைக்கு வரும் தேதியைக் குறிப்பிடவும்",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.firstVisit",
+      "humanLabel": "முதல் வருகை",
+      "question": "இது உங்கள் முதல் வருகையா?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.shortCode",
+      "humanLabel": "குறுக்குக் குறியீடு",
+      "question": "நான்கு எழுத்துக்களுக்குள் ஒரு குறியீட்டை உள்ளிடவும்",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "medical.allergyFlag",
+      "humanLabel": "ஒவ்வாமை",
+      "question": "உங்களுக்கு ஏதேனும் ஒவ்வாமை (Allergy) உள்ளதா?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "medical.description",
+      "humanLabel": "மருத்துவ விவரம்",
+      "question": "மருத்துவமனைக்கு வரக் காரணம் அல்லது அறிகுறிகளை விளக்கவும்",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.name",
+      "humanLabel": "அவசரகாலத் தொடர்பு பெயர்",
+      "question": "அவசரத் தேவைக்குத் தொடர்பு கொள்ள வேண்டிய நபரின் பெயர்",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.phone",
+      "humanLabel": "அவசரகாலத் தொடர்பு எண்",
+      "question": "அவசரகாலத் தொடர்பு கொள்ள வேண்டிய தொலைபேசி எண்",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.contact",
+      "humanLabel": "தொடர்பு கொள்ள அனுமதி",
+      "question": "உங்களைத் தொடர்பு கொள்ள நான் சம்மதிக்கிறேன்",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "கையெழுத்து",
+      "question": "நோயாளி தனது கையெழுத்தைப் போடவும்",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "ms",
+  "formLanguageConfidence": 0.9,
+  "formCountry": "MY",
+  "formCountryConfidence": 1
+}

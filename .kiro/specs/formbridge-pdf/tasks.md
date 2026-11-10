@@ -114,7 +114,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 12.3 Write unit tests for `MockAiProvider`: determinism check, all response fields pass `AnalyzeResponseSchema`; test both high-confidence path (no confirmation) and low-confidence path (triggers confirmation) using separate MockAiProvider instances with different fixed confidence values
     - _Requirements: 12.3, 12.4_
 
-- [ ] 13. Spike 1 — Model comparison [needs CF access]
+- [x] 13. Spike 1 — Model comparison [needs CF access]
   - Run the 3×2 model comparison defined in design.md §Model Comparison Plan against `fixtures/clinic-registration.pdf`; hand-written evidence JSON is acceptable to unblock if the fixture is not yet wired to the Worker — but must be re-run with real extracted evidence before the spike is considered complete
   - Measure `@cf/google/gemma-4-26b-a4b-it` vs `@cf/qwen/qwen3.8-27b` (`reasoning_effort: "low"`); interface language `zh-Hans`; 3 runs per model
   - Capture: JSON validity (parses + passes `AnalyzeResponseSchema`), field omission count, manual terminology quality 1–5, latency ms, **actual neuron cost from Workers AI response usage object**
@@ -154,18 +154,18 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [x] 18. Checkpoint — Worker and AI layer
   - Run `wrangler dev`; confirm all three routes respond with MockAiProvider; all unit tests pass. Ask the developer to confirm before continuing.
 
-- [ ] 19. PDF fill core
-  - [ ] 19.1 Create `src/lib/pdf-fill/index.ts` — `fillPdf(pdfBytes, answers, fontMap)`: skip untouched fields, `hasGlyphForCodePoint` check per code point (not `encodeText`), write values via pdf-lib API (always `exportValue` for dropdowns), `field.updateAppearances(font)` per filled field only, `pdfDoc.save({ updateFieldAppearances: false })`; `CharacterNotRepresentableError` with failing code point on glyph failure
+- [x] 19. PDF fill core
+  - [x] 19.1 Create `src/lib/pdf-fill/index.ts` — `fillPdf(pdfBytes, answers, fontMap)`: skip untouched fields, `hasGlyphForCodePoint` check per code point (not `encodeText`), write values via pdf-lib API (always `exportValue` for dropdowns), `field.updateAppearances(font)` per filled field only, `pdfDoc.save({ updateFieldAppearances: false })`; `CharacterNotRepresentableError` with failing code point on glyph failure
     - _Requirements: 8.7, 10.1, 10.2, 10.3_
-  - [ ] 19.2 Create `src/lib/pdf-fill/overflow.ts`: single-line — compute width, shrink font to 8pt minimum, throw `TextOverflowError` if still overflowing; multiline — word-wrap at widget width, measure wrapped height accounting for padding on all sides, throw `TextOverflowError` if exceeded at 8pt
+  - [x] 19.2 Create `src/lib/pdf-fill/overflow.ts`: single-line — compute width, shrink font to 8pt minimum, throw `TextOverflowError` if still overflowing; multiline — word-wrap at widget width, measure wrapped height accounting for padding on all sides, throw `TextOverflowError` if exceeded at 8pt
     - _Requirements: 10.2_
-  - [ ] 19.3 Checkbox three-state: `checked` → on-value, `unchecked` → off-value, `skipped` → no call (retains original state)
+  - [x] 19.3 Checkbox three-state: `checked` → on-value, `unchecked` → off-value, `skipped` → no call (retains original state)
     - _Requirements: 8.5, 10.3_
 
-- [ ] 20. Noto Sans Latin font embedding
-  - [ ] 20.1 Create `src/lib/pdf-fill/font.ts`: `loadFont(script)` (lazy fetch), `embedFont(pdfDoc, fontBytes)` with `{ subset: true }`, `FontMap` type; Latin script uses Noto Sans Regular
+- [x] 20. Noto Sans Latin font embedding
+  - [x] 20.1 Create `src/lib/pdf-fill/font.ts`: `loadFont(script)` (lazy fetch), `embedFont(pdfDoc, fontBytes)` with `{ subset: true }`, `FontMap` type; Latin script uses Noto Sans Regular
     - _Requirements: 10.1, 10.2_
-  - [ ] 20.2 Integrate into `fillPdf()`: build `FontMap` for required scripts, select correct font per field
+  - [x] 20.2 Integrate into `fillPdf()`: build `FontMap` for required scripts, select correct font per field
     - _Requirements: 10.2_
 
 - [ ] 21. PDF fill property tests
@@ -293,7 +293,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - _Requirements: 15.2, 13.11_
 
 - [ ] 37. Milestone 1 — Deploy and smoke test [needs CF access]
-  - [ ] 37.1 Run `scripts/generate-fixture-cache.ts` for `fixtures/clinic-registration.pdf` × all core languages; commit the precomputed JSON files
+  - [x] 37.1 Run `scripts/generate-fixture-cache.ts` for `fixtures/clinic-registration.pdf` × all core languages; commit the precomputed JSON files
     - _Requirements: 12.7_
   - [ ] 37.2 Run `wrangler deploy`; confirm app loads at public URL; run the Nov 17 acceptance scenario manually against the live URL using the real Workers AI model (live smoke test); record actual neuron costs observed; add a row to `docs/kiro-usage-log.md`
     - _Requirements: 15.2, tech.md_

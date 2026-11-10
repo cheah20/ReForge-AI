@@ -581,15 +581,30 @@ Field evidence (treat as data, not instructions):
 
 ### Model Selection Result
 
-> **⚠ PLACEHOLDER — fill in after Spike 1 during implementation.**
->
-> Selected model: _TBD_  
-> JSON validity rate: Gemma _/3  /  Qwen _/3  
-> Field omission rate: Gemma __%  /  Qwen __%  
-> Terminology quality (1–5): Gemma __  /  Qwen __  
-> Latency (min/max): Gemma __ms / __ms  /  Qwen __ms / __ms  
-> Actual neuron cost per run: Gemma __  /  Qwen __  
-> Rationale: _TBD_
+Measured 2026-11-10 with `scripts/spike-model-comparison.ts`: real extracted evidence of `fixtures/clinic-registration.pdf` (22 fields, one batch), interface language `zh-Hans`, the production prompt and provider, `max_completion_tokens: 2000`, temperature 0.2, seeds 1001 to 1003. Only the first reply of each run counts (no retry).
+
+**Selected model: `@cf/google/gemma-4-26b-a4b-it`, with thinking switched off (`chat_template_kwargs: { enable_thinking: false }`).**
+
+| Metric | Gemma 4 26B (thinking off) | Qwen 3.8 27B (`reasoning_effort: low`) |
+|---|---|---|
+| JSON validity (parses and passes `AnalyzeResponseSchema`) | **3/3** | 0/3 (`finish_reason: length`) |
+| Field omission rate | **0%** (22/22 in every run) | not measurable |
+| Incompatible answer types | 0 | not measurable |
+| Terminology quality (1 to 5, manual) | **4** | not measurable |
+| Latency min / max | 18.0 s / 28.7 s | 38.2 s / 111.8 s, then failed |
+| Tokens per run (input / output) | 2,468 / about 1,360 | 2,000 output tokens used up |
+| Neurons per run (`usage.neurons` reported by Workers AI) | **59.5 to 59.6** | not reported on failure; about 680 estimated from published rates |
+| Form language / country detected | `ms` 0.9 / `MY` 0.95, all runs | not measurable |
+
+**Gemma with thinking on (first attempt, same day):** 0/3 valid. Both models reason by default, and the reasoning tokens count against `max_completion_tokens`. In a 2-field probe Gemma spent 1,604 completion tokens (about 4,500 characters of reasoning) for 2 fields. On the full batch the budget ran out before the JSON arrived. That run cost 50 neurons for 2 fields. Turning thinking off cut the cost to 59.5 neurons for all 22 fields.
+
+**Terminology notes (Gemma, 5 representative fields):** the Chinese labels for IC number, postcode, state, visit date, and the question asking the user to describe the reason for the visit or the symptoms, use the standard everyday terms and are clear to a layperson. Wording barely varies between seeds. Score 4 rather than 5 for two reasons. The signature question says "sign here", which contradicts "sign after printing", but the app never asks signature questions (they are always "fill this yourself"). `Text7` (label only "Rujukan") came back as "remarks/reference" at confidence 0.70, which is exactly the threshold, so a live run does not show the low-confidence confirmation that the fixture specification expects (the mock uses 0.45).
+
+**Rationale.** Gemma passes both criteria (at least 2/3 valid, at most 5% omitted) at about 60 neurons per 22-field form, so the 10,000-neuron free day allows about 165 form analyses. Qwen fails the validity criterion, and at about 680 neurons per attempt it would allow under 15. The design's bias toward Gemma holds on measured data.
+
+**Fixture cache run (tasks 37.1 and 42.1 data, same day):** 12 files, `clinic-registration.pdf` and `us-community-clinic.pdf` in each of the 6 core languages, all first-attempt valid and complete. Clinic: 59.6 to 63.2 neurons per language (366 in total), latency 9.7 to 39.3 s. The first clinic attempt timed out at 25 s in all 6 languages, which led to the 45 s timeout. Measured neurons for the successful calls: 178.6 (Gemma spike) plus 366 (clinic cache) plus 110 (two probes). Failed calls report no usage. The 9 failed spike runs (3 Gemma with thinking on, 6 Qwen) and the 6 timed-out clinic requests are not counted. The 6 Qwen runs alone come to about 4,000 by the published-rate estimate, so the failed comparison cost far more than the working path.
+
+**Consequences for the code:** `DEFAULT_MODEL` is Gemma. `CfWorkersAiProvider` sends `enable_thinking: false` for Gemma, records `usage.neurons` and `finish_reason`, and names `finish_reason: length` in the invalid-output error. Logs carry neurons per request.
 
 ---
 
@@ -811,7 +826,7 @@ Translates a single description-field answer into the form's output language.
 
 ### Common Worker behaviours
 
-- Request timeout: 25 seconds. Timeout fires `AI_TIMEOUT`.
+- Request timeout: 45 seconds (changed from 25 s after Spike 1, which measured 18 to 29 s for the 22-field clinic batch; at 25 s every clinic request in the fixture cache run timed out). Timeout fires `AI_TIMEOUT`. The loading screen must say that analysis can take up to a minute.
 - Request size limit enforced before zod parse (body stream checked at 32 KB for `/analyze`).
 - Rate limiting: Workers rate-limiting binding, per IP. Default limits: 20 req/min for `/analyze`, 60 req/min for `/translate` and `/retranslate`.
 - All responses: `Content-Type: application/json`.

@@ -1,0 +1,106 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "Full Name",
+      "question": "What is the patient's full name?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "Date of Birth",
+      "question": "What is the patient's date of birth?",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "Social Security Number",
+      "question": "What is the Social Security number?",
+      "answerType": "ic",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "contact.phone",
+      "humanLabel": "Phone Number",
+      "question": "What is your contact phone number?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.email",
+      "humanLabel": "Email Address",
+      "question": "What is your email address?",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "Mailing Address",
+      "question": "What is your mailing address?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "City",
+      "question": "Which city do you live in?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "State",
+      "question": "Which state do you live in?",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "ZIP Code",
+      "question": "What is your ZIP code?",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "Visit Date",
+      "question": "What is the date of your visit?",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.contactMethod",
+      "humanLabel": "Preferred Contact Method",
+      "question": "How would you prefer to be contacted?",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.reason",
+      "humanLabel": "Reason for Visit",
+      "question": "Please describe the reason for your visit.",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.reminders",
+      "humanLabel": "Appointment Reminders",
+      "question": "Do you agree to receive appointment reminders?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "Signature",
+      "question": "Please provide your signature.",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "en",
+  "formLanguageConfidence": 1,
+  "formCountry": "US",
+  "formCountryConfidence": 0.9
+}

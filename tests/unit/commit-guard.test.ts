@@ -115,9 +115,10 @@ describe('git commit', () => {
 
   it('blocks non-Latin text in source and docs, but allows it in locale files, fixtures and tests', () => {
     const chinese = String.fromCodePoint(0x4e2d, 0x6587);
-    const blocked = tempRepo({ 'src/app.ts': `// ${chinese}\n` });
+    const blocked = tempRepo({ 'src/app.ts': `// ${chinese}\n`, 'src/worker/cache/notes.json': `{"q": "${chinese}"}\n` });
     const allowed = tempRepo({
       'src/packs/language/locales/zh-Hans.json': `{"a": "${chinese}"}\n`,
+      'src/worker/cache/precomputed/abc-zh-Hans.json': `{"q": "${chinese}"}\n`,
       'tests/unit/x.test.ts': `const s = '${chinese}';\n`,
       'docs/notes.md': 'Plain English and Bahasa Melayu text.\n',
     });
@@ -125,6 +126,7 @@ describe('git commit', () => {
     const r = run('git commit -m "msg"', blocked);
     expect(r.status).toBe(2);
     expect(r.stderr).toContain('non-English text in src/app.ts');
+    expect(r.stderr).toContain('non-English text in src/worker/cache/notes.json');
     expect(run('git commit -m "msg"', allowed).status).toBe(0);
   });
 

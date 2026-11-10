@@ -8,12 +8,13 @@
  * Validates: Requirements 12.1, 12.2, 12.3, 12.4
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { extractFields } from '../../src/lib/pdf-extract/index.js';
 import { MockAiProvider, matchTable } from '../../src/lib/ai/mock.js';
 import {
   CfWorkersAiProvider,
+  DEFAULT_TIMEOUT_MS,
   classifyBindingError,
   GEMMA_MODEL,
   QWEN_MODEL,
@@ -237,6 +238,29 @@ describe('CfWorkersAiProvider', () => {
     expect((err as AiError).code).toBe('AI_QUOTA');
     expect(isCacheFallbackError(err)).toBe(true);
     expect((err as AiError).message).not.toContain('10,000');
+  });
+
+  // Fixture cache run: every 22-field clinic request timed out at the old 25 s default.
+  it('the default timeout is above the 29 s maximum latency measured in Spike 1', () => {
+    expect(DEFAULT_TIMEOUT_MS).toBe(45_000);
+    expect(DEFAULT_TIMEOUT_MS).toBeGreaterThan(28_733);
+  });
+
+  it('uses the default timeout when none is given', async () => {
+    vi.useFakeTimers();
+    try {
+      const slow: AiBinding = { run: () => new Promise(() => {}) };
+      const pending = call(new CfWorkersAiProvider(slow)).catch((e: unknown) => e);
+      await vi.advanceTimersByTimeAsync(44_999);
+      let settled = false;
+      void pending.then(() => (settled = true));
+      await Promise.resolve();
+      expect(settled).toBe(false);
+      await vi.advanceTimersByTimeAsync(2);
+      expect(await pending).toMatchObject({ code: 'AI_TIMEOUT' });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('times out with AI_TIMEOUT', async () => {

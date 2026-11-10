@@ -16,7 +16,11 @@ import { analyzeMessages, retranslateMessages, translateMessages, type ChatMessa
 
 export const GEMMA_MODEL = '@cf/google/gemma-4-26b-a4b-it';
 export const QWEN_MODEL = '@cf/qwen/qwen3.8-27b';
-/** Default until Spike 1 records the measured choice (design.md, Model Selection Result). */
+/**
+ * Chosen by Spike 1 (design.md, Model Selection Result): Gemma with thinking off
+ * gave 3/3 valid replies, 0 omitted fields, about 60 neurons per 22-field form.
+ * Qwen at reasoning_effort "low" gave 0/3 (token budget used up by reasoning).
+ */
 export const DEFAULT_MODEL = GEMMA_MODEL;
 
 /** The part of the Workers AI binding this provider uses. */
@@ -24,9 +28,17 @@ export interface AiBinding {
   run(model: string, inputs: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
 }
 
+/**
+ * Per-call timeout. The design said 25 s, but Spike 1 measured 18 to 29 s for
+ * the 22-field clinic batch, and every clinic request timed out at 25 s when the
+ * fixture cache was generated. 45 s leaves room above the measured maximum.
+ * Waiting on the AI binding is I/O, not Worker CPU time.
+ */
+export const DEFAULT_TIMEOUT_MS = 45_000;
+
 export interface CfWorkersAiOptions {
   model?: string;
-  /** Per-call timeout in ms (default 25 s, the Worker's request budget). */
+  /** Per-call timeout in ms (default DEFAULT_TIMEOUT_MS). */
   timeoutMs?: number;
   now?: () => number;
 }
@@ -53,7 +65,7 @@ export class CfWorkersAiProvider implements AiProvider {
     options: CfWorkersAiOptions = {},
   ) {
     this.model = options.model ?? DEFAULT_MODEL;
-    this.timeoutMs = options.timeoutMs ?? 25_000;
+    this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.now = options.now ?? (() => Date.now());
   }
 

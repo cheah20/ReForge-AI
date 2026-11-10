@@ -1,0 +1,106 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "Nama Penuh Pesakit",
+      "question": "Sila masukkan nama penuh pesakit.",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "Tarikh Lahir",
+      "question": "Sila nyatakan tarikh lahir pesakit.",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "Nombor Keselamatan Sosial",
+      "question": "Sila masukkan nombor keselamatan sosial anda.",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "contact.phone",
+      "humanLabel": "Nombor Telefon",
+      "question": "Sila berikan nombor telefon untuk dihubungi.",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.email",
+      "humanLabel": "Alamat Emel",
+      "question": "Sila masukkan alamat emel anda.",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "Alamat Surat-menyurat",
+      "question": "Sila masukkan alamat lengkap anda.",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "Bandar",
+      "question": "Sila nyatakan bandar tempat tinggal anda.",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "Negeri",
+      "question": "Sila pilih negeri anda.",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "Poskod",
+      "question": "Sila masukkan poskod anda.",
+      "answerType": "postcode",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "Tarikh Temujanji",
+      "question": "Sila nyatakan tarikh lawatan atau temujanji anda.",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.contactMethod",
+      "humanLabel": "Cara Hubungan",
+      "question": "Bagaimanakah anda ingin kami hubungi anda?",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.reason",
+      "humanLabel": "Sebab Lawatan",
+      "question": "Sila jelaskan sebab anda datang melawat.",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.reminders",
+      "humanLabel": "Peringatan Temujanji",
+      "question": "Adakah anda bersetuju untuk menerima peringatan temujanji?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "Tandatangan Pesakit",
+      "question": "Sila turunkan tandatangan anda di sini.",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "ms",
+  "formLanguageConfidence": 1,
+  "formCountry": "US",
+  "formCountryConfidence": 0.8
+}

@@ -32,7 +32,7 @@ Anything else needs a change to this file first.
 - Warn before the user leaves the page with unsaved answers. Do not save them silently.
 - The Worker logs only: request id, route, status, duration, error code, AI mode, model, attempts, token counts, neurons and the cache flag. Never request bodies, prompts, model replies, field labels or answers.
 - Error messages and error details name schema paths, never submitted values.
-- Do not commit raw model output. Summaries go into design.md.
+- Do not commit raw model output (spike and probe replies, reasoning text). Summaries go into design.md. The one exception is the precomputed fixture cache in `src/worker/cache/precomputed/`: schema-validated labels and questions for the bundled synthetic fixtures, written only by `scripts/generate-fixture-cache.ts`.
 
 ## AI mode
 

@@ -28,7 +28,8 @@ import { pathToFileURL } from 'url';
 import { extractFields } from '../src/lib/pdf-extract/index.js';
 import { getCoreLanguages } from '../src/packs/language/registry.js';
 import { AnalyzeResponseSchema } from '../src/shared/schemas.js';
-import { cacheKey } from '../src/worker/cache/fixture-cache.js';
+// Not fixture-cache.ts: that module uses Vite's import.meta.glob, which plain Node cannot run.
+import { cacheKey } from '../src/worker/cache/cache-key.js';
 
 export const CACHE_DIR = path.join(process.cwd(), 'src', 'worker', 'cache', 'precomputed');
 const MAX_FIELDS_PER_REQUEST = 30;

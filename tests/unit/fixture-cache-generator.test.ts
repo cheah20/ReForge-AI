@@ -8,6 +8,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
+import { spawnSync } from 'child_process';
+import path from 'path';
 import { createHandler } from '../../src/worker/index.js';
 import { MockAiProvider } from '../../src/lib/ai/mock.js';
 import type { AiProvider } from '../../src/lib/ai/interface.js';
@@ -96,6 +98,17 @@ describe('generateFixtureCache', () => {
     const { result } = await run(workerFetch(fakeRealProvider()), { languages: undefined as never });
     expect(result.written).toHaveLength(getCoreLanguages().length);
   });
+
+  // Found on the first real run: under plain tsx the script crashed on import.meta.glob.
+  it('runs as a plain Node script (outside Vite) and prints its usage', () => {
+    const r = spawnSync(process.execPath, [path.resolve('node_modules/tsx/dist/cli.mjs'), 'scripts/generate-fixture-cache.ts'], {
+      encoding: 'utf8',
+      timeout: 60_000,
+    });
+    expect(r.stderr).not.toContain('is not a function');
+    expect(r.stderr).toContain('Usage: npm run generate-fixture-cache');
+    expect(r.status).toBe(2);
+  }, 70_000);
 
   it('throws for a fixture that the extractor rejects', async () => {
     await expect(run(workerFetch(fakeRealProvider()), { fixtures: ['no-fields'] })).rejects.toThrow('rejected: NO_FIELDS');

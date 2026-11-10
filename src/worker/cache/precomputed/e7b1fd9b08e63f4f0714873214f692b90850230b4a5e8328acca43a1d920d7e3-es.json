@@ -1,0 +1,106 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "Nombre completo",
+      "question": "¿Cuál es su nombre completo?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "Fecha de nacimiento",
+      "question": "¿Cuál es su fecha de nacimiento?",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "Número de Seguro Social",
+      "question": "¿Cuál es su número de Seguro Social?",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "contact.phone",
+      "humanLabel": "Teléfono de contacto",
+      "question": "¿Cuál es su número de teléfono?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.email",
+      "humanLabel": "Correo electrónico",
+      "question": "¿Cuál es su dirección de correo electrónico?",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "Dirección de domicilio",
+      "question": "¿Cuál es su dirección de correspondencia?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "Ciudad",
+      "question": "¿En qué ciudad vive?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "Estado",
+      "question": "¿En qué estado vive?",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "Código postal",
+      "question": "¿Cuál es su código postal?",
+      "answerType": "postcode",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "Fecha de la visita",
+      "question": "¿Qué día será su visita?",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.contactMethod",
+      "humanLabel": "Método de contacto preferido",
+      "question": "¿Cómo prefiere que nos comuniquemos con usted?",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.reason",
+      "humanLabel": "Motivo de la visita",
+      "question": "¿Por qué desea realizar esta visita?",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.reminders",
+      "humanLabel": "Recordatorios de citas",
+      "question": "¿Acepta recibir recordatorios de sus citas?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "Firma del paciente",
+      "question": "Por favor, firme aquí para confirmar.",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "es",
+  "formLanguageConfidence": 1,
+  "formCountry": "US",
+  "formCountryConfidence": 0.9
+}

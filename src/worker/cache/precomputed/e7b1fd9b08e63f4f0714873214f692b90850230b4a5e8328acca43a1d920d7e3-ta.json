@@ -1,0 +1,106 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "நோயாளி பெயர்",
+      "question": "நோயாளியின் முழு பெயரை உள்ளிடவும்",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "பிறந்த தேதி",
+      "question": "நோயாளியின் பிறந்த தேதியை குறிப்பிடவும்",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "சமூக பாதுகாப்பு எண்",
+      "question": "உங்கள் சமூக பாதுகாப்பு எண்ணை (SSN) உள்ளிடவும்",
+      "answerType": "ic",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "contact.phone",
+      "humanLabel": "தொலைபேசி எண்",
+      "question": "தொடர்பு கொள்ள வேண்டிய தொலைபேசி எண்ணை வழங்கவும்",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.email",
+      "humanLabel": "மின்னஞ்சல் முகவரி",
+      "question": "உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடவும்",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "முகவரி",
+      "question": "உங்கள் தபால் முகவரியை முழுமையாக எழுதவும்",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "நகரம்",
+      "question": "நீங்கள் வசிக்கும் நகரத்தின் பெயரை உள்ளிடவும்",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "மாநிலம்",
+      "question": "உங்கள் மாநிலத்தைத் தேர்ந்தெடுக்கவும்",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "அஞ்சல் குறியீடு",
+      "question": "உங்கள் பகுதியின் அஞ்சல் குறியீட்டை (ZIP code) உள்ளிடவும்",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "வருகை தேதி",
+      "question": "மருத்துவமனைக்கு வரும் தேதியை குறிப்பிடவும்",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.contactMethod",
+      "humanLabel": "தொடர்பு முறை",
+      "question": "உங்களை எதன் மூலம் தொடர்பு கொள்ள வேண்டும்?",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.reason",
+      "humanLabel": "வருகைக்கான காரணம்",
+      "question": "மருத்துவமனைக்கு வருவதற்கான காரணத்தை விளக்கவும்",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.reminders",
+      "humanLabel": "நினைவூட்டல் ஒப்புதல்",
+      "question": "மருத்துவ சந்திப்பு நினைவூட்டல்களைப் பெற சம்மதமா?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "கையெழுத்து",
+      "question": "தயவுசெய்து இங்கே கையெழுத்திடவும்",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "ta",
+  "formLanguageConfidence": 1,
+  "formCountry": "US",
+  "formCountryConfidence": 0.9
+}
