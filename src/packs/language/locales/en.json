@@ -73,6 +73,8 @@
   "validation.postcode.invalid": "Please enter a valid postcode.",
   "validation.postcode.my.invalid": "A Malaysian postcode must be exactly 5 digits.",
   "validation.date.invalid": "This is not a valid date. Please check.",
+  "validation.date.chooseFormat": "Which date format does this form use? Choose one before you enter the date.",
+  "validation.date.wrongFormat": "Write the date as {format}, for example {example}.",
   "validation.date.confirmFormat": "Please confirm the date format: is this {format}?",
   "validation.email.invalid": "Please enter a valid email address.",
   "validation.zip.invalid": "Please enter a valid ZIP code (e.g. 12345 or 12345-6789).",

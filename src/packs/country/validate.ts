@@ -13,13 +13,30 @@
  */
 
 import type { AnswerType } from '../../shared/types.js';
+import { detectDateFormat, type DateFormat } from './dates.js';
 import type { CountryPack, ValidationContext, ValidationResult } from './interface.js';
 import { validateEmail } from './universal.js';
 
 export interface FieldConstraints {
   required?: boolean;
   maxLength?: number;
+  /** The PDF tooltip (/TU), searched for a printed date pattern. */
   tooltip?: string;
+  /** Page text beside the field, also searched for a printed date pattern. */
+  pageText?: string;
+  /** Date format the user confirmed for this field. Wins over anything printed. */
+  dateFormat?: DateFormat;
+  /** The field asks for a US Social Security number (format check only). */
+  ssn?: boolean;
+}
+
+/**
+ * The output format for a date field: the user's confirmed choice, else a
+ * single unambiguous pattern printed in the tooltip, else in the page text.
+ * Undefined means the user must be asked (requirement 7.5).
+ */
+export function resolveDateFormat(field: FieldConstraints): DateFormat | undefined {
+  return field.dateFormat ?? detectDateFormat(field.tooltip) ?? detectDateFormat(field.pageText);
 }
 
 /** Number of characters as a PDF viewer counts them (Unicode code points). */
@@ -48,9 +65,9 @@ function byType(
     case 'phone':
       return pack.validatePhone(value, context);
     case 'postcode':
-      return (pack.validateZip ?? pack.validatePostcode).call(pack, value, context);
+      return pack.validatePostcode(value, context);
     case 'date':
-      return pack.validateDate(value, field.tooltip, context);
+      return pack.validateDate(value, resolveDateFormat(field), context);
     case 'email':
       return validateEmail(value);
     case 'ic':
@@ -58,8 +75,10 @@ function byType(
       // the value is kept as typed (the field label decides what it means).
       return pack.validateIc ? pack.validateIc(value, context) : { valid: true, normalizedValue: value.trim() };
     case 'text':
-    case 'description':
+      if (field.ssn && pack.validateSsn) return pack.validateSsn(value, context);
       // Free text keeps the user's exact spelling; only surrounding spaces go.
+      return { valid: true, normalizedValue: value.trim() };
+    case 'description':
       return { valid: true, normalizedValue: value.trim() };
     default:
       // Checkbox, radio, dropdown and signature answers are not typed text.

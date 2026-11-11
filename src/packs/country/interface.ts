@@ -6,6 +6,8 @@
  * The universal fallback pack handles any country without a registered pack.
  */
 
+import type { DateFormat } from './dates.js';
+
 export interface ValidationResult {
   valid: boolean;
   /** i18n key for the error message, not a raw string */
@@ -27,11 +29,19 @@ export interface ValidationResult {
 export interface ValidationContext {
   /** ISO 3166-1 alpha-2 country of the form, when known (e.g. "MY", "US"). */
   country?: string;
+  /** "Today" for checks that compare with the current date (IC century). Defaults to the real date. */
+  today?: Date;
 }
 
 export interface CountryPack {
   /** ISO 3166-1 alpha-2 country code, or "universal" for the fallback */
   code: string;
+
+  /**
+   * Date format to pre-select when the user is asked to confirm one. Only a
+   * suggestion: a date is never checked against it without confirmation.
+   */
+  defaultDateFormat: DateFormat;
 
   /** Validate a national identity number (e.g. Malaysian IC / MyKad) */
   validateIc?(value: string, context?: ValidationContext): ValidationResult;
@@ -43,18 +53,12 @@ export interface CountryPack {
   validatePostcode(value: string, context?: ValidationContext): ValidationResult;
 
   /**
-   * Validate a date string.
-   * @param value - User-entered string
-   * @param fieldTooltip - Optional tooltip from the PDF, may contain format hint
+   * Validate a date answer.
+   * @param format the field's output format, confirmed by the user or printed
+   *   on the form; undefined when neither exists (the result then asks for it)
    */
-  validateDate(value: string, fieldTooltip?: string, context?: ValidationContext): ValidationResult;
-
-  /** Format a date string to the expected output format for this country */
-  formatDate(value: string, fieldTooltip?: string): string;
+  validateDate(value: string, format: DateFormat | undefined, context?: ValidationContext): ValidationResult;
 
   /** Validate a Social Security Number (US only: format check, never verification) */
   validateSsn?(value: string, context?: ValidationContext): ValidationResult;
-
-  /** Validate a ZIP / postal code (US-specific; same as validatePostcode for US) */
-  validateZip?(value: string, context?: ValidationContext): ValidationResult;
 }

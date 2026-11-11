@@ -73,6 +73,8 @@
   "validation.postcode.invalid": "Sila masukkan poskod yang sah.",
   "validation.postcode.my.invalid": "Poskod Malaysia mesti mempunyai tepat 5 digit.",
   "validation.date.invalid": "Ini bukan tarikh yang sah. Sila semak.",
+  "validation.date.chooseFormat": "Borang ini menggunakan format tarikh yang mana? Pilih satu sebelum anda memasukkan tarikh.",
+  "validation.date.wrongFormat": "Tulis tarikh dalam format {format}, contohnya {example}.",
   "validation.date.confirmFormat": "Sila sahkan format tarikh: adakah ini {format}?",
   "validation.email.invalid": "Sila masukkan alamat e-mel yang sah.",
   "validation.zip.invalid": "Sila masukkan kod ZIP yang sah (contoh: 12345 atau 12345-6789).",

@@ -73,6 +73,8 @@
   "validation.postcode.invalid": "Masukkan kode pos yang valid.",
   "validation.postcode.my.invalid": "Kode pos Malaysia harus tepat 5 digit.",
   "validation.date.invalid": "Ini bukan tanggal yang valid. Periksa.",
+  "validation.date.chooseFormat": "Formulir ini memakai format tanggal yang mana? Pilih satu sebelum mengisi tanggal.",
+  "validation.date.wrongFormat": "Tulis tanggal sebagai {format}, misalnya {example}.",
   "validation.date.confirmFormat": "Konfirmasi format tanggal: apakah ini {format}?",
   "validation.email.invalid": "Masukkan alamat email yang valid.",
   "validation.dropdown.invalid": "Pilih salah satu opsi yang tersedia.",

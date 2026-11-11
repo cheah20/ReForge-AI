@@ -47,6 +47,13 @@ describe('validateEmail', () => {
     expect(validateEmail('user @example.com').valid).toBe(false);
   });
 
+  it.each(['a@b..com', 'a@.example.com', 'a@example.com.', 'a@@example.com', 'a@example.c'])(
+    'rejects %s (empty domain label, double @ or one-letter TLD)',
+    (value) => {
+      expect(validateEmail(value).valid).toBe(false);
+    },
+  );
+
   it('returns the correct message key on failure', () => {
     expect(validateEmail('bad').messageKey).toBe('validation.email.invalid');
   });
@@ -110,28 +117,29 @@ describe('universalPack.validateDate — ISO format', () => {
     expect(r.valid).toBe(true);
   });
 
+  // A format is always passed now: without one the answer needs confirmation (dates.test.ts).
   it('accepts leap year 2024-02-29', () => {
-    const r = universalPack.validateDate('2024-02-29');
+    const r = universalPack.validateDate('2024-02-29', 'YYYY-MM-DD');
     expect(r.valid).toBe(true);
   });
 
   it('rejects century non-leap 2100-02-29', () => {
-    const r = universalPack.validateDate('2100-02-29');
+    const r = universalPack.validateDate('2100-02-29', 'YYYY-MM-DD');
     expect(r.valid).toBe(false);
   });
 
   it('rejects century divisible by 400 is leap: 2000-02-29 passes', () => {
-    const r = universalPack.validateDate('2000-02-29');
+    const r = universalPack.validateDate('2000-02-29', 'YYYY-MM-DD');
     expect(r.valid).toBe(true);
   });
 
   it('rejects invalid month 13', () => {
-    const r = universalPack.validateDate('2026-13-01');
+    const r = universalPack.validateDate('2026-13-01', 'YYYY-MM-DD');
     expect(r.valid).toBe(false);
   });
 
   it('rejects April 31', () => {
-    const r = universalPack.validateDate('2026-04-31');
+    const r = universalPack.validateDate('2026-04-31', 'YYYY-MM-DD');
     expect(r.valid).toBe(false);
   });
 });

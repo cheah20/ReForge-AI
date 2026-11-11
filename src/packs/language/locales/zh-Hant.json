@@ -73,6 +73,8 @@
   "validation.postcode.invalid": "請輸入有效的郵遞區號。",
   "validation.postcode.my.invalid": "馬來西亞郵遞區號必須恰好為 5 位數字。",
   "validation.date.invalid": "這不是有效的日期。請檢查。",
+  "validation.date.chooseFormat": "這份表格使用哪種日期格式？請先選擇格式，再填寫日期。",
+  "validation.date.wrongFormat": "請按 {format} 格式填寫日期，例如 {example}。",
   "validation.date.confirmFormat": "請確認日期格式：這是 {format} 嗎？",
   "validation.email.invalid": "請輸入有效的電子郵件地址。",
   "validation.zip.invalid": "請輸入有效的 ZIP 郵遞區號（例如 12345 或 12345-6789）。",

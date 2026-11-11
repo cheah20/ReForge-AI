@@ -73,6 +73,8 @@
   "validation.postcode.invalid": "சரியான தபால் குறியீட்டை உள்ளிடவும்.",
   "validation.postcode.my.invalid": "மலேசிய தபால் குறியீடு சரியாக 5 இலக்கங்களாக இருக்க வேண்டும்.",
   "validation.date.invalid": "இது சரியான தேதி அல்ல. சரிபார்க்கவும்.",
+  "validation.date.chooseFormat": "இந்தப் படிவம் எந்த தேதி வடிவத்தைப் பயன்படுத்துகிறது? தேதியை உள்ளிடும் முன் ஒன்றைத் தேர்ந்தெடுக்கவும்.",
+  "validation.date.wrongFormat": "தேதியை {format} வடிவத்தில் எழுதவும், எ.கா. {example}.",
   "validation.date.confirmFormat": "தேதி வடிவத்தை உறுதிப்படுத்தவும்: இது {format} ஆகுமா?",
   "validation.email.invalid": "சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.",
   "validation.zip.invalid": "சரியான ZIP குறியீட்டை உள்ளிடவும் (எ.கா. 12345 அல்லது 12345-6789).",

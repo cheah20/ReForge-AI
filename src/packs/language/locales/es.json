@@ -73,6 +73,8 @@
   "validation.postcode.invalid": "Introduce un código postal válido.",
   "validation.postcode.my.invalid": "Un código postal de Malasia debe tener exactamente 5 dígitos.",
   "validation.date.invalid": "Esta no es una fecha válida. Revísala.",
+  "validation.date.chooseFormat": "¿Qué formato de fecha usa este formulario? Elige uno antes de escribir la fecha.",
+  "validation.date.wrongFormat": "Escribe la fecha como {format}, por ejemplo {example}.",
   "validation.date.confirmFormat": "Confirma el formato de fecha: ¿es {format}?",
   "validation.email.invalid": "Introduce una dirección de correo electrónico válida.",
   "validation.zip.invalid": "Introduce un código ZIP válido (p. ej. 12345 o 12345-6789).",

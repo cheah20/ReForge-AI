@@ -73,6 +73,8 @@
   "validation.postcode.invalid": "请输入有效的邮政编码。",
   "validation.postcode.my.invalid": "马来西亚邮政编码必须恰好为 5 位数字。",
   "validation.date.invalid": "这不是有效的日期。请检查。",
+  "validation.date.chooseFormat": "这份表格使用哪种日期格式？请先选择格式，再填写日期。",
+  "validation.date.wrongFormat": "请按 {format} 格式填写日期，例如 {example}。",
   "validation.date.confirmFormat": "请确认日期格式：这是 {format} 吗？",
   "validation.email.invalid": "请输入有效的电子邮件地址。",
   "validation.zip.invalid": "请输入有效的 ZIP 邮政编码（例如 12345 或 12345-6789）。",

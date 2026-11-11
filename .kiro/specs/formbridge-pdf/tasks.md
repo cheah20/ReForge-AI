@@ -182,43 +182,43 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - **Property 11: Max length rejection**
     - **Validates: Requirements 7.9, 10.2**
 
-- [ ] 22. MY validation pack
-  - [ ] 22.1 Create `src/packs/country/my.ts`: `MY_IC_BIRTHPLACE_CODES` constant with JPN source URL comment; `validateIc` with YYMMDD parsing (20YY if valid and not later than today; else 19YY; else reject), birthplace code check; `normalizeIc`; no age inference; no checksum claim
+- [x] 22. MY validation pack
+  - [x] 22.1 Create `src/packs/country/my.ts`: `MY_IC_BIRTHPLACE_CODES` constant with JPN source URL comment; `validateIc` with YYMMDD parsing (20YY if valid and not later than today; else 19YY; else reject), birthplace code check; `normalizeIc`; no age inference; no checksum claim
     - _Requirements: 7.1, 8.3_
-  - [ ] 22.2 `validatePhone` in MY pack: MCMC prefix+length table with source URL; `+60`/`60` prefixes; standard grouping output
+  - [x] 22.2 `validatePhone` in MY pack: MCMC prefix+length table with source URL; `+60`/`60` prefixes; standard grouping output
     - _Requirements: 7.2_
-  - [ ] 22.3 `validatePostcode` in MY pack: exactly 5 ASCII digits; register MY pack in registry
+  - [x] 22.3 `validatePostcode` in MY pack: exactly 5 ASCII digits; register MY pack in registry
     - _Requirements: 7.3_
-  - [ ] 22.4 Unit tests for MY IC: ≥ 10 known valid ICs; impossible date (month 13, day 32); invalid birthplace code; with/without dashes; too short/long; **IC with 20YY date that would be in the future must be rejected and re-tried as 19YY**
+  - [x] 22.4 Unit tests for MY IC: ≥ 10 known valid ICs; impossible date (month 13, day 32); invalid birthplace code; with/without dashes; too short/long; **IC with 20YY date that would be in the future must be rejected and re-tried as 19YY**
     - _Requirements: 7.1_
-  - [ ] 22.5 Unit tests for MY phone: one valid mobile per prefix type; Klang Valley landline; Sarawak landline; `+60` prefix; no prefix; invalid prefix; wrong digit count
+  - [x] 22.5 Unit tests for MY phone: one valid mobile per prefix type; Klang Valley landline; Sarawak landline; `+60` prefix; no prefix; invalid prefix; wrong digit count
     - _Requirements: 7.2_
-  - [ ] 22.6 Unit tests for MY postcode: 5 digits valid; 4/6 digits invalid; non-digit chars invalid
+  - [x] 22.6 Unit tests for MY postcode: 5 digits valid; 4/6 digits invalid; non-digit chars invalid
     - _Requirements: 7.3_
-  - [ ] 22.7 Write Property 3 (IC normalization idempotence): generate strings that pass `validateIc`; `normalizeIc(normalizeIc(s)) === normalizeIc(s)` and result is exactly 12 digits; generator must include strings with dashes
+  - [x] 22.7 Write Property 3 (IC normalization idempotence): generate strings that pass `validateIc`; `normalizeIc(normalizeIc(s)) === normalizeIc(s)` and result is exactly 12 digits; generator must include strings with dashes
     - **Property 3: IC normalization idempotence**
     - **Validates: Requirements 7.1, 8.3**
-  - [ ] 22.8 Write Property 4 (IC validation correctness): generate arbitrary 12-digit strings; `validateIc(s).valid` iff digits 1–6 are a valid calendar date (20YY if not future, else 19YY) **and** digits 7–8 are in `MY_IC_BIRTHPLACE_CODES`; generator must produce strings that fail each condition independently
+  - [x] 22.8 Write Property 4 (IC validation correctness): generate arbitrary 12-digit strings; `validateIc(s).valid` iff digits 1–6 are a valid calendar date (20YY if not future, else 19YY) **and** digits 7–8 are in `MY_IC_BIRTHPLACE_CODES`; generator must produce strings that fail each condition independently
     - **Property 4: IC validation correctness**
     - **Validates: Requirements 7.1**
 
-- [ ] 23. US validation pack
-  - [ ] 23.1 Create `src/packs/country/us.ts`: NANP phone (accept `+1`), ZIP/ZIP+4, date (DD/MM/YYYY and YYYY-MM-DD input → MM/DD/YYYY output), SSN format check only (never send to backend, never claim verification); register in registry
+- [x] 23. US validation pack
+  - [x] 23.1 Create `src/packs/country/us.ts`: NANP phone (accept `+1`), ZIP/ZIP+4, date (DD/MM/YYYY and YYYY-MM-DD input → MM/DD/YYYY output), SSN format check only (never send to backend, never claim verification); register in registry
     - _Requirements: 7.4, 7.5_
-  - [ ] 23.2 Unit tests for US pack: valid/invalid NANP phone, ZIP and ZIP+4, invalid ZIP, date parsing → MM/DD/YYYY output, SSN format pass and fail
+  - [x] 23.2 Unit tests for US pack: valid/invalid NANP phone, ZIP and ZIP+4, invalid ZIP, date parsing → MM/DD/YYYY output, SSN format pass and fail
     - _Requirements: 7.4, 7.5_
 
-- [ ] 24. Cross-pack validation (date, email, required, max length)
-  - [ ] 24.1 `validateDate` (universal): DD/MM/YYYY and YYYY-MM-DD; use explicit format from tooltip/nearby text if available; ask user to confirm format if ambiguous; reject invalid dates; check formatted result against `MaxLen`
+- [x] 24. Cross-pack validation (date, email, required, max length)
+  - [x] 24.1 `validateDate` (universal): DD/MM/YYYY and YYYY-MM-DD; use explicit format from tooltip/nearby text if available; ask user to confirm format if ambiguous; reject invalid dates; check formatted result against `MaxLen`
     - _Requirements: 7.5_
-  - [ ] 24.4 Dates need an explicitly confirmed format (review 1, item 19): `validateDate` parses only the confirmed or explicitly hinted format; never fall back to another format and never guess an ambiguous value such as `03/04/2026`; return `needs: 'format'` ("needs format confirmation") when no format is known. Unit tests for each case
+  - [x] 24.4 Dates need an explicitly confirmed format (review 1, item 19): `validateDate` parses only the confirmed or explicitly hinted format; never fall back to another format and never guess an ambiguous value such as `03/04/2026`; return `needs: 'format'` ("needs format confirmation") when no format is known. Unit tests for each case
     - _Requirements: 7.5_
-  - [ ] 24.2 `validateEmail`, `validateRequired`, `validateMaxLength` in universal pack: never silently truncate
+  - [x] 24.2 `validateEmail`, `validateRequired`, `validateMaxLength` in universal pack: never silently truncate
     - _Requirements: 7.6, 7.7, 7.9_
-  - [ ] 24.3 Unit tests: valid/invalid email; required field blank; required with answer; at max length; one char over max length
+  - [x] 24.3 Unit tests: valid/invalid email; required field blank; required with answer; at max length; one char over max length
     - _Requirements: 7.6, 7.9_
 
-- [ ] 25. Checkpoint — core logic
+- [x] 25. Checkpoint — core logic
   - All property-based tests and unit tests for tasks 19–24 pass; `tsc --noEmit` clean. Ask the developer to confirm before continuing.
 
 - [ ] 26. Session state and browser analysis orchestration
