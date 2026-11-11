@@ -16,6 +16,9 @@ export default defineConfig({
     // Node by default; frontend tests opt in with `// @vitest-environment jsdom`.
     environment: 'node',
     globals: true,
+    // PDF parsing and font subsetting are CPU-heavy. With every file running in
+    // parallel, single tests passed alone in 1-2 s but crossed the 5 s default.
+    testTimeout: 20_000,
     include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx', 'src/**/*.test.ts'],
   },
 });

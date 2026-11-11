@@ -36,3 +36,6 @@ spike-*.txt
 spike-*.json
 test-out.txt
 *.tmp
+# Playwright output (screenshots and traces of test runs)
+test-results/
+playwright-report/

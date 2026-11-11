@@ -22,6 +22,7 @@
 
 import { batchFields, BATCH_SIZE } from '../lib/batch.js';
 import {
+  isCompatible,
   LOW_CONFIDENCE_THRESHOLD,
   needsAnalysis,
   reconcileAnalysis,
@@ -86,6 +87,8 @@ export interface SessionState {
   detection: Detection | null;
   /** True when the user must confirm the form language and country before the questions. */
   needsConfirmation: boolean;
+  /** True when the Worker served the precomputed analysis because the AI failed (12.7). */
+  servedFromCache: boolean;
 }
 
 export interface SessionStore {
@@ -107,6 +110,7 @@ export function createSession(interfaceLanguage = 'en'): SessionState {
     activeAnalysisId: null,
     detection: null,
     needsConfirmation: false,
+    servedFromCache: false,
   };
 }
 
@@ -235,7 +239,11 @@ export async function analyzeForm(
       if (reply.aiMode === 'mock') demoMode = true;
       replies.push(reply.data);
     }
-    combined = { ...combineDetection(replies), fields: replies.flatMap((r) => r.fields) };
+    combined = {
+      ...combineDetection(replies),
+      fields: replies.flatMap((r) => r.fields),
+      servedFromCache: replies.some((r) => r.servedFromCache === true),
+    };
   }
 
   const result = combined;
@@ -256,6 +264,7 @@ export async function analyzeForm(
       formLanguage: detection.formLanguage,
       formCountry: detection.formCountry,
       needsConfirmation: detectionNeedsConfirmation(detection),
+      servedFromCache: result.servedFromCache === true,
       demoMode,
       activeAnalysisId: null,
     };
@@ -396,6 +405,41 @@ export async function translateDescription(store: SessionStore, fieldId: string,
       return rest;
     });
   }
+}
+
+/** The user chose to write the answer themselves: forget the machine translation. */
+export function discardTranslation(store: SessionStore, fieldId: string): void {
+  updateField(store, fieldId, (f) => {
+    const { translation: _dropped, ...rest } = f;
+    return rest;
+  });
+}
+
+/** The user skipped the field: nothing will be written to it. */
+export function skipField(store: SessionStore, fieldId: string): void {
+  updateField(store, fieldId, (f) => {
+    const { normalizedOutput: _o, rawAnswer: _r, translation: _t, ...rest } = f;
+    return { ...rest, skipped: true };
+  });
+}
+
+/** The user confirmed a date format; it applies to every listed date field (asked once per form). */
+export function setDateFormat(store: SessionStore, fieldIds: readonly string[], format: DateFormat): void {
+  const ids = new Set(fieldIds);
+  store.set((s) => ({ ...s, fields: s.fields.map((f) => (ids.has(f.evidence.fieldId) ? { ...f, dateFormat: format } : f)) }));
+}
+
+/** The user changed the answer type of a field (5.9). A type the PDF field cannot hold is ignored. */
+export function overrideAnswerType(store: SessionStore, fieldId: string, answerType: AnswerType): void {
+  updateField(store, fieldId, (f) => {
+    if (!isCompatible(f.evidence.fieldType, answerType)) return f;
+    const { normalizedOutput: _o, translation: _t, ...rest } = f;
+    return { ...rest, userOverrideAnswerType: answerType };
+  });
+}
+
+export function setStep(store: SessionStore, step: number): void {
+  store.set((s) => ({ ...s, currentStep: Math.max(0, step) }));
 }
 
 /** The user approved the (possibly edited) translation; only now may it be written to the PDF. */

@@ -1102,6 +1102,34 @@ Minimum body text: 16px. Line length capped at 68ch. A 1.125× larger-text optio
 
 One deliberate motion moment: the question card slides in from the right on advance (150ms ease-out, `translateX(24px) → 0`), from the left on back. When `prefers-reduced-motion: reduce` is set, replaced by a 100ms opacity fade with no translate.
 
+### Frontend design plan (written before the screens, task 27)
+
+**Concept.** The app looks like a well-kept paper form that someone has already explained to you: a paper-toned page, ruled section lines, one question at a time, and plain blue ink for every action. Everything a user must read sits in a single column of at most 68 characters.
+
+```
+┌──────────────────────────────────────────────┐
+│ ReForge AI             [Language ▾]          │  header: name left, language right
+│ Demo mode: AI responses are simulated        │  banner only in mock mode
+├──────────────────────────────────────────────┤
+│                                              │
+│   Step heading (h1, focus lands here)        │  one column, start-aligned,
+│   ─────────────────────────────────────      │  max 560px, centred on wide screens
+│   Body text, 16px+                           │
+│   [ Primary action ]   Secondary action      │  one primary action per screen
+│                                              │
+└──────────────────────────────────────────────┘
+```
+
+**Token changes after a contrast check.** The palette table lists contrast on white, but the page background is `paper`. Recomputed with the WCAG formula: `border` (#D1D1D6) is 1.52:1 on white and 1.39:1 on paper, not 3.1:1 as the table says, so it fails the 3:1 rule for input borders. Inputs and other control borders use a new `control-border` token, `#6E6E73`: 5.07:1 on white, 4.64:1 on paper. On paper the other pairs are: ink 15.56, ink-secondary 8.34, stamp-blue 7.31, approval-green 4.89, alert-red 5.92, caution-amber 6.48. `border` stays for decorative dividers only. A unit test computes every text and control pair from `tokens.css`.
+
+**Principles.**
+- Ink and stamps: text is `ink`, actions are `stamp-blue`, states use the green, amber and red with an icon and words, never colour alone.
+- Ruled lines instead of cards: screens are sections separated by a thin rule, like a printed form. The question card in the wizard is the only boxed element, because it is the one thing to look at.
+- The Kiroween idea (an old form brought back to life) appears in one place only: an "approved" stamp mark on the download screen when the filled PDF is ready.
+- Labels from the PDF are shown in their own language, with their own `lang` attribute, next to the translated question.
+
+**Review of the plan.** The first draft used rounded cards with soft shadows for every screen. That is the default template look, so it was replaced by ruled sections. No eyebrow labels, no gradient, no arrow glyphs on buttons; the wizard keeps its step counter because it is a real sequence.
+
 ---
 
 ## Error Handling

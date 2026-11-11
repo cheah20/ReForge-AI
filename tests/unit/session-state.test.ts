@@ -229,6 +229,23 @@ describe('analyzeForm (requirements 5.1, 5.8)', () => {
     expect(store.get().demoMode).toBe(true);
   });
 
+  it('flags a precomputed (cached) analysis when any batch was served from the fixture cache', async () => {
+    const api = new FakeApi();
+    const real = api.analyze.bind(api);
+    api.analyze = async (req) => {
+      const reply = await real(req);
+      return { ...reply, data: { ...reply.data, servedFromCache: api.analyzeCalls.length === 2 } };
+    };
+    const store = newStore();
+    await analyzeForm(manyFields(31), HASH, store, deps(api));
+    expect(store.get().servedFromCache).toBe(true);
+    // A cache hit in the browser keeps the flag.
+    await analyzeForm(manyFields(31), HASH, store, deps(api));
+    expect(store.get().servedFromCache).toBe(true);
+    await analyzeForm(manyFields(2), OTHER_HASH, store, deps(new FakeApi()));
+    expect(store.get().servedFromCache).toBe(false);
+  });
+
   it('keeps demo mode off for real AI replies', async () => {
     const api = new FakeApi();
     const store = newStore();
@@ -343,11 +360,25 @@ describe('combineVotes', () => {
       { arbitrary: fc.double({ min: 0.7, max: 1, noNaN: true }), weight: 3 },
     );
     const vote = fc.record({ value: fc.constantFrom('ms', 'en', 'zh-Hans'), confidence });
+    // Random lists reached that case in only about 60% of 300-run trials, so one
+    // branch builds it on purpose: 4 or 5 confident votes for one value, one confident dissent.
+    const outvotedDissent = fc
+      .tuple(
+        fc.array(fc.double({ min: 0.9, max: 1, noNaN: true }), { minLength: 4, maxLength: 5 }),
+        fc.double({ min: 0.7, max: 1, noNaN: true }),
+        fc.nat(5),
+      )
+      .map(([wins, dissent, at]) => {
+        const votes = wins.map((c) => ({ value: 'en', confidence: c }));
+        votes.splice(at % (votes.length + 1), 0, { value: 'ms', confidence: dissent });
+        return votes;
+      });
+    const votesArb = fc.oneof(fc.array(vote, { minLength: 1, maxLength: 6 }), outvotedDissent);
     let sawDissent = 0;
     let sawDissentAboveAverage = 0;
     let sawAgreementAbove = 0;
     fc.assert(
-      fc.property(fc.array(vote, { minLength: 1, maxLength: 6 }), (votes) => {
+      fc.property(votesArb, (votes) => {
         const result = combineVotes(votes);
         const sum = (v: string) => votes.filter((x) => x.value === v).reduce((a, x) => a + x.confidence, 0);
         for (const v of votes) expect(sum(result.value)).toBeGreaterThanOrEqual(sum(v.value));

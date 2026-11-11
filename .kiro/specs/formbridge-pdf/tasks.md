@@ -229,42 +229,42 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 26.3 `switchLanguage(newLang, session)`: check cache; if miss call `POST /api/forms/retranslate`; update only `humanLabel` and `question`; never touch answers
     - _Requirements: 5.8_
 
-- [ ] 27. Language picker screen
-  - [ ] 27.1 `src/frontend/screens/LanguagePicker.tsx`: list registry languages; pre-select from `navigator.language`; experimental badge; larger-text toggle; `<html lang>` update; Noto font lazy-load
+- [x] 27. Language picker screen
+  - [x] 27.1 `src/frontend/screens/LanguagePicker.tsx`: list registry languages; pre-select from `navigator.language`; experimental badge; larger-text toggle; `<html lang>` update; Noto font lazy-load
     - _Requirements: 2-L.7, 2-L.8, 2-L.3, 13.4, 13.9_
 
-- [ ] 28. Upload and disclosure screen
-  - [ ] 28.1 `src/frontend/screens/Upload.tsx`: file input, privacy notice (exact wording from requirements §Overview), "Continue" gated on acknowledgement; trigger `extractFields()`; show rejection errors in active language
+- [x] 28. Upload and disclosure screen
+  - [x] 28.1 `src/frontend/screens/Upload.tsx`: file input, privacy notice (exact wording from requirements §Overview), "Continue" gated on acknowledgement; trigger `extractFields()`; show rejection errors in active language
     - _Requirements: 1.3, 1.4, 9.5, 11.4_
-  - [ ] 28.2 On rejection: show error card with i18n message key and "Try another file"; never crash
-  - [ ] 28.3 Configure the pdf.js worker for the browser (`pdfjs-dist/build/pdf.worker.min.mjs?url` → `GlobalWorkerOptions.workerSrc`) and add a browser extraction check (Playwright: upload a fixture, see its fields extracted) (review 1, item 20)
+  - [x] 28.2 On rejection: show error card with i18n message key and "Try another file"; never crash
+  - [x] 28.3 Configure the pdf.js worker for the browser (`pdfjs-dist/build/pdf.worker.min.mjs?url` → `GlobalWorkerOptions.workerSrc`) and add a browser extraction check (Playwright: upload a fixture, see its fields extracted) (review 1, item 20)
     - _Requirements: 4.1, 4.5_
-  - [ ] 28.4 **Demo 1 (non-blocking):** run the dev server; write the URL and exact try-it steps into `.local/kiro-progress.md` under "Demos ready": pick a language, upload each fixture, see the extracted fields listed or the right rejection message
+  - [x] 28.4 **Demo 1 (non-blocking):** run the dev server; write the URL and exact try-it steps into `.local/kiro-progress.md` under "Demos ready": pick a language, upload each fixture, see the extracted fields listed or the right rejection message
 
-- [ ] 29. Analysis loading screen
-  - [ ] 29.1 `src/frontend/screens/AnalysisLoading.tsx`: batch progress "Analyzing batch N of M"; `DemoModeBanner` if mock provider; on complete navigate to ConfirmLanguage if confidence < 0.7 else QuestionWizard
+- [x] 29. Analysis loading screen
+  - [x] 29.1 `src/frontend/screens/AnalysisLoading.tsx`: batch progress "Analyzing batch N of M"; `DemoModeBanner` if mock provider; on complete navigate to ConfirmLanguage if confidence < 0.7 else QuestionWizard
     - _Requirements: 5.1, 5.3, 12.4_
 
-- [ ] 30. Form language/country confirmation screen
-  - [ ] 30.1 `src/frontend/screens/ConfirmLanguage.tsx`: detected language + country with confidence; user selects from candidates; confirm navigates to QuestionWizard; if Spike 2 failed and detected form language is `zh-Hans`/`zh-Hant`, show "Chinese-language forms are not supported yet" and prevent proceeding to fill
+- [x] 30. Form language/country confirmation screen
+  - [x] 30.1 `src/frontend/screens/ConfirmLanguage.tsx`: detected language + country with confidence; user selects from candidates; confirm navigates to QuestionWizard; if Spike 2 failed and detected form language is `zh-Hans`/`zh-Hant`, show "Chinese-language forms are not supported yet" and prevent proceeding to fill
     - _Requirements: 5.3, 3-C.3_
 
-- [ ] 31. Question wizard screen
-  - [ ] 31.1 `src/frontend/screens/QuestionWizard.tsx`: one field per step, step counter, skip read-only/fill-yourself, "Skip this field", "← Back"/"Next →", inline validation, navigate to Review when done
+- [x] 31. Question wizard screen
+  - [x] 31.1 `src/frontend/screens/QuestionWizard.tsx`: one field per step, step counter, skip read-only/fill-yourself, "Skip this field", "← Back"/"Next →", inline validation, navigate to Review when done
     - _Requirements: 4.3, 6.2, 6.3, 6.4_
-  - [ ] 31.6 Fields marked `multiSelect` or `unresolvedPage` show as "fill this yourself" (never asked, listed in review) (review 1, item 21); date questions ask the user to confirm the date format before validating when the field gives none (review 1, item 19)
+  - [x] 31.6 Fields marked `multiSelect` or `unresolvedPage` show as "fill this yourself" (never asked, listed in review) (review 1, item 21); date questions ask the user to confirm the date format before validating when the field gives none (review 1, item 19)
     - _Requirements: 6.2, 7.5, 15.1_
-  - [ ] 31.2 `src/frontend/components/FieldQuestion.tsx`: `humanLabel`/`question`, `MachineTranslatedLabel` badge, original PDF label (tooltip or snippet, never fabricated); low-confidence confirmation flow; description translation flow — **translate button is the only trigger for the translate API call**, never automatic
+  - [x] 31.2 `src/frontend/components/FieldQuestion.tsx`: `humanLabel`/`question`, `MachineTranslatedLabel` badge, original PDF label (tooltip or snippet, never fabricated); low-confidence confirmation flow; description translation flow — **translate button is the only trigger for the translate API call**, never automatic
     - _Requirements: 2-L.6, 2-L.7, 5.7, 6.1, 8.6, 11.1_
-  - [ ] 31.3 `MachineTranslatedLabel.tsx`, `ValidationMessage.tsx` (linked via `aria-describedby`, announced via `aria-live="polite"`)
+  - [x] 31.3 `MachineTranslatedLabel.tsx`, `ValidationMessage.tsx` (linked via `aria-describedby`, announced via `aria-live="polite"`)
     - _Requirements: 2-L.6, 13.3_
-  - [ ] 31.4 Wire validation: active country pack on each answer change; block "Next" on invalid; language switcher in header calls `switchLanguage()` without losing answers
+  - [x] 31.4 Wire validation: active country pack on each answer change; block "Next" on invalid; language switcher in header calls `switchLanguage()` without losing answers
     - _Requirements: 7.1–7.9, 5.8, 5.9_
-  - [ ] 31.5 Write a unit test that simulates the translate flow: mock the translate API; assert the API is NOT called before the "Translate" button is pressed; assert it IS called exactly once after the button is pressed
+  - [x] 31.5 Write a unit test that simulates the translate flow: mock the translate API; assert the API is NOT called before the "Translate" button is pressed; assert it IS called exactly once after the button is pressed
     - _Requirements: 8.6, 11.1_
 
-- [ ] 32. Review screen
-  - [ ] 32.1 `src/frontend/screens/ReviewScreen.tsx`: semantic HTML list of all fields (original label, question, normalized output, status badge); privacy notice; "Confirm and download PDF"; inline edit opens `FieldQuestion` in-place with re-validation
+- [x] 32. Review screen
+  - [x] 32.1 `src/frontend/screens/ReviewScreen.tsx`: semantic HTML list of all fields (original label, question, normalized output, status badge); privacy notice; "Confirm and download PDF"; inline edit opens `FieldQuestion` in-place with re-validation
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
 - [ ] 33. Download confirmation screen
@@ -272,10 +272,10 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - _Requirements: 8.7, 10.1, 10.2, 10.4_
   - [ ] 33.2 **Demo 2 (non-blocking):** full local flow with the mock AI (language → upload clinic form → answer → review → download, then open the PDF); write step-by-step instructions with the synthetic answers from the fixture spec into `.local/kiro-progress.md` under "Demos ready"
 
-- [ ] 34. Design tokens and visual polish
-  - [ ] 34.1 `src/frontend/tokens.css`: CSS custom properties for color palette and type scale from design.md; `font-family: 'Noto Sans', sans-serif`; max-width 560px on wizard; 68ch line length; CSS logical properties throughout; WCAG AA contrast confirmed for each color pair
+- [x] 34. Design tokens and visual polish
+  - [x] 34.1 `src/frontend/tokens.css`: CSS custom properties for color palette and type scale from design.md; `font-family: 'Noto Sans', sans-serif`; max-width 560px on wizard; 68ch line length; CSS logical properties throughout; WCAG AA contrast confirmed for each color pair
     - _Requirements: 13.5, 2-L.4_
-  - [ ] 34.2 Question card slide-in animation (150ms ease-out, `translateX(24px) → 0`; reverse on back; `prefers-reduced-motion` → 100ms opacity fade, no translate)
+  - [x] 34.2 Question card slide-in animation (150ms ease-out, `translateX(24px) → 0`; reverse on back; `prefers-reduced-motion` → 100ms opacity fade, no translate)
     - _Requirements: 13.10_
 
 - [ ] 35. Accessibility pass
