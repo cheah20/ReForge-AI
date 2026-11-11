@@ -29,7 +29,10 @@ export interface Env {
   AI?: AiBinding;
   AI_MODE?: string;
   AI_MODEL?: string;
-  RATE_LIMITER?: RateLimiter;
+  /** 20 requests per minute per IP (design: Common Worker behaviours). */
+  RATE_LIMITER_ANALYZE?: RateLimiter;
+  /** 60 requests per minute per IP and route, for translate and retranslate. */
+  RATE_LIMITER_TRANSLATE?: RateLimiter;
   ASSETS?: { fetch(request: Request): Promise<Response> };
 }
 
@@ -38,13 +41,15 @@ export const AI_MODE_HEADER = 'x-reforge-ai-mode';
 
 interface RouteDef {
   limit: number;
+  /** Which rate-limiting binding counts this route. */
+  rateLimiter: 'RATE_LIMITER_ANALYZE' | 'RATE_LIMITER_TRANSLATE';
   handle: (body: unknown, ctx: RouteContext, cache?: FixtureCacheStore) => Promise<RouteResult>;
 }
 
 const ROUTES: Record<string, RouteDef> = {
-  '/api/forms/analyze': { limit: ANALYZE_BODY_LIMIT, handle: analyzeRoute },
-  '/api/forms/retranslate': { limit: RETRANSLATE_BODY_LIMIT, handle: retranslateRoute },
-  '/api/forms/translate': { limit: TRANSLATE_BODY_LIMIT, handle: translateRoute },
+  '/api/forms/analyze': { limit: ANALYZE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_ANALYZE', handle: analyzeRoute },
+  '/api/forms/retranslate': { limit: RETRANSLATE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_TRANSLATE', handle: retranslateRoute },
+  '/api/forms/translate': { limit: TRANSLATE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_TRANSLATE', handle: translateRoute },
 };
 
 export interface HandlerDeps {
@@ -88,8 +93,9 @@ export function createHandler(deps: HandlerDeps = {}) {
 
       const body = await readJson(request, def.limit);
 
-      if (env.RATE_LIMITER) {
-        const { success } = await env.RATE_LIMITER.limit({ key: `${route}:${clientKey(request)}` });
+      const limiter = env[def.rateLimiter];
+      if (limiter) {
+        const { success } = await limiter.limit({ key: `${route}:${clientKey(request)}` });
         if (!success) throw new HttpError('RATE_LIMITED');
       }
 

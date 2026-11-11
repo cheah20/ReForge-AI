@@ -137,13 +137,13 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - **Property 2: answerType compatibility enforcement**
     - **Validates: Requirements 5.5a**
 
-- [ ] 16. POST /api/forms/retranslate and POST /api/forms/translate routes
+- [x] 16. POST /api/forms/retranslate and POST /api/forms/translate routes
   - [x] 16.1 Create `src/worker/routes/retranslate.ts`: validate with `RetranslateRequestSchema`; call `aiProvider.retranslate()`; return only `humanLabel` and `question` updates; validate response with `RetranslateResponseSchema`
     - _Requirements: 5.8_
   - [x] 16.2 Create `src/worker/routes/translate.ts`: validate with `TranslateRequestSchema`; call `aiProvider.translate()`; never store or log request text; **the translate endpoint is only reachable when the user has pressed a "Translate" button** — the route does not need to enforce this, but note it in a comment; add a unit test that simulates the button-gating logic in session state (translate is not called without explicit user trigger)
     - _Requirements: 8.6, 11.1, 11.3_
   - [x] 16.3 Write unit tests for retranslate and translate routes
-  - [ ] 16.4 Close the gaps between the two routes and the design and requirements (found when task 16 was reconciled on 2026-11-11): (a) rate limits: design says 20 req/min for `/analyze` and 60 for `/translate` and `/retranslate`, but `wrangler.jsonc` has one limiter at 10 per 60 s keyed per route and IP; decide and make design and config agree; (b) a canary test that neither route logs request text (only `/analyze` has one); (c) tests for the error mapping of both routes (`AI_TIMEOUT` to 504, other AI failures and two invalid replies to 503); (d) tests for retranslate's unsupported language and its 48 KB body limit; (e) requirement 12.6 says oversized input gets 400, while the design and code answer 413; decide and make them agree
+  - [x] 16.4 Close the gaps between the two routes and the design and requirements (found when task 16 was reconciled on 2026-11-11): (a) rate limits: design says 20 req/min for `/analyze` and 60 for `/translate` and `/retranslate`, but `wrangler.jsonc` has one limiter at 10 per 60 s keyed per route and IP; decide and make design and config agree; (b) a canary test that neither route logs request text (only `/analyze` has one); (c) tests for the error mapping of both routes (`AI_TIMEOUT` to 504, other AI failures and two invalid replies to 503); (d) tests for retranslate's unsupported language and its 48 KB body limit; (e) requirement 12.6 says oversized input gets 400, while the design and code answer 413; decide and make them agree
     - _Requirements: 11.3, 12.6, 12.7_
     - _Requirements: 5.8, 8.6_
 

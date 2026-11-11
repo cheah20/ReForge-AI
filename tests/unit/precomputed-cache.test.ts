@@ -15,7 +15,8 @@ import { getCoreLanguages } from '../../src/packs/language/registry.js';
 import { isCompatible } from '../../src/lib/analysis/reconcile.js';
 import type { FieldEvidence } from '../../src/shared/types.js';
 
-const FIXTURES = ['clinic-registration', 'us-community-clinic'] as const;
+/** The acceptance fixtures, plus the blank "Try a sample form" copy (task 28.5). */
+const FIXTURES = ['clinic-registration', 'us-community-clinic', 'clinic-registration-sample'] as const;
 const evidence = new Map<string, { hash: string; fields: FieldEvidence[] }>();
 
 beforeAll(async () => {

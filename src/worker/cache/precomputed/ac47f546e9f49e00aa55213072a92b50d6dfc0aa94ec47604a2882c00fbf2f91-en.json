@@ -1,0 +1,162 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "Full Name",
+      "question": "What is the patient's full name as shown in their identity document?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "Date of Birth",
+      "question": "What is the patient's date of birth (DD/MM/YYYY)?",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.gender",
+      "humanLabel": "Gender",
+      "question": "What is the patient's gender?",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "ID Card Number",
+      "question": "What is the patient's identity card number?",
+      "answerType": "ic",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "clinic.branchCode",
+      "humanLabel": "Branch Code",
+      "question": "What is the clinic branch code?",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "Reference",
+      "question": "Please provide the reference information.",
+      "answerType": "text",
+      "confidence": 0.7
+    },
+    {
+      "fieldId": "contact.mobile",
+      "humanLabel": "Mobile Number",
+      "question": "What is the contact mobile number?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.homePhone",
+      "humanLabel": "Home Phone",
+      "question": "What is the contact home phone number?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "Mailing Address",
+      "question": "What is the mailing address?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.postcode",
+      "humanLabel": "Postcode",
+      "question": "What is the postcode?",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "City",
+      "question": "What is the city?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "State / Territory",
+      "question": "Which state or territory is the address in?",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text3",
+      "humanLabel": "Email Address",
+      "question": "What is the email address?",
+      "answerType": "email",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "Visit Date",
+      "question": "What is the date of the visit?",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.firstVisit",
+      "humanLabel": "First Visit",
+      "question": "Is this the patient's first visit?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.shortCode",
+      "humanLabel": "Short Code",
+      "question": "Please enter the short code (maximum 4 characters).",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "medical.allergyFlag",
+      "humanLabel": "Allergies",
+      "question": "Does the patient have any allergies?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "medical.description",
+      "humanLabel": "Reason for Visit",
+      "question": "Please describe the reason for the visit or any symptoms.",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.name",
+      "humanLabel": "Emergency Contact Name",
+      "question": "What is the name of the person to contact in an emergency?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.phone",
+      "humanLabel": "Emergency Phone",
+      "question": "What is the emergency contact phone number?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.contact",
+      "humanLabel": "Contact Consent",
+      "question": "Do you agree to be contacted?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "Patient Signature",
+      "question": "Please provide the patient's signature.",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "ms",
+  "formLanguageConfidence": 0.95,
+  "formCountry": "MY",
+  "formCountryConfidence": 0.95
+}

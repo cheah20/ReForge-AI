@@ -828,7 +828,8 @@ Translates a single description-field answer into the form's output language.
 
 - Request timeout: 45 seconds (changed from 25 s after Spike 1, which measured 18 to 29 s for the 22-field clinic batch; at 25 s every clinic request in the fixture cache run timed out). Timeout fires `AI_TIMEOUT`. The loading screen must say that analysis can take up to a minute.
 - Request size limit enforced before zod parse (body stream checked at 32 KB for `/analyze`).
-- Rate limiting: Workers rate-limiting binding, per IP. Default limits: 20 req/min for `/analyze`, 60 req/min for `/translate` and `/retranslate`.
+- Rate limiting: Workers rate-limiting bindings, keyed by route and IP. Limits: 20 req/min for `/analyze` (binding `RATE_LIMITER_ANALYZE`), 60 req/min each for `/translate` and `/retranslate` (binding `RATE_LIMITER_TRANSLATE`). Both are set in `wrangler.jsonc` and checked by `tests/unit/worker-api.test.ts`. (Until 2026-11-11 the config had one binding at 10 req/min; the design values were confirmed and the config changed.)
+- Oversized bodies: 413 `PAYLOAD_TOO_LARGE` (requirement 12.6): 32 KB for `/analyze`, 48 KB for `/retranslate`, 16 KB for `/translate`.
 - All responses: `Content-Type: application/json`.
 - No CORS configuration needed — same-origin deployment (frontend and API are the same Worker).
 - **Metadata-only logging:** log `{ requestId, route, status, durationMs, errorCode }` only. Never log request bodies, AI responses, field content, or exception stack traces that could contain form text.

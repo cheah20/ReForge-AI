@@ -18,14 +18,24 @@
     "AI_MODE": "mock"
   },
 
-  // Rate limiting binding, keyed per IP. The period can only be 10 or 60 seconds
-  // and counts are approximate per Cloudflare location (decision 16).
+  // Rate limiting bindings, keyed per route and IP, with the limits from the
+  // design (Common Worker behaviours): 20 per minute for analysis, 60 per
+  // minute for translate and for retranslate. The period can only be 10 or 60
+  // seconds and counts are approximate per Cloudflare location (decision 16).
   "ratelimits": [
     {
-      "name": "RATE_LIMITER",
+      "name": "RATE_LIMITER_ANALYZE",
       "namespace_id": "1001",
       "simple": {
-        "limit": 10,
+        "limit": 20,
+        "period": 60
+      }
+    },
+    {
+      "name": "RATE_LIMITER_TRANSLATE",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 60,
         "period": 60
       }
     }

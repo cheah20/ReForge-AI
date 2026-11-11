@@ -1,0 +1,162 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "Nama Penuh",
+      "question": "Sila masukkan nama penuh anda seperti dalam kad pengenalan.",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "Tarikh Lahir",
+      "question": "Sila nyatakan tarikh lahir anda (DD/MM/YYYY).",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.gender",
+      "humanLabel": "Jantina",
+      "question": "Sila pilih jantina anda.",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "No. Kad Pengenalan",
+      "question": "Sila masukkan nombor kad pengenalan anda.",
+      "answerType": "ic",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "clinic.branchCode",
+      "humanLabel": "Kod Cawangan",
+      "question": "Sila masukkan kod cawangan klinik.",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "Rujukan",
+      "question": "Sila masukkan maklumat rujukan jika ada.",
+      "answerType": "text",
+      "confidence": 0.8
+    },
+    {
+      "fieldId": "contact.mobile",
+      "humanLabel": "Telefon Bimbit",
+      "question": "Sila masukkan nombor telefon bimbit anda.",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.homePhone",
+      "humanLabel": "Telefon Rumah",
+      "question": "Sila masukkan nombor telefon rumah anda.",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "Alamat",
+      "question": "Sila masukkan alamat surat-menyurat anda.",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.postcode",
+      "humanLabel": "Poskod",
+      "question": "Sila masukkan poskod anda.",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "Bandar",
+      "question": "Sila masukkan nama bandar anda.",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "Negeri / Wilayah",
+      "question": "Sila pilih negeri atau wilayah tempat tinggal anda.",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text3",
+      "humanLabel": "E-mel",
+      "question": "Sila masukkan alamat e-mel anda.",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "Tarikh Lawatan",
+      "question": "Sila nyatakan tarikh lawatan anda.",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.firstVisit",
+      "humanLabel": "Lawatan Pertama",
+      "question": "Adakah ini kali pertama anda datang melawat?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.shortCode",
+      "humanLabel": "Kod Ringkas",
+      "question": "Sila masukkan kod ringkas (maksimum 4 aksara).",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "medical.allergyFlag",
+      "humanLabel": "Alahan",
+      "question": "Adakah anda mempunyai sebarang alahan?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "medical.description",
+      "humanLabel": "Sebab Lawatan / Gejala",
+      "question": "Sila terangkan sebab lawatan atau gejala yang anda alami.",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.name",
+      "humanLabel": "Nama Kecemasan",
+      "question": "Sila berikan nama orang untuk dihubungi semasa kecemasan.",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.phone",
+      "humanLabel": "Telefon Kecemasan",
+      "question": "Sila berikan nombor telefon untuk dihubungi semasa kecemasan.",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.contact",
+      "humanLabel": "Persetujuan Hubungan",
+      "question": "Adakah anda bersetuju untuk kami hubungi anda?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "Tandatangan",
+      "question": "Sila turunkan tandatangan anda di sini.",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "ms",
+  "formLanguageConfidence": 1,
+  "formCountry": "MY",
+  "formCountryConfidence": 0.9
+}

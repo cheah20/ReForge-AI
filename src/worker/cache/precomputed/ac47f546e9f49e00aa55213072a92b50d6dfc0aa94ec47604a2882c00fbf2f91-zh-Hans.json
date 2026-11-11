@@ -1,0 +1,162 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "患者姓名",
+      "question": "请输入您的完整姓名（请与身份证件一致）",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "出生日期",
+      "question": "请输入您的出生日期（格式：日/月/年）",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.gender",
+      "humanLabel": "性别",
+      "question": "请选择您的性别",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "身份证号码",
+      "question": "请输入您的身份证号码",
+      "answerType": "ic",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "clinic.branchCode",
+      "humanLabel": "诊所分店代码",
+      "question": "请输入诊所的分店代码",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "备注/参考",
+      "question": "请输入相关参考信息",
+      "answerType": "text",
+      "confidence": 0.7
+    },
+    {
+      "fieldId": "contact.mobile",
+      "humanLabel": "手机号码",
+      "question": "请输入您的手机号码",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.homePhone",
+      "humanLabel": "家庭电话",
+      "question": "请输入您的家庭座机号码",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "通讯地址",
+      "question": "请输入您的详细通讯地址",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.postcode",
+      "humanLabel": "邮政编码",
+      "question": "请输入您的邮政编码",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "城市",
+      "question": "请输入您所在的城市",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "州属/地区",
+      "question": "请选择您所在的州属或地区",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text3",
+      "humanLabel": "电子邮件",
+      "question": "请输入您的电子邮箱地址",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "就诊日期",
+      "question": "请输入您的就诊日期",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.firstVisit",
+      "humanLabel": "首次就诊",
+      "question": "这是您第一次来这里就诊吗？",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.shortCode",
+      "humanLabel": "简码",
+      "question": "请输入简码（最多4个字符）",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "medical.allergyFlag",
+      "humanLabel": "过敏情况",
+      "question": "您是否有任何过敏史？",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "medical.description",
+      "humanLabel": "就诊原因/症状",
+      "question": "请描述您的就诊原因或目前症状",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.name",
+      "humanLabel": "紧急联系人姓名",
+      "question": "请输入紧急情况下的联系人姓名",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.phone",
+      "humanLabel": "紧急联系电话",
+      "question": "请输入紧急联系人的电话号码",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.contact",
+      "humanLabel": "联系同意",
+      "question": "我同意您与我取得联系",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "患者签名",
+      "question": "请在此处签名",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "ms",
+  "formLanguageConfidence": 0.9,
+  "formCountry": "MY",
+  "formCountryConfidence": 0.95
+}

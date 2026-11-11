@@ -1,0 +1,162 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "Nombre completo",
+      "question": "¿Cuál es su nombre completo tal como aparece en su documento de identidad?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "Fecha de nacimiento",
+      "question": "¿Cuál es su fecha de nacimiento?",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.gender",
+      "humanLabel": "Género",
+      "question": "¿Cuál es su género?",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "Número de identificación",
+      "question": "¿Cuál es su número de documento de identidad?",
+      "answerType": "ic",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "clinic.branchCode",
+      "humanLabel": "Código de sucursal",
+      "question": "¿Cuál es el código de la sucursal de la clínica?",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "Referencia",
+      "question": "¿Tiene alguna referencia o información adicional?",
+      "answerType": "text",
+      "confidence": 0.7
+    },
+    {
+      "fieldId": "contact.mobile",
+      "humanLabel": "Teléfono móvil",
+      "question": "¿Cuál es su número de teléfono móvil?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.homePhone",
+      "humanLabel": "Teléfono fijo",
+      "question": "¿Cuál es su número de teléfono de casa?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "Dirección",
+      "question": "¿Cuál es su dirección de correspondencia?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.postcode",
+      "humanLabel": "Código postal",
+      "question": "¿Cuál es su código postal?",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "Ciudad",
+      "question": "¿En qué ciudad vive?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "Estado o región",
+      "question": "¿A qué estado o región pertenece su ubicación?",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text3",
+      "humanLabel": "Correo electrónico",
+      "question": "¿Cuál es su dirección de correo electrónico?",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "Fecha de visita",
+      "question": "¿Qué día será su visita?",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.firstVisit",
+      "humanLabel": "Primera visita",
+      "question": "¿Es esta su primera visita a la clínica?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.shortCode",
+      "humanLabel": "Código corto",
+      "question": "¿Cuál es el código corto de referencia?",
+      "answerType": "text",
+      "confidence": 0.8
+    },
+    {
+      "fieldId": "medical.allergyFlag",
+      "humanLabel": "Alergias",
+      "question": "¿Tiene usted alguna alergia?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "medical.description",
+      "humanLabel": "Motivo de la visita",
+      "question": "¿Podría describir el motivo de su visita o sus síntomas?",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.name",
+      "humanLabel": "Contacto de emergencia",
+      "question": "¿Cuál es el nombre de la persona a la que debemos contactar en caso de emergencia?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.phone",
+      "humanLabel": "Teléfono de emergencia",
+      "question": "¿Cuál es el número de teléfono de su contacto de emergencia?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.contact",
+      "humanLabel": "Consentimiento de contacto",
+      "question": "¿Acepta que nos pongamos en contacto con usted?",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "Firma",
+      "question": "Por favor, firme aquí para confirmar.",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "ms",
+  "formLanguageConfidence": 0.9,
+  "formCountry": "MY",
+  "formCountryConfidence": 0.95
+}

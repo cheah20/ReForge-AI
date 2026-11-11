@@ -309,7 +309,7 @@ All validation messages are displayed in the user's chosen language. Validation 
 
 **12.5** Every outbound AI call has a request timeout. If the timeout is exceeded the user sees a clear "This is taking too long — please try again" message.
 
-**12.6** Input to the AI endpoint is size-limited. Requests that exceed the limit are rejected with a 400 error before the AI call is made.
+**12.6** Input to the AI endpoints is size-limited. Requests that exceed the limit are rejected with a 413 error (`PAYLOAD_TOO_LARGE`) before the body is parsed and before the AI call is made. (Changed from 400 on 2026-11-11: 413 is the HTTP status for an oversized body, and the design and code already used it.)
 
 **12.7** Rate limiting uses the **Cloudflare Workers rate-limiting binding** (per IP). The daily neuron budget for the free plan is 10,000 neurons, resetting at 00:00 UTC. The app tracks consumed neurons as an estimate. When the budget or rate limit is exhausted:
 - For the bundled fixture PDFs (matched by content hash): serve precomputed analysis results and display a visible notice that cached analysis is being used.

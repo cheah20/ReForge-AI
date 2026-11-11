@@ -1,0 +1,162 @@
+{
+  "fields": [
+    {
+      "fieldId": "patient.fullName",
+      "humanLabel": "患者姓名",
+      "question": "請輸入您的全名（請與身份證件一致）",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.birthDate",
+      "humanLabel": "出生日期",
+      "question": "請輸入您的出生日期（格式：日/月/年）",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "patient.gender",
+      "humanLabel": "性別",
+      "question": "請問您的性別是？",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text1",
+      "humanLabel": "身份證號碼",
+      "question": "請輸入您的身份證號碼",
+      "answerType": "ic",
+      "confidence": 0.95
+    },
+    {
+      "fieldId": "clinic.branchCode",
+      "humanLabel": "分院代碼",
+      "question": "請輸入診所的分院代碼",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "Text7",
+      "humanLabel": "轉介資訊",
+      "question": "請輸入轉介相關資訊",
+      "answerType": "text",
+      "confidence": 0.7
+    },
+    {
+      "fieldId": "contact.mobile",
+      "humanLabel": "手機號碼",
+      "question": "請輸入您的聯絡手機號碼",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.homePhone",
+      "humanLabel": "家用電話",
+      "question": "請輸入您的家用電話號碼",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.address",
+      "humanLabel": "通訊地址",
+      "question": "請輸入您的通訊地址",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.postcode",
+      "humanLabel": "郵遞區號",
+      "question": "請輸入您的郵遞區號",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.city",
+      "humanLabel": "城市",
+      "question": "請輸入您居住的城市",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "contact.state",
+      "humanLabel": "州屬/地區",
+      "question": "請選擇您所在的州屬或地區",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "fieldId": "Text3",
+      "humanLabel": "電子郵件",
+      "question": "請輸入您的電子郵件地址",
+      "answerType": "email",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.date",
+      "humanLabel": "就診日期",
+      "question": "請輸入您的就診日期",
+      "answerType": "date",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.firstVisit",
+      "humanLabel": "首次就診",
+      "question": "這是您第一次來本診所就診嗎？",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "visit.shortCode",
+      "humanLabel": "簡短代碼",
+      "question": "請輸入簡短代碼（最多4個字元）",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "fieldId": "medical.allergyFlag",
+      "humanLabel": "過敏紀錄",
+      "question": "您是否有任何過敏史？",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "medical.description",
+      "humanLabel": "就診原因或症狀",
+      "question": "請描述您的就診原因或目前的症狀",
+      "answerType": "description",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.name",
+      "humanLabel": "緊急聯絡人姓名",
+      "question": "請輸入緊急聯絡人的姓名",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "fieldId": "emergency.phone",
+      "humanLabel": "緊急聯絡電話",
+      "question": "請輸入緊急聯絡人的電話號碼",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.contact",
+      "humanLabel": "聯絡同意",
+      "question": "我同意您與我聯繫",
+      "answerType": "checkbox",
+      "confidence": 1
+    },
+    {
+      "fieldId": "consent.signature",
+      "humanLabel": "患者簽名",
+      "question": "請在此簽名",
+      "answerType": "signature",
+      "confidence": 1
+    }
+  ],
+  "formLanguage": "zh-Hant",
+  "formLanguageConfidence": 0.9,
+  "formCountry": "MY",
+  "formCountryConfidence": 0.95
+}
