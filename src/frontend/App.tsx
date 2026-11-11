@@ -3,7 +3,8 @@
  *
  * Screen flow (design: Frontend Screen Flow):
  * language -> upload -> analysis -> [confirm form language] -> questions ->
- * review -> download. Everything stays in memory in this tab; leaving the
+ * review -> download. Opening SAMPLE_FORM_PATH starts on the upload screen
+ * with the sample form loaded (task 28.5). Everything stays in memory in this tab; leaving the
  * page with answers asks the browser to warn first (privacy: never saved).
  */
 
@@ -21,17 +22,31 @@ import { LanguagePicker } from './screens/LanguagePicker.js';
 import { QuestionWizard } from './screens/QuestionWizard.js';
 import { ReviewScreen } from './screens/ReviewScreen.js';
 import { Upload, type ExtractedForm, type Extractor } from './screens/Upload.js';
+import { loadSampleForm, SAMPLE_FORM_NAME, type SampleLoader, type SampleSource } from './sample-form.js';
 import { createSession, createSessionStore, setStep, type SessionStore } from './state.js';
+import { SAMPLE_FORM_PATH } from '../shared/app-paths.js';
 import { useChangeLanguage } from './use-change-language.js';
 
 export type Screen = 'language' | 'upload' | 'analysis' | 'confirm' | 'questions' | 'review' | 'download';
 
-function Flow({ extractor }: { extractor?: Extractor | undefined }) {
+interface FlowProps {
+  extractor?: Extractor | undefined;
+  /** Path the page was opened at; SAMPLE_FORM_PATH starts with the sample form loaded. */
+  initialPath: string;
+  loadSample: SampleLoader;
+}
+
+function Flow({ extractor, initialPath, loadSample }: FlowProps) {
   const { t } = useTranslation();
   const changeLanguage = useChangeLanguage();
   const session = useSession();
-  const [screen, setScreen] = useState<Screen>('language');
+  const startsWithSample = initialPath === SAMPLE_FORM_PATH;
+  const [screen, setScreen] = useState<Screen>(startsWithSample ? 'upload' : 'language');
   const [form, setForm] = useState<ExtractedForm | null>(null);
+  // A new object per request, so pressing "Try a sample form" again reads it again.
+  const [sample, setSample] = useState<SampleSource | undefined>(() =>
+    startsWithSample ? { name: SAMPLE_FORM_NAME, load: loadSample } : undefined,
+  );
   const [firstScreen, setFirstScreen] = useState(true);
   const { store } = useServices();
 
@@ -75,11 +90,23 @@ function Flow({ extractor }: { extractor?: Extractor | undefined }) {
       )}
       <main id="main" className="page">
         {screen === 'language' && (
-          <LanguagePicker changeLanguage={changeLanguage} firstScreen={firstScreen} onContinue={() => show('upload')} />
+          <LanguagePicker
+            changeLanguage={changeLanguage}
+            firstScreen={firstScreen}
+            onContinue={() => {
+              setSample(undefined);
+              show('upload');
+            }}
+            onTrySample={() => {
+              setSample({ name: SAMPLE_FORM_NAME, load: loadSample });
+              show('upload');
+            }}
+          />
         )}
         {screen === 'upload' && (
           <Upload
             {...(extractor ? { extractor } : {})}
+            sample={sample}
             onContinue={(f) => {
               setForm(f);
               show('analysis');
@@ -111,9 +138,14 @@ export interface AppProps {
   store?: SessionStore;
   initialLanguage?: string;
   extractor?: Extractor;
+  /** Defaults to the current page path. */
+  initialPath?: string;
+  /** Replaces the sample-form fetch (tests). */
+  loadSample?: SampleLoader;
 }
 
-export function App({ api, store, initialLanguage, extractor }: AppProps) {
+export function App({ api, store, initialLanguage, extractor, initialPath, loadSample = loadSampleForm }: AppProps) {
+  const path = initialPath ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
   const language = useMemo(() => initialLanguage ?? matchLanguage(browserLanguages()), [initialLanguage]);
   const services = useMemo(
     () => ({ api: api ?? createApiClient(), store: store ?? createSessionStore(createSession(language)) }),
@@ -122,7 +154,7 @@ export function App({ api, store, initialLanguage, extractor }: AppProps) {
   return (
     <I18nProvider initialLanguage={language}>
       <AppContext.Provider value={services}>
-        <Flow extractor={extractor} />
+        <Flow extractor={extractor} initialPath={path} loadSample={loadSample} />
       </AppContext.Provider>
     </I18nProvider>
   );

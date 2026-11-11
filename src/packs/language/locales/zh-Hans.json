@@ -14,6 +14,8 @@
   "language.picker.experimental": "实验性",
   "language.picker.continue": "继续",
   "language.picker.largerText": "放大文字",
+  "language.picker.trySample": "试用示例表格",
+  "language.picker.trySampleHint": "打开一份虚构的诊所登记表，让您在使用自己的表格之前先看看如何操作。",
 
   "upload.title": "上传您的表格",
   "upload.button": "选择 PDF 文件",

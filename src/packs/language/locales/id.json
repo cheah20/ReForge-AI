@@ -14,6 +14,8 @@
   "language.picker.experimental": "Eksperimental",
   "language.picker.continue": "Lanjutkan",
   "language.picker.largerText": "Teks lebih besar",
+  "language.picker.trySample": "Coba formulir contoh",
+  "language.picker.trySampleHint": "Membuka formulir pendaftaran klinik rekaan, agar Anda bisa melihat cara kerjanya sebelum memakai formulir Anda sendiri.",
 
   "upload.title": "Unggah formulir Anda",
   "upload.button": "Pilih file PDF",

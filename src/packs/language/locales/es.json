@@ -14,6 +14,8 @@
   "language.picker.experimental": "Experimental",
   "language.picker.continue": "Continuar",
   "language.picker.largerText": "Texto más grande",
+  "language.picker.trySample": "Probar un formulario de ejemplo",
+  "language.picker.trySampleHint": "Abre un formulario de registro de clínica inventado, para que veas cómo funciona antes de usar el tuyo.",
 
   "upload.title": "Sube tu formulario",
   "upload.button": "Elegir archivo PDF",

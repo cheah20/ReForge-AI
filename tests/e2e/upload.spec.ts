@@ -11,6 +11,35 @@ import path from 'node:path';
 
 const fixture = (name: string) => path.resolve(process.cwd(), 'fixtures', name);
 
+test.describe('"Try a sample form" (task 28.5)', () => {
+  test('opening /forms/sample reads the bundled clinic form in the browser, sends nothing until the acknowledgement', async ({ page }) => {
+    const posts: string[] = [];
+    page.on('request', (r) => {
+      if (r.method() !== 'GET') posts.push(r.url());
+    });
+    await page.goto('/forms/sample');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { level: 1, name: 'Upload your form' })).toBeVisible();
+    await expect(page.getByText('Fields found: 22. Pages: 1.')).toBeVisible();
+    expect(posts).toEqual([]);
+
+    const analyze = page.waitForRequest((r) => r.url().endsWith('/api/forms/analyze'));
+    await page.getByRole('button', { name: 'I understand, continue' }).click();
+    const body = JSON.parse((await analyze).postData() ?? '{}') as { fields: Array<{ widgets: Array<{ pageSnippet: string }> }> };
+    expect(body.fields).toHaveLength(22);
+    // pdf.js ran on the sample too: printed labels reached the snippets.
+    expect(body.fields.flatMap((f) => f.widgets.map((w) => w.pageSnippet)).join(' ')).toContain('Nama');
+  });
+
+  test('the picker button opens the same sample', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Try a sample form' }).click();
+    await expect(page.getByText('Fields found: 22. Pages: 1.')).toBeVisible();
+  });
+});
+
+test.describe('upload', () => {
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
@@ -66,3 +95,4 @@ for (const [file, message] of [
     await expect(page.getByLabel('Choose PDF file')).toBeFocused();
   });
 }
+});

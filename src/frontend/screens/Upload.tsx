@@ -11,7 +11,7 @@
  *   "Try another file" button; nothing crashes.
  */
 
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { extractFields, type ExtractionResult } from '../../lib/pdf-extract/index.js';
 import { MAX_FILE_SIZE_BYTES } from '../../lib/pdf-extract/rejection.js';
 import type { FieldEvidence } from '../../shared/types.js';
@@ -20,6 +20,7 @@ import { ScreenHeading } from '../components/ScreenHeading.js';
 import { StatusMessage } from '../components/StatusMessage.js';
 import { useTranslation } from '../i18n.js';
 import { ensurePdfJsWorker } from '../pdfjs-worker.js';
+import type { SampleSource } from '../sample-form.js';
 
 export type Extractor = (bytes: Uint8Array) => Promise<ExtractionResult>;
 
@@ -39,6 +40,8 @@ export interface UploadProps {
   onContinue: (form: ExtractedForm) => void;
   /** Replaces the PDF reader (tests). */
   extractor?: Extractor;
+  /** "Try a sample form" (task 28.5): read this PDF as if the user had chosen it. */
+  sample?: SampleSource | undefined;
 }
 
 type UploadState =
@@ -63,7 +66,7 @@ function fieldName(f: FieldEvidence): string {
   return f.tooltip?.trim() || f.fieldId;
 }
 
-export function Upload({ onContinue, extractor = defaultExtractor }: UploadProps) {
+export function Upload({ onContinue, extractor = defaultExtractor, sample }: UploadProps) {
   const { t } = useTranslation();
   const [state, setState] = useState<UploadState>({ kind: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,17 +74,30 @@ export function Upload({ onContinue, extractor = defaultExtractor }: UploadProps
   const noticeId = useId();
   const run = useRef(0);
 
+  // The sample form goes through the same reading path as a chosen file.
+  const sampleRead = useRef<SampleSource | null>(null);
+  useEffect(() => {
+    if (!sample || sampleRead.current === sample) return;
+    sampleRead.current = sample;
+    void read(sample.name, sample.load);
+  }, [sample]);
+
   async function readFile(file: File) {
-    const thisRun = ++run.current;
     if (file.size > MAX_FILE_SIZE_BYTES) {
+      run.current++;
       setState({ kind: 'rejected', messageKey: 'upload.error.tooLarge' });
       return;
     }
+    await read(file.name, () => readFileBytes(file));
+  }
+
+  async function read(name: string, load: () => Promise<Uint8Array>) {
+    const thisRun = ++run.current;
     setState({ kind: 'reading' });
     let result: ExtractionResult;
     let bytes: Uint8Array;
     try {
-      bytes = await readFileBytes(file);
+      bytes = await load();
       result = await extractor(bytes);
     } catch {
       result = { ok: false, code: 'INVALID_PDF', messageKey: 'upload.error.invalidPdf' };
@@ -94,7 +110,7 @@ export function Upload({ onContinue, extractor = defaultExtractor }: UploadProps
     }
     setState({
       kind: 'ready',
-      form: { pdf: { name: file.name, bytes }, fields: result.fields, contentHash: result.fileHash, pageCount: result.pageCount },
+      form: { pdf: { name, bytes }, fields: result.fields, contentHash: result.fileHash, pageCount: result.pageCount },
     });
   }
 

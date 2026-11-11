@@ -119,7 +119,11 @@ function click(el: Element | null | undefined) {
 }
 
 const buttonByText = (text: string) => [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === text);
-const flush = () => act(async () => new Promise((r) => setTimeout(r, 0)));
+/** Let pending reads and replies settle (file reading and extraction take a few async hops). */
+const flush = () =>
+  act(async () => {
+    for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 0));
+  });
 
 async function analysedStore(api: RecordingApi, fields: FieldEvidence[], interfaceLanguage = 'en') {
   const store = createSessionStore(createSession(interfaceLanguage));
@@ -132,7 +136,7 @@ describe('LanguagePicker (task 27.1)', () => {
   function picker(store: SessionStore, api: ApiClient) {
     let current = 'en';
     const changeLanguage: ChangeLanguage = { busy: false, errorKey: null, change: async (tag) => void (current = tag) };
-    render(<LanguagePicker changeLanguage={changeLanguage} onContinue={() => {}} />, store, api);
+    render(<LanguagePicker changeLanguage={changeLanguage} onContinue={() => {}} onTrySample={() => {}} />, store, api);
     return () => current;
   }
 

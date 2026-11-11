@@ -7,6 +7,7 @@
  * - Experimental languages carry a visible badge (2-L.7).
  * - Picking a language switches the screen at once, so the user can check it.
  * - Larger-text option (13.9).
+ * - "Try a sample form" opens the bundled clinic form on the upload screen (28.5).
  */
 
 import { useId, useState } from 'react';
@@ -18,6 +19,8 @@ import type { ChangeLanguage } from '../use-change-language.js';
 export interface LanguagePickerProps {
   changeLanguage: ChangeLanguage;
   onContinue: () => void;
+  /** "Try a sample form" (task 28.5): continue with the bundled clinic form. */
+  onTrySample: () => void;
   /** Initial page load: do not steal focus from the top of the page. */
   firstScreen?: boolean;
 }
@@ -31,10 +34,11 @@ export function setLargeText(on: boolean): void {
   else delete document.documentElement.dataset['textSize'];
 }
 
-export function LanguagePicker({ changeLanguage, onContinue, firstScreen = false }: LanguagePickerProps) {
+export function LanguagePicker({ changeLanguage, onContinue, onTrySample, firstScreen = false }: LanguagePickerProps) {
   const { t, language } = useTranslation();
   const [largeText, setLarge] = useState(readLargeText);
   const subtitleId = useId();
+  const sampleHintId = useId();
 
   return (
     <>
@@ -89,7 +93,13 @@ export function LanguagePicker({ changeLanguage, onContinue, firstScreen = false
           <button type="submit" className="button">
             {t('language.picker.continue')}
           </button>
+          <button type="button" className="button button--secondary" aria-describedby={sampleHintId} onClick={onTrySample}>
+            {t('language.picker.trySample')}
+          </button>
         </div>
+        <p className="hint" id={sampleHintId}>
+          {t('language.picker.trySampleHint')}
+        </p>
       </form>
     </>
   );

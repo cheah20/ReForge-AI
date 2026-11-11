@@ -14,6 +14,8 @@
   "language.picker.experimental": "Experimental",
   "language.picker.continue": "Continue",
   "language.picker.largerText": "Larger text",
+  "language.picker.trySample": "Try a sample form",
+  "language.picker.trySampleHint": "Opens a made-up clinic registration form, so you can see how it works before you use your own.",
 
   "upload.title": "Upload your form",
   "upload.button": "Choose PDF file",

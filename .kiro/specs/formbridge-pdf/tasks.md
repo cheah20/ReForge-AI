@@ -239,6 +239,9 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 28.2 On rejection: show error card with i18n message key and "Try another file"; never crash
   - [x] 28.3 Configure the pdf.js worker for the browser (`pdfjs-dist/build/pdf.worker.min.mjs?url` → `GlobalWorkerOptions.workerSrc`) and add a browser extraction check (Playwright: upload a fixture, see its fields extracted) (review 1, item 20)
     - _Requirements: 4.1, 4.5_
+  - [x] 28.5 "Try a sample form" entry: a secondary button on the language picker, and the route `SAMPLE_FORM_PATH` exported from `src/shared/app-paths.ts`, both open `fixtures/clinic-registration.pdf` on the upload screen as if the user had chosen it (bundled as a static asset, read with the same extraction path, fresh session with no answers). No privacy change: the PDF is read in the browser, nothing is sent before the user presses the acknowledgement, and the notice is shown as for any upload. Tests: the constant is a same-origin path with no query string and not under `/legacy/`; the route and the button show the 22 fields; no API request before the acknowledgement; Playwright opens the route in a real browser
+    - Prerequisite of `accessforge-skeleton` tasks 1.6, 4.3 and 16.8, which link to `SAMPLE_FORM_PATH`
+    - _Requirements: 1.3, 9.5, 11.4, 14.1; accessforge-skeleton 11.5_
   - [x] 28.4 **Demo 1 (non-blocking):** run the dev server; write the URL and exact try-it steps into `.local/kiro-progress.md` under "Demos ready": pick a language, upload each fixture, see the extracted fields listed or the right rejection message
 
 - [x] 29. Analysis loading screen
@@ -369,7 +372,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     { "id": 20, "tasks": ["26.2", "26.3", "34.1"] },
     { "id": 21, "tasks": ["27.1", "34.2"] },
     { "id": 22, "tasks": ["28.1", "28.2"] },
-    { "id": 23, "tasks": ["29.1"] },
+    { "id": 23, "tasks": ["28.5", "29.1"] },
     { "id": 24, "tasks": ["30.1"] },
     { "id": 25, "tasks": ["31.1"] },
     { "id": 26, "tasks": ["31.2", "31.3"] },

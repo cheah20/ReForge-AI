@@ -14,6 +14,8 @@
   "language.picker.experimental": "實驗性",
   "language.picker.continue": "繼續",
   "language.picker.largerText": "放大文字",
+  "language.picker.trySample": "試用範例表格",
+  "language.picker.trySampleHint": "開啟一份虛構的診所登記表，讓您在使用自己的表格之前先看看如何操作。",
 
   "upload.title": "上傳您的表格",
   "upload.button": "選擇 PDF 檔案",

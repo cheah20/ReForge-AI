@@ -14,6 +14,8 @@
   "language.picker.experimental": "சோதனை நிலையில்",
   "language.picker.continue": "தொடரவும்",
   "language.picker.largerText": "பெரிய எழுத்து",
+  "language.picker.trySample": "மாதிரிப் படிவத்தை முயலவும்",
+  "language.picker.trySampleHint": "கற்பனையான மருத்துவமனைப் பதிவுப் படிவத்தைத் திறக்கிறது; உங்கள் சொந்தப் படிவத்தைப் பயன்படுத்தும் முன் இது எப்படி வேலை செய்கிறது என்று பார்க்கலாம்.",
 
   "upload.title": "உங்கள் படிவத்தை பதிவேற்றவும்",
   "upload.button": "PDF கோப்பை தேர்வு செய்யவும்",

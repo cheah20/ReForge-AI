@@ -14,6 +14,8 @@
   "language.picker.experimental": "Eksperimen",
   "language.picker.continue": "Teruskan",
   "language.picker.largerText": "Teks lebih besar",
+  "language.picker.trySample": "Cuba borang contoh",
+  "language.picker.trySampleHint": "Membuka borang pendaftaran klinik rekaan, supaya anda boleh melihat cara ia berfungsi sebelum menggunakan borang anda sendiri.",
 
   "upload.title": "Muat naik borang anda",
   "upload.button": "Pilih fail PDF",
