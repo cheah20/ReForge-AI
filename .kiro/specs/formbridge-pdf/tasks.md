@@ -140,7 +140,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 16. POST /api/forms/retranslate and POST /api/forms/translate routes
   - [x] 16.1 Create `src/worker/routes/retranslate.ts`: validate with `RetranslateRequestSchema`; call `aiProvider.retranslate()`; return only `humanLabel` and `question` updates; validate response with `RetranslateResponseSchema`
     - _Requirements: 5.8_
-  - [ ] 16.2 Create `src/worker/routes/translate.ts`: validate with `TranslateRequestSchema`; call `aiProvider.translate()`; never store or log request text; **the translate endpoint is only reachable when the user has pressed a "Translate" button** — the route does not need to enforce this, but note it in a comment; add a unit test that simulates the button-gating logic in session state (translate is not called without explicit user trigger)
+  - [x] 16.2 Create `src/worker/routes/translate.ts`: validate with `TranslateRequestSchema`; call `aiProvider.translate()`; never store or log request text; **the translate endpoint is only reachable when the user has pressed a "Translate" button** — the route does not need to enforce this, but note it in a comment; add a unit test that simulates the button-gating logic in session state (translate is not called without explicit user trigger)
     - _Requirements: 8.6, 11.1, 11.3_
   - [x] 16.3 Write unit tests for retranslate and translate routes
     - _Requirements: 5.8, 8.6_
@@ -221,12 +221,12 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [x] 25. Checkpoint — core logic
   - All property-based tests and unit tests for tasks 19–24 pass; `tsc --noEmit` clean. Ask the developer to confirm before continuing.
 
-- [ ] 26. Session state and browser analysis orchestration
-  - [ ] 26.1 Create `src/frontend/state.ts`: `FieldState`, `SessionState` interfaces; `createSession()`; `analysisCache` keyed `${contentHash}:${interfaceLanguage}`; `activeAnalysisId` stale-response guard; `batchFields(fields, 30)` (the same pure function tested in task 10.3)
+- [x] 26. Session state and browser analysis orchestration
+  - [x] 26.1 Create `src/frontend/state.ts`: `FieldState`, `SessionState` interfaces; `createSession()`; `analysisCache` keyed `${contentHash}:${interfaceLanguage}`; `activeAnalysisId` stale-response guard; `batchFields(fields, 30)` (the same pure function tested in task 10.3)
     - _Requirements: 5.1, 5.8_
-  - [ ] 26.2 `analyzeForm(fields, session)`: batch sequentially, aggregate `formLanguage`/`formCountry` confidence-weighted across batches, trigger confirmation if final confidence < 0.7 or batches disagree, discard stale via `activeAnalysisId`, cache result
+  - [x] 26.2 `analyzeForm(fields, session)`: batch sequentially, aggregate `formLanguage`/`formCountry` confidence-weighted across batches, trigger confirmation if final confidence < 0.7 or batches disagree, discard stale via `activeAnalysisId`, cache result
     - _Requirements: 5.1, 5.3, 5.7, 5.8_
-  - [ ] 26.3 `switchLanguage(newLang, session)`: check cache; if miss call `POST /api/forms/retranslate`; update only `humanLabel` and `question`; never touch answers
+  - [x] 26.3 `switchLanguage(newLang, session)`: check cache; if miss call `POST /api/forms/retranslate`; update only `humanLabel` and `question`; never touch answers
     - _Requirements: 5.8_
 
 - [ ] 27. Language picker screen
