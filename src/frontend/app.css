@@ -432,25 +432,22 @@ a {
   animation-name: step-in-back;
 }
 
+/* Transform only, as design.md specifies: text keeps full contrast on every frame. */
 @keyframes step-in {
   from {
     transform: translateX(24px);
-    opacity: 0.4;
   }
   to {
     transform: none;
-    opacity: 1;
   }
 }
 
 @keyframes step-in-back {
   from {
     transform: translateX(-24px);
-    opacity: 0.4;
   }
   to {
     transform: none;
-    opacity: 1;
   }
 }
 
@@ -593,14 +590,13 @@ a {
   animation: stamp-down 220ms ease-out;
 }
 
+/* Scale only: the stamp keeps full colour (and contrast) on every frame. */
 @keyframes stamp-down {
   from {
     transform: rotate(-4deg) scale(1.25);
-    opacity: 0;
   }
   to {
     transform: rotate(-4deg) scale(1);
-    opacity: 1;
   }
 }
 

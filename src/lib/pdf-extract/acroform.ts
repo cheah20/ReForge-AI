@@ -46,6 +46,8 @@ const MAX_TEXT = 200;
 export interface PdfWidget {
   pageIndex: number;
   rect: PdfRect;
+  /** Radio buttons: the export value this widget turns on. */
+  exportValue?: string;
 }
 
 export interface ExtractedField {
@@ -100,29 +102,26 @@ function onStateName(pdfDoc: PDFDocument, widget: PDFDict): string | undefined {
   return undefined;
 }
 
-/** Radio export values: /Opt strings mapped to widgets in order, else on-state names. */
-function radioOptions(pdfDoc: PDFDocument, field: LogicalField): FieldOption[] {
+/**
+ * Radio export values: /Opt strings mapped to widgets in order, else on-state
+ * names. `perWidget[i]` is the value widget i turns on (aligned with
+ * field.widgets). The display label starts as the export value; extraction
+ * replaces it with the text printed beside the button when there is one.
+ */
+function radioOptions(pdfDoc: PDFDocument, field: LogicalField): { options: FieldOption[]; perWidget: Array<string | undefined> } {
   const opt = resolveAs(pdfDoc.context, getAny(field.dict, 'Opt'), PDFArray);
-  const values: string[] = [];
-  if (opt && opt.size() > 0) {
-    for (let i = 0; i < Math.min(opt.size(), field.widgets.length); i++) {
-      const v = textOf(resolveAny(pdfDoc.context, opt.get(i)));
-      if (v) values.push(v);
-    }
-  } else {
-    for (const w of field.widgets) {
-      const v = onStateName(pdfDoc, w.dict);
-      if (v) values.push(v);
-    }
-  }
+  const perWidget: Array<string | undefined> = field.widgets.map((w, i) => {
+    if (opt && opt.size() > 0) return i < opt.size() ? textOf(resolveAny(pdfDoc.context, opt.get(i))) || undefined : undefined;
+    return onStateName(pdfDoc, w.dict);
+  });
   const seen = new Set<string>();
   const options: FieldOption[] = [];
-  for (const v of values) {
-    if (seen.has(v) || v.length > MAX_TEXT || options.length >= MAX_OPTIONS) continue;
+  for (const v of perWidget) {
+    if (!v || seen.has(v) || v.length > MAX_TEXT || options.length >= MAX_OPTIONS) continue;
     seen.add(v);
     options.push({ exportValue: v, displayLabel: v });
   }
-  return options;
+  return { options, perWidget };
 }
 
 /** Page geometry needed to express a rect in top-origin page coordinates. */
@@ -151,14 +150,15 @@ function topOriginBbox(rect: PdfRect, box: PageBox): Widget['bbox'] {
 }
 
 /** Widgets that have both a resolved page and a valid /Rect. */
-function locatedWidgets(pdfDoc: PDFDocument, widgets: WidgetNode[]): PdfWidget[] {
+function locatedWidgets(pdfDoc: PDFDocument, widgets: WidgetNode[], exportValues: Array<string | undefined> = []): PdfWidget[] {
   const out: PdfWidget[] = [];
-  for (const w of widgets) {
-    if (w.pageIndex === undefined) continue;
+  widgets.forEach((w, i) => {
+    if (w.pageIndex === undefined) return;
     const rect = getRect(pdfDoc.context, w.dict);
-    if (!rect) continue;
-    out.push({ pageIndex: w.pageIndex, rect });
-  }
+    if (!rect) return;
+    const value = exportValues[i];
+    out.push(value ? { pageIndex: w.pageIndex, rect, exportValue: value } : { pageIndex: w.pageIndex, rect });
+  });
   return out;
 }
 
@@ -193,7 +193,8 @@ export function buildEvidence(pdfDoc: PDFDocument, fields: LogicalField[]): Extr
     if (kind === 'pushbutton') continue;
     const idTooLong = field.name.length > MAX_FIELD_ID;
 
-    const pdfWidgets = locatedWidgets(pdfDoc, field.widgets).slice(0, MAX_WIDGETS);
+    const radio = kind === 'radio' ? radioOptions(pdfDoc, field) : undefined;
+    const pdfWidgets = locatedWidgets(pdfDoc, field.widgets, radio?.perWidget).slice(0, MAX_WIDGETS);
     const widgets: Widget[] = pdfWidgets.map((w) => ({
       pageNumber: w.pageIndex + 1,
       bbox: topOriginBbox(w.rect, boxFor(w.pageIndex)),
@@ -231,10 +232,7 @@ export function buildEvidence(pdfDoc: PDFDocument, fields: LogicalField[]): Extr
       if (placeholder) evidence.hasPlaceholderOption = true;
     }
 
-    if (kind === 'radio') {
-      const options = radioOptions(pdfDoc, field);
-      if (options.length > 0) evidence.options = options;
-    }
+    if (radio && radio.options.length > 0) evidence.options = radio.options;
 
     result.push({ evidence, pdfWidgets, pdfName: field.name });
   }

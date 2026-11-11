@@ -12,12 +12,38 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ValidationResult } from '../../packs/country/interface.js';
 import type { DateFormat } from '../../packs/country/dates.js';
+import type { AnswerType } from '../../shared/types.js';
 import { useServices, useSession } from '../app-context.js';
 import { FieldQuestion } from '../components/FieldQuestion.js';
 import { ScreenHeading } from '../components/ScreenHeading.js';
 import { useTranslation } from '../i18n.js';
 import { setAnswer, setDateFormat, setStep, skipField } from '../state.js';
 import { answerTypeOf, needsDateFormatChoice, validateFieldAnswer, wizardSteps } from '../wizard-logic.js';
+
+const isChoice = (type: AnswerType) => type === 'checkbox' || type === 'radio' || type === 'dropdown';
+
+/**
+ * The message after a blur or a choice. A blur only adds or changes a
+ * problem; it never removes one. Removing the error on blur made the Next
+ * button jump up under the pointer, so the click that caused the blur missed
+ * it and a corrected IC number could not be submitted with the mouse.
+ * Choices (a click on the option itself) update at once.
+ */
+export function resultOnCommit(
+  type: AnswerType,
+  value: string,
+  result: ValidationResult,
+  previous: ValidationResult | null,
+): ValidationResult | null {
+  if (isChoice(type)) return result;
+  if (!result.valid && value !== '') return result;
+  return previous;
+}
+
+/** While typing: the error goes away as soon as the answer is valid; a new error waits for blur or Next. */
+export function resultOnChange(result: ValidationResult, previous: ValidationResult | null): ValidationResult | null {
+  return previous && !previous.valid && result.valid ? null : previous;
+}
 
 export interface QuestionWizardProps {
   onDone: () => void;
@@ -55,11 +81,7 @@ export function QuestionWizard({ onDone, onBackToStart }: QuestionWizardProps) {
     validateFieldAnswer(field, value, { formCountry: session.formCountry });
 
   function commit(value: string) {
-    if (value === '' && answerTypeOf(field!) !== 'checkbox') {
-      setResult(null);
-      return;
-    }
-    setResult(validate(value));
+    setResult((previous) => resultOnCommit(answerTypeOf(field!), value, validate(value), previous));
   }
 
   function go(to: number, dir: 'forward' | 'back') {
@@ -105,11 +127,14 @@ export function QuestionWizard({ onDone, onBackToStart }: QuestionWizardProps) {
           if (!lowConfidencePending && !formatPending) next();
         }}
       >
-        <div key={stepIndex} className={`question-card question-card--${direction}`}>
+        <div key={stepIndex} className={`question-card question-card--${direction}`} data-field-id={field.evidence.fieldId}>
           <FieldQuestion
             field={field}
             draft={draft}
-            onDraftChange={setDraft}
+            onDraftChange={(v) => {
+              setDraft(v);
+              setResult((previous) => resultOnChange(validate(v), previous));
+            }}
             onCommit={commit}
             result={result}
             formLanguage={session.formLanguage}

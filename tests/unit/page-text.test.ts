@@ -9,6 +9,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+  computeOptionLabels,
   computePageSnippets,
   rectDistance,
   textItemBox,
@@ -80,5 +81,33 @@ describe('snippet ranking', () => {
   it('rectDistance is 0 for overlapping rectangles and the gap otherwise', () => {
     expect(rectDistance(WIDGET, WIDGET)).toBe(0);
     expect(rectDistance({ left: 0, bottom: 0, right: 10, top: 10 }, { left: 13, bottom: 14, right: 20, top: 20 })).toBe(5);
+  });
+});
+
+describe('computeOptionLabels (radio buttons show their printed label)', () => {
+  const button = (left: number): PdfRect => ({ left, bottom: 700, right: left + 14, top: 714 });
+  const F = button(220);
+  const M = button(320);
+
+  it('takes the nearest text directly to the right of each small button, on the same line', () => {
+    const items = [item('Jantina', 36, 720), item('Perempuan', 238, 703, 10, 50), item('Lelaki', 338, 703, 10, 30)];
+    expect(computeOptionLabels(items, [F, M])).toEqual(['Perempuan', 'Lelaki']);
+  });
+
+  it('gives no label when nothing is printed beside the button, or when it is too far away', () => {
+    const far = item('Far away', 220 + 14 + 41, 703);
+    expect(computeOptionLabels([far], [F])).toEqual([undefined]);
+    expect(computeOptionLabels([item('Above', 220, 720)], [F])).toEqual([undefined]);
+  });
+
+  it('never labels wide widgets', () => {
+    expect(computeOptionLabels([item('Beside', 305, 710)], [WIDGET])).toEqual([undefined]);
+  });
+
+  it('uses the same privacy filter as snippets: text touching any widget is never a label', () => {
+    // A value drawn inside a neighbouring text field that starts right of the button.
+    const valueField: PdfRect = { left: 236, bottom: 698, right: 400, top: 716 };
+    const value = item('PRIVATE_VALUE', 238, 703);
+    expect(computeOptionLabels([value], [F], [valueField])).toEqual([undefined]);
   });
 });

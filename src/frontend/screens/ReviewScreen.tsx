@@ -14,6 +14,7 @@ import { useServices, useSession } from '../app-context.js';
 import { FieldQuestion } from '../components/FieldQuestion.js';
 import { ScreenHeading } from '../components/ScreenHeading.js';
 import { StatusMessage, type StatusTone } from '../components/StatusMessage.js';
+import { resultOnChange, resultOnCommit } from './QuestionWizard.js';
 import { useTranslation } from '../i18n.js';
 import { setAnswer, setDateFormat, skipField, type FieldState } from '../state.js';
 import { answerTypeOf, answersForFill, needsDateFormatChoice, reviewStatus, validateFieldAnswer, type ReviewStatus } from '../wizard-logic.js';
@@ -66,8 +67,11 @@ function InlineEdit({ field, onClose }: { field: FieldState; onClose: () => void
       <FieldQuestion
         field={field}
         draft={draft}
-        onDraftChange={setDraft}
-        onCommit={(v) => setResult(v === '' ? null : validate(v))}
+        onDraftChange={(v) => {
+          setDraft(v);
+          setResult((previous) => resultOnChange(validate(v), previous));
+        }}
+        onCommit={(v) => setResult((previous) => resultOnCommit(answerTypeOf(field), v, validate(v), previous))}
         result={result}
         formLanguage={session.formLanguage}
         formCountry={session.formCountry}

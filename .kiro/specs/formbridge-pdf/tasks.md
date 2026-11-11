@@ -270,10 +270,10 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 32.1 `src/frontend/screens/ReviewScreen.tsx`: semantic HTML list of all fields (original label, question, normalized output, status badge); privacy notice; "Confirm and download PDF"; inline edit opens `FieldQuestion` in-place with re-validation
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-- [ ] 33. Download confirmation screen
-  - [ ] 33.1 `src/frontend/screens/DownloadConfirm.tsx`: call `fillPdf()`; handle `CharacterNotRepresentableError` and `TextOverflowError`; trigger browser download as `<name>-filled.pdf`
+- [x] 33. Download confirmation screen
+  - [x] 33.1 `src/frontend/screens/DownloadConfirm.tsx`: call `fillPdf()`; handle `CharacterNotRepresentableError` and `TextOverflowError`; trigger browser download as `<name>-filled.pdf`
     - _Requirements: 8.7, 10.1, 10.2, 10.4_
-  - [ ] 33.2 **Demo 2 (non-blocking):** full local flow with the mock AI (language → upload clinic form → answer → review → download, then open the PDF); write step-by-step instructions with the synthetic answers from the fixture spec into `.local/kiro-progress.md` under "Demos ready"
+  - [x] 33.2 **Demo 2 (non-blocking):** full local flow with the mock AI (language → upload clinic form → answer → review → download, then open the PDF); write step-by-step instructions with the synthetic answers from the fixture spec into `.local/kiro-progress.md` under "Demos ready"
 
 - [x] 34. Design tokens and visual polish
   - [x] 34.1 `src/frontend/tokens.css`: CSS custom properties for color palette and type scale from design.md; `font-family: 'Noto Sans', sans-serif`; max-width 560px on wizard; 68ch line length; CSS logical properties throughout; WCAG AA contrast confirmed for each color pair
@@ -288,11 +288,11 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - _Requirements: 13.11_
 
 - [ ] 36. Nov 17 end-to-end acceptance test
-  - [ ] 36.1 Create `tests/e2e/nov17-acceptance.spec.ts` — two variants using MockAiProvider: (a) mock returns high confidence → confirmation screen is skipped; (b) mock returns low confidence → confirmation screen appears and user selects Malay; both variants proceed through: language picker → upload clinic form → disclosure → question wizard (wrong IC rejected, then correct IC) → review → confirm → download
+  - [x] 36.1 Create `tests/e2e/nov17-acceptance.spec.ts` — two variants using MockAiProvider: (a) mock returns high confidence → confirmation screen is skipped; (b) mock returns low confidence → confirmation screen appears and user selects Malay; both variants proceed through: language picker → upload clinic form → disclosure → question wizard (wrong IC rejected, then correct IC) → review → confirm → download
     - _Requirements: 15.2_
   - [ ] 36.2 Add pdf.js field-rect verification: for text fields, assert rendered text bounding box is inside the field rectangle; for checkboxes/radios/dropdowns, read field value back from PDF and assert it matches; take visual screenshots of each filled page
     - _Requirements: 15.2_
-  - [ ] 36.3 Run `checkA11y()` on every screen in the Nov 17 path; assert zero violations
+  - [x] 36.3 Run `checkA11y()` on every screen in the Nov 17 path; assert zero violations
     - _Requirements: 15.2, 13.11_
 
 - [ ] 37. Milestone 1 — Deploy and smoke test [needs CF access]

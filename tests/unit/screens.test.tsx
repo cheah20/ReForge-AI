@@ -14,7 +14,7 @@ import type { ApiClient, ApiReply } from '../../src/frontend/api.js';
 import { AppContext } from '../../src/frontend/app-context.js';
 import { I18nProvider } from '../../src/frontend/i18n.js';
 import { LanguagePicker } from '../../src/frontend/screens/LanguagePicker.js';
-import { QuestionWizard } from '../../src/frontend/screens/QuestionWizard.js';
+import { QuestionWizard, resultOnChange, resultOnCommit } from '../../src/frontend/screens/QuestionWizard.js';
 import { Upload, type Extractor } from '../../src/frontend/screens/Upload.js';
 import { analyzeForm, confirmFormSettings, createSession, createSessionStore, type SessionStore } from '../../src/frontend/state.js';
 import type { ChangeLanguage } from '../../src/frontend/use-change-language.js';
@@ -257,6 +257,45 @@ describe('QuestionWizard (tasks 31.1, 31.4)', () => {
     expect(store.get().fields[0]).toMatchObject({ skipped: true });
     expect(store.get().fields[0]!.normalizedOutput).toBeUndefined();
     expect(container.textContent).toContain(translate('en', 'wizard.step', { current: 2, total: 2 }));
+  });
+});
+
+describe('error message timing (found by the Nov 17 browser test)', () => {
+  const bad = { valid: false, messageKey: 'validation.ic.invalidDate' };
+  const good = { valid: true, normalizedValue: '900101101234' };
+
+  it('a blur never removes an error, so the Next button does not move under the pointer', () => {
+    expect(resultOnCommit('ic', '900101-10-1234', good, bad)).toBe(bad);
+    expect(resultOnCommit('ic', '', good, bad)).toBe(bad);
+    expect(resultOnCommit('ic', '901301-10-1234', bad, null)).toBe(bad);
+    expect(resultOnCommit('ic', '900101-10-1234', good, null)).toBeNull();
+  });
+
+  it('typing a valid answer clears the error at once; a new error waits for blur or Next', () => {
+    expect(resultOnChange(good, bad)).toBeNull();
+    expect(resultOnChange(bad, bad)).toBe(bad);
+    expect(resultOnChange(bad, null)).toBeNull();
+  });
+
+  it('choices update at once', () => {
+    expect(resultOnCommit('radio', 'F', good, bad)).toBe(good);
+  });
+
+  it('in the wizard, the error is gone before the field loses focus once the IC is corrected', async () => {
+    const api = new RecordingApi();
+    api.types.set('Text1', 'ic');
+    const store = await analysedStore(api, [evidence('Text1')]);
+    render(<QuestionWizard onDone={() => {}} onBackToStart={() => {}} />, store, api);
+    const ic = container.querySelector<HTMLInputElement>('input')!;
+    type(ic, '901301-10-1234');
+    click(buttonByText('Next'));
+    expect(container.querySelector('.validation-message')!.textContent).toBe(translate('en', 'validation.ic.invalidDate'));
+    type(ic, '900101-10-123');
+    expect(container.querySelector('.validation-message')!.textContent).toBe(translate('en', 'validation.ic.invalidDate'));
+    type(ic, '900101-10-1234');
+    expect(container.querySelector('.validation-message')!.textContent).toBe('');
+    blur(ic);
+    expect(container.querySelector('.validation-message')!.textContent).toBe('');
   });
 });
 

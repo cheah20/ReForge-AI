@@ -13,7 +13,7 @@
 import { PDFArray, PDFDict, type PDFDocument } from 'pdf-lib';
 import type { FieldEvidence } from '../../shared/types.js';
 import { buildEvidence, type ExtractedField } from './acroform.js';
-import { computePageSnippets, isFiniteRect, type TextItem } from './page-text.js';
+import { computeOptionLabels, computePageSnippets, isFiniteRect, type TextItem } from './page-text.js';
 import { getAny, getNameText, getRect, resolveAs, type PdfRect } from './pdf-objects.js';
 import { checkPdf, rejection, type RejectionCode } from './rejection.js';
 
@@ -183,9 +183,14 @@ async function addPageSnippets(
     // Guards: every widget in /Annots, plus extracted widgets placed only through /P.
     const guards = [...(guardsByPage.get(pageNumber - 1) ?? []), ...widgetRects];
     const snippets = computePageSnippets(items, widgetRects, guards);
-    onPage.forEach(({ f, wi }, k) => {
+    const optionLabels = computeOptionLabels(items, widgetRects, guards);
+    onPage.forEach(({ f, w, wi }, k) => {
       const widget = f.evidence.widgets[wi];
       if (widget) widget.pageSnippet = snippets[k] ?? '';
+      // A radio option shows the text printed beside its button ("Perempuan"), not its export value ("F").
+      const label = optionLabels[k];
+      const option = w.exportValue !== undefined ? f.evidence.options?.find((o) => o.exportValue === w.exportValue) : undefined;
+      if (label && option && option.displayLabel === option.exportValue) option.displayLabel = label;
     });
   }
 }

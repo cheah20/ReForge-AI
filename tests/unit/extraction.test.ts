@@ -111,6 +111,15 @@ describe('clinic-registration.pdf evidence', () => {
     expect(gender.options?.map((o) => o.exportValue)).toEqual(['F', 'M', 'X']);
   });
 
+  it.each([
+    ['clinic-registration.pdf', 'patient.gender', [['F', 'Perempuan'], ['M', 'Lelaki'], ['X', 'Tidak dinyatakan']]],
+    ['us-community-clinic.pdf', 'visit.contactMethod', [['P', 'Phone'], ['E', 'Email'], ['N', 'Neither']]],
+    ['school-enrolment.pdf', 'admission.session', [['AM', 'Morning / Pagi'], ['PM', 'Afternoon / Petang']]],
+  ])('%s: each %s button is shown with the label printed beside it, and keeps its export value', async (file, id, pairs) => {
+    const field = byId(await fieldsOf(fixture(file))).get(id)!;
+    expect(field.options).toEqual(pairs.map(([exportValue, displayLabel]) => ({ exportValue, displayLabel })));
+  });
+
   it('keeps dropdown export values distinct from display labels', async () => {
     const state = byId(await fieldsOf(fixture('clinic-registration.pdf'))).get('contact.state')!;
     expect(state.options).toContainEqual({ exportValue: 'SGR', displayLabel: 'Selangor' });

@@ -128,13 +128,9 @@ function primaryLabel(usable: Usable[], widget: PdfRect): number {
  * @param guardRects every widget annotation on the page (defaults to widgetRects);
  *   text touching any of them is excluded from all snippets.
  */
-export function computePageSnippets(
-  items: TextItem[],
-  widgetRects: PdfRect[],
-  guardRects: PdfRect[] = widgetRects,
-): string[] {
+/** Text items that may be used at all: trimmed, with certain bounds, touching no guard. */
+function usableItems(items: TextItem[], widgetRects: PdfRect[], guardRects: PdfRect[]): Usable[] {
   const guards = [...guardRects, ...widgetRects].map((r) => expand(r, WIDGET_MARGIN));
-
   const usable: Usable[] = [];
   items.forEach((item, index) => {
     const str = typeof item.str === 'string' ? item.str.trim() : '';
@@ -144,6 +140,39 @@ export function computePageSnippets(
     if (guards.some((g) => touches(box, g))) return;
     usable.push({ index, str, box });
   });
+  return usable;
+}
+
+/**
+ * The printed label of each small widget (radio button or checkbox): the
+ * nearest usable text item directly to its right, on the same line, within
+ * LABEL_GAP. Undefined for wider widgets and when no such text exists. The
+ * same privacy filter as the snippets applies, so field values never qualify.
+ */
+export function computeOptionLabels(
+  items: TextItem[],
+  widgetRects: PdfRect[],
+  guardRects: PdfRect[] = widgetRects,
+): Array<string | undefined> {
+  const usable = usableItems(items, widgetRects, guardRects);
+  return widgetRects.map((w) => {
+    if (w.right - w.left > SMALL_WIDGET) return undefined;
+    let best: Usable | undefined;
+    for (const u of usable) {
+      const gap = u.box.left - w.right;
+      if (!overlapsVertically(u.box, w) || gap < 0 || gap > LABEL_GAP) continue;
+      if (!best || gap < best.box.left - w.right) best = u;
+    }
+    return best?.str.slice(0, MAX_SNIPPET_LENGTH);
+  });
+}
+
+export function computePageSnippets(
+  items: TextItem[],
+  widgetRects: PdfRect[],
+  guardRects: PdfRect[] = widgetRects,
+): string[] {
+  const usable = usableItems(items, widgetRects, guardRects);
 
   // The primary (nearest own) label of every widget on the page.
   const allWidgets = [...guardRects, ...widgetRects];
