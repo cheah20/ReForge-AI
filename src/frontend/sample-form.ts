@@ -1,15 +1,16 @@
 /**
  * src/frontend/sample-form.ts
  *
- * The bundled sample form (task 28.5): the synthetic clinic registration PDF
- * from fixtures/, emitted by Vite as a static asset of this app. It is fetched
- * from our own origin and then read exactly like a file the user chose; no
- * data goes out.
+ * The bundled sample form (task 28.5): fixtures/clinic-registration-sample.pdf,
+ * the synthetic clinic registration form with every field empty (made by
+ * scripts/create-fixtures). Vite emits it as a static asset of this app. It is
+ * fetched from our own origin and then read exactly like a file the user
+ * chose; no data goes out.
  */
 
-import sampleUrl from '../../fixtures/clinic-registration.pdf?url';
+import sampleUrl from '../../fixtures/clinic-registration-sample.pdf?url';
 
-export const SAMPLE_FORM_NAME = 'clinic-registration.pdf';
+export const SAMPLE_FORM_NAME = 'clinic-registration-sample.pdf';
 
 export interface SampleSource {
   name: string;

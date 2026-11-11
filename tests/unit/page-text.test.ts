@@ -104,6 +104,56 @@ describe('computeOptionLabels (radio buttons show their printed label)', () => {
     expect(computeOptionLabels([item('Beside', 305, 710)], [WIDGET])).toEqual([undefined]);
   });
 
+  it('joins a label split into several text items on the same line, in reading order', () => {
+    // pdf.js often returns one item per word or per font run.
+    const items = [item('applicable', 238 + 22, 703, 10, 45), item('Not', 238, 703, 10, 18)];
+    expect(computeOptionLabels(items, [F])).toEqual(['Not applicable']);
+  });
+
+  it('reads a label that wraps onto a second line, starting under the first line', () => {
+    const items = [
+      item('Tidak', 238, 703, 10, 25),
+      item('dinyatakan', 238 + 28, 703, 10, 45),
+      item('oleh pesakit', 238, 703 - 12, 10, 55),
+      item('Unrelated text far below', 238, 703 - 60, 10, 90),
+    ];
+    expect(computeOptionLabels(items, [F])).toEqual(['Tidak dinyatakan oleh pesakit']);
+  });
+
+  it('stops at the next button on the same line, so one option never takes the next one’s label', () => {
+    const items = [item('Perempuan', 238, 703, 10, 50), item('Lelaki', 338, 703, 10, 30)];
+    // Perempuan ends at 288, the M button starts at 320: the gap is small enough to join, but a widget lies between.
+    const wide = { ...items[0]!, width: 75 };
+    expect(computeOptionLabels([wide, items[1]!], [F, M])).toEqual(['Perempuan', 'Lelaki']);
+  });
+
+  it('in a vertical list, the next option’s label is not read as a second line', () => {
+    const yes = button(220);
+    const no: PdfRect = { left: 220, bottom: 686, right: 234, top: 700 };
+    const items = [item('Yes', 238, 703, 10, 20), item('No', 238, 689, 10, 15)];
+    expect(computeOptionLabels(items, [yes, no])).toEqual(['Yes', 'No']);
+  });
+
+  it('does not join words separated by a wide gap (another column)', () => {
+    const items = [item('Morning', 238, 703, 10, 40), item('Office use only', 238 + 40 + 60, 703, 10, 70)];
+    expect(computeOptionLabels(items, [F])).toEqual(['Morning']);
+  });
+
+  it('caps a long label at the snippet limit', () => {
+    const words = Array.from({ length: 60 }, (_, i) => item(`word${i}`, 238 + i * 30, 703, 10, 28));
+    const [label] = computeOptionLabels(words, [F]);
+    expect(label!.length).toBeLessThanOrEqual(200);
+    expect(label!.startsWith('word0 word1 word2')).toBe(true);
+  });
+
+  it('a value drawn inside a widget in the middle of a label line is skipped and ends the label there', () => {
+    const otherWidget: PdfRect = { left: 262, bottom: 698, right: 300, top: 716 };
+    const items = [item('Not', 238, 703, 10, 18), item('PRIVATE_VALUE', 264, 703, 10, 30), item('applicable', 302, 703, 10, 45)];
+    const [label] = computeOptionLabels(items, [F], [otherWidget]);
+    expect(label).toBe('Not');
+    expect(label).not.toContain('PRIVATE_VALUE');
+  });
+
   it('uses the same privacy filter as snippets: text touching any widget is never a label', () => {
     // A value drawn inside a neighbouring text field that starts right of the button.
     const valueField: PdfRect = { left: 236, bottom: 698, right: 400, top: 716 };

@@ -21,10 +21,48 @@ import { extractFields, sha256Hex } from '../../src/lib/pdf-extract/index.js';
 import { translate } from '../../src/packs/language/registry.js';
 import { SAMPLE_FORM_PATH } from '../../src/shared/app-paths.js';
 import { createApiClient } from '../../src/frontend/api.js';
+import { PDFCheckBox, PDFDocument, PDFDropdown, PDFName, PDFRadioGroup, PDFTextField } from 'pdf-lib';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const SAMPLE = new Uint8Array(readFileSync(path.resolve(__dirname, '../../fixtures/clinic-registration.pdf')));
+const fixtureBytes = (name: string) => new Uint8Array(readFileSync(path.resolve(__dirname, '../../fixtures', name)));
+const SAMPLE = fixtureBytes('clinic-registration-sample.pdf');
+const CLINIC = fixtureBytes('clinic-registration.pdf');
+
+/** Every value a field holds: text, checked state, selection. Empty means nothing is filled. */
+async function filledValues(bytes: Uint8Array): Promise<Record<string, string>> {
+  const form = (await PDFDocument.load(bytes)).getForm();
+  const out: Record<string, string> = {};
+  for (const f of form.getFields()) {
+    const dict = f.acroField.dict;
+    // /Off is the empty state of a checkbox or radio group; any other /V or /DV is a value.
+    for (const key of ['V', 'DV']) {
+      const raw = dict.get(PDFName.of(key));
+      if (raw !== undefined && String(raw) !== '/Off') out[f.getName()] = `has /${key} ${String(raw)}`;
+    }
+    if (f instanceof PDFTextField && f.getText()) out[f.getName()] = `text ${f.getText()}`;
+    if (f instanceof PDFCheckBox && f.isChecked()) out[f.getName()] = 'checked';
+    if (f instanceof PDFRadioGroup && f.getSelected()) out[f.getName()] = `selected ${f.getSelected()}`;
+    if (f instanceof PDFDropdown && f.getSelected().length) out[f.getName()] = `selected ${f.getSelected().join()}`;
+  }
+  return out;
+}
+
+describe('the sample PDF (task 28.5)', () => {
+  it('has every field empty', async () => {
+    expect(await filledValues(SAMPLE)).toEqual({});
+  });
+
+  it('is the clinic form: same field names and evidence, only the values removed', async () => {
+    // The check has teeth: the clinic fixture itself is prefilled.
+    expect(Object.keys(await filledValues(CLINIC)).sort()).toEqual(['clinic.branchCode', 'consent.contact']);
+    const noText = { loadPageText: async () => new Map() };
+    const [sample, clinic] = await Promise.all([extractFields(SAMPLE, noText), extractFields(CLINIC, noText)]);
+    expect(sample.ok && clinic.ok).toBe(true);
+    if (!sample.ok || !clinic.ok) return;
+    expect(sample.fields).toEqual(clinic.fields);
+  });
+});
 
 describe('SAMPLE_FORM_PATH', () => {
   it('is a same-origin path with no query string or fragment, outside /legacy/', () => {
@@ -100,9 +138,10 @@ async function expectSampleReady(run: ReturnType<typeof renderApp>) {
   await until(() => container.textContent!.includes(t('upload.found', { count: 22, pages: 1 })));
   expect(container.querySelector('h1')?.textContent).toBe(t('upload.title'));
   expect(container.textContent).toContain(t('upload.privacyNotice'));
-  // The very same bytes as the fixture went through the normal reader.
+  // The loaded sample went through the normal reader, and nothing in it is filled.
   expect(run.extracted).toHaveLength(1);
   expect(await sha256Hex(run.extracted[0]!)).toBe(await sha256Hex(SAMPLE));
+  expect(await filledValues(run.extracted[0]!)).toEqual({});
   // Reading the sample sent nothing.
   expect(run.bodies).toEqual([]);
 }

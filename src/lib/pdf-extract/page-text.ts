@@ -143,11 +143,30 @@ function usableItems(items: TextItem[], widgetRects: PdfRect[], guardRects: PdfR
   return usable;
 }
 
+/** Largest gap between two items of one label line, as a multiple of the text height. */
+export const LABEL_WORD_GAP = 1.5;
+/** Largest gap between two lines of one label, as a multiple of the text height. */
+export const LABEL_LINE_GAP = 0.8;
+/** How far a continuation line may start from the first line's left edge. */
+const LINE_ALIGN = 2;
+
+const height = (r: PdfRect) => r.top - r.bottom;
+const sameRect = (a: PdfRect, b: PdfRect) => a.left === b.left && a.right === b.right && a.top === b.top && a.bottom === b.bottom;
+
 /**
- * The printed label of each small widget (radio button or checkbox): the
- * nearest usable text item directly to its right, on the same line, within
- * LABEL_GAP. Undefined for wider widgets and when no such text exists. The
- * same privacy filter as the snippets applies, so field values never qualify.
+ * The printed label of each small widget (radio button or checkbox), in
+ * reading order:
+ * 1. The first line starts with the nearest usable text item directly right of
+ *    the widget (same line, within LABEL_GAP) and takes the following items on
+ *    that line while the gap stays within LABEL_WORD_GAP text heights, so
+ *    "Not" + "applicable" is one label.
+ * 2. Continuation lines: an item directly below the previous line (within
+ *    LABEL_LINE_GAP text heights) that starts at the first line's left edge,
+ *    joined the same way. A wrapped label is read in full.
+ * The label stops before any widget (guard) in its path, so it never runs into
+ * the next option, and at MAX_SNIPPET_LENGTH. Text that touches a widget is
+ * never usable (same privacy filter as the snippets). Undefined for wider
+ * widgets and when nothing is printed beside the widget.
  */
 export function computeOptionLabels(
   items: TextItem[],
@@ -155,15 +174,75 @@ export function computeOptionLabels(
   guardRects: PdfRect[] = widgetRects,
 ): Array<string | undefined> {
   const usable = usableItems(items, widgetRects, guardRects);
+  const allWidgets = [...guardRects, ...widgetRects];
+  const sameLine = (a: PdfRect, b: PdfRect) => overlapsVertically(a, b);
+
+  /** Text items on the line of `start`, left to right from `start`, stopping at gaps and widgets. */
+  const lineFrom = (start: Usable, used: Set<number>): Usable[] => {
+    const line = [start];
+    used.add(start.index);
+    for (;;) {
+      const last = line[line.length - 1]!;
+      const maxGap = LABEL_WORD_GAP * height(last.box);
+      let next: Usable | undefined;
+      for (const u of usable) {
+        if (used.has(u.index) || !sameLine(u.box, last.box)) continue;
+        const gap = u.box.left - last.box.right;
+        if (gap < -0.5 || gap > maxGap) continue;
+        if (!next || u.box.left < next.box.left) next = u;
+      }
+      if (!next) return line;
+      // A widget between the two items starts another option: stop before it.
+      const between: PdfRect = { left: last.box.right, right: next.box.left, bottom: next.box.bottom, top: next.box.top };
+      if (allWidgets.some((w) => w.left >= between.left - 0.5 && w.left <= between.right && overlapsVertically(w, between))) return line;
+      used.add(next.index);
+      line.push(next);
+    }
+  };
+
   return widgetRects.map((w) => {
     if (w.right - w.left > SMALL_WIDGET) return undefined;
-    let best: Usable | undefined;
+    let first: Usable | undefined;
     for (const u of usable) {
       const gap = u.box.left - w.right;
       if (!overlapsVertically(u.box, w) || gap < 0 || gap > LABEL_GAP) continue;
-      if (!best || gap < best.box.left - w.right) best = u;
+      if (!first || gap < first.box.left - w.right) first = u;
     }
-    return best?.str.slice(0, MAX_SNIPPET_LENGTH);
+    if (!first) return undefined;
+
+    const used = new Set<number>();
+    const lines = [lineFrom(first, used)];
+    const labelLeft = first.box.left;
+    for (;;) {
+      const prev = lines[lines.length - 1]!;
+      const top = Math.max(...prev.map((u) => u.box.top));
+      const bottom = Math.min(...prev.map((u) => u.box.bottom));
+      const h = Math.max(...prev.map((u) => height(u.box)));
+      // The next line down: clearly lower than this one (its top below this line's middle;
+      // it may overlap this line's descent), close under it, and aligned with the label start.
+      const below = usable.find(
+        (u) =>
+          !used.has(u.index) &&
+          Math.abs(u.box.left - labelLeft) <= LINE_ALIGN &&
+          u.box.top <= top - h / 2 &&
+          bottom - u.box.top <= LABEL_LINE_GAP * h,
+      );
+      if (!below) break;
+      // A line that sits beside another widget is that widget's label, not a continuation.
+      const besideOther = allWidgets.some(
+        (x) => !sameRect(x, w) && overlapsVertically(x, below.box) && x.right <= below.box.left && below.box.left - x.right <= LABEL_GAP,
+      );
+      if (besideOther) break;
+      lines.push(lineFrom(below, used));
+    }
+
+    let label = '';
+    for (const u of lines.flat()) {
+      const next = label ? `${label} ${u.str}` : u.str;
+      if (next.length > MAX_SNIPPET_LENGTH) break;
+      label = next;
+    }
+    return label || first.str.slice(0, MAX_SNIPPET_LENGTH);
   });
 }
 

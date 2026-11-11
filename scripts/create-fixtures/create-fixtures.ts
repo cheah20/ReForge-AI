@@ -332,6 +332,30 @@ export const FIXTURES: FixtureSpec[] = [
   },
 ];
 
+/**
+ * The bundled "Try a sample form" PDF (formbridge-pdf task 28.5): the clinic
+ * registration form with every value removed, so the sample opens with every
+ * field empty. Same page text, fields, flags and rectangles as the clinic
+ * fixture; only /V, /DV, checked states and value appearances are left out.
+ */
+export const SAMPLE_FORM_FILE = 'clinic-registration-sample.pdf';
+
+export function blankCopy(spec: FixtureSpec, file: string): FixtureSpec {
+  return {
+    ...spec,
+    file,
+    fields: spec.fields.map((f) => {
+      const copy = { ...f } as Record<string, unknown>;
+      delete copy['value'];
+      delete copy['checked'];
+      delete copy['selected'];
+      return copy as unknown as typeof f;
+    }),
+  };
+}
+
+FIXTURES.push(blankCopy(FIXTURES.find((f) => f.file === 'clinic-registration.pdf')!, SAMPLE_FORM_FILE));
+
 /** Base for encrypted.pdf (encrypted afterwards with qpdf). */
 export const ENCRYPTED_BASE: FixtureSpec = {
   file: 'encrypted-base.pdf',

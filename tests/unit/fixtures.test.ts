@@ -68,6 +68,7 @@ describe('school-enrolment.pdf rectangles (fixture spec section 2)', () => {
 describe('embedded Noto Sans (fixture spec common conventions)', () => {
   const LATIN = [
     'clinic-registration.pdf',
+    'clinic-registration-sample.pdf',
     'school-enrolment.pdf',
     'us-community-clinic.pdf',
     'prefilled-field.pdf',
