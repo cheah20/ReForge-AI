@@ -16,6 +16,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { PDFDocument } from 'pdf-lib';
 import { answerWizard, expectNoAxeViolations, fixture, translate, type Answer } from './helpers.js';
+import { expectTextInsideFields, screenshotPdfPages } from './pdf-check.js';
 
 // The whole flow with an axe run on every screen takes longer than the 30 s default.
 test.setTimeout(120_000);
@@ -107,9 +108,38 @@ async function wizardToDownload(page: Page) {
   await link.click();
   const download = await downloadEvent;
   expect(download.suggestedFilename()).toBe('clinic-registration-filled.pdf');
-  const bytes = await readFile((await download.path())!);
+  const bytes = new Uint8Array(await readFile((await download.path())!));
+
+  // Task 36.2: the drawn text sits inside each field, and the pages are rendered and kept as screenshots.
+  const checked = await expectTextInsideFields(bytes, DRAWN_TEXT);
+  expect(checked).toBe(Object.values(DRAWN_TEXT).join('\n').split('\n').length);
+  const shots = await screenshotPdfPages(page, bytes, test.info().outputPath('filled'));
+  for (const file of shots) await test.info().attach(file.split(/[\\/]/).pop()!, { path: file, contentType: 'image/png' });
+  expect(shots).toHaveLength(1);
+
   return PDFDocument.load(bytes);
 }
+
+/** Every text value the Nov 17 path writes, as it must appear on the page (field rectangle check). */
+const DRAWN_TEXT: Record<string, string> = {
+  'patient.fullName': 'LIN MEI TEST',
+  Text1: '900101101234',
+  'patient.birthDate': '01/01/1990',
+  Text7: 'REF-A',
+  'contact.mobile': '011-2345 6789',
+  'contact.homePhone': '03-2345 6789',
+  Text3: 'lin.mei@example.invalid',
+  'contact.address': 'Unit Ujian 8, Jalan Rekaan Ungu',
+  'contact.postcode': '43000',
+  'contact.city': 'Bandar Rekaan',
+  'visit.date': '17/11/2026',
+  'medical.description': 'Saya batuk selama dua hari.',
+  'emergency.name': 'LIN HAO TEST',
+  'emergency.phone': '012-345 6789',
+  'visit.shortCode': 'A123',
+  // Untouched read-only value: still drawn in its own field.
+  'clinic.branchCode': 'AU-TEST',
+};
 
 function expectFilled(pdf: PDFDocument) {
   const form = pdf.getForm();

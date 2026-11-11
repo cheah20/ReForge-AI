@@ -289,10 +289,10 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [ ] 35.2 Run `checkA11y()` via `axe-playwright` on every main screen: LanguagePicker, Upload, QuestionWizard (text field, checkbox, radio, dropdown each), ReviewScreen, DownloadConfirm; assert zero violations
     - _Requirements: 13.11_
 
-- [ ] 36. Nov 17 end-to-end acceptance test
+- [x] 36. Nov 17 end-to-end acceptance test
   - [x] 36.1 Create `tests/e2e/nov17-acceptance.spec.ts` — two variants using MockAiProvider: (a) mock returns high confidence → confirmation screen is skipped; (b) mock returns low confidence → confirmation screen appears and user selects Malay; both variants proceed through: language picker → upload clinic form → disclosure → question wizard (wrong IC rejected, then correct IC) → review → confirm → download
     - _Requirements: 15.2_
-  - [ ] 36.2 Add pdf.js field-rect verification: for text fields, assert rendered text bounding box is inside the field rectangle; for checkboxes/radios/dropdowns, read field value back from PDF and assert it matches; take visual screenshots of each filled page
+  - [x] 36.2 Add pdf.js field-rect verification: for text fields, assert rendered text bounding box is inside the field rectangle; for checkboxes/radios/dropdowns, read field value back from PDF and assert it matches; take visual screenshots of each filled page
     - _Requirements: 15.2_
   - [x] 36.3 Run `checkA11y()` on every screen in the Nov 17 path; assert zero violations
     - _Requirements: 15.2, 13.11_
