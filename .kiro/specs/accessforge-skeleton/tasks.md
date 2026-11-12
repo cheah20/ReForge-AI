@@ -234,10 +234,10 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - _Requirements: 7.2_
   - [ ] 13.7 Implement and register `POST /api/pages/analyze` (Slice 1)
     - **Shared file:** `src/worker/index.ts` (`ROUTES`). `LogEntry` in `src/worker/http.ts` stays unchanged.
-    - `src/worker/routes/page-analyze.ts`: 48 KB limit before parsing, `PageAnalyzeRequestSchema`, `UNSUPPORTED_LANGUAGE`, the Slice 1 rows of the decision table in design Question 5 (`mock`; `live`; `cached` after a failed live call; `503 AI_UNAVAILABLE` when no cached plan matches; `500 INTERNAL_ERROR` when the mock reply is invalid twice), `validatePlan` before replying, existing rate limit with key `route:ip`, log entries with only the allowed items.
+    - `src/worker/routes/page-analyze.ts`: 48 KB limit before parsing, `PageAnalyzeRequestSchema`, `UNSUPPORTED_LANGUAGE`, the Slice 1 rows of the decision table in design Question 5 (`mock`; `live`; `cached` after a failed live call; `503 AI_UNAVAILABLE` when no cached plan matches; `500 INTERNAL_ERROR` when the mock reply is invalid twice), `validatePlan` before replying, rate limit through the existing `RATE_LIMITER_ANALYZE` binding (20 per 60 s) named in its `RouteDef.rateLimiter`, key `route:ip`, no new binding and no change to `wrangler.jsonc`, log entries with only the allowed items.
     - _Requirements: 6.2, 6.3, 6.10, 7.1, 7.2, 7.8, 7.10, 13.1, 13.2, 13.5, 13.6, 13.12_
   - [ ] 13.8 Write example tests for the analysis route (Slice 1)
-    - `tests/unit/accessforge-routes-examples.test.ts` with a scripted fake provider and an injected cache: one example per Slice 1 row of the decision table; retry exactly after an invalid reply or a timeout, none after quota; a cached plan for another version or language is never used; an extra property, 51 entries and a bad Page_Version give 400 with schema paths only and zero provider calls; each log entry has only the allowed items; the default Vitest environment resolves the mock provider.
+    - `tests/unit/accessforge-routes-examples.test.ts` with a scripted fake provider and an injected cache: one example per Slice 1 row of the decision table; retry exactly after an invalid reply or a timeout, none after quota; a cached plan for another version or language is never used; an extra property, 51 entries and a bad Page_Version give 400 with schema paths only and zero provider calls; each log entry has only the allowed items; the route is counted by `RATE_LIMITER_ANALYZE` with key `/api/pages/analyze:<ip>` and answers 429 `RATE_LIMITED` when it is full, while a full `RATE_LIMITER_TRANSLATE` does not block it; the default Vitest environment resolves the mock provider.
     - _Requirements: 6.3, 6.10, 7.1, 7.2, 7.8, 7.10, 13.5, 13.6, 13.11_
   - [ ] 13.9 Write the mock determinism test (Slice 1)
     - `tests/unit/accessforge-mock.test.ts`: identical Page_Model and language give an identical plan; reason for visit has confidence 0.6; `zh-Hans` and `en` texts come from the table.
@@ -431,11 +431,11 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - _Requirements: 4.5, 13.2_
   - [ ]* 25.3 Implement `runPageRetranslate()` and `POST /api/pages/retranslate` (Slice 2)
     - **Shared file:** `src/worker/index.ts`.
-    - 48 KB limit, item count must match, 503 and 504 errors, allowed log items only.
+    - 48 KB limit, item count must match, 503 and 504 errors, rate limit through `RATE_LIMITER_TRANSLATE` (60 per 60 s), allowed log items only.
     - _Requirements: 7.7, 7.9, 13.1, 13.5_
   - [ ]* 25.4 Implement `GET /api/pages/cached-plan` (Slice 2)
     - **Shared file:** `src/worker/index.ts`.
-    - Query `version` and `lang` validated with zod; reads only the bundled precomputed plans, never calls the provider; 404 when none exists.
+    - Query `version` and `lang` validated with zod; reads only the bundled precomputed plans, never calls the provider; 404 when none exists; rate limit through `RATE_LIMITER_TRANSLATE` (60 per 60 s).
     - _Requirements: 7.7_
   - [ ]* 25.5 Wire language switching into the Mirror (Slice 2)
     - **Shared files:** `src/frontend/api.ts`, every interface locale file.

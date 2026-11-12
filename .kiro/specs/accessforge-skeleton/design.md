@@ -20,7 +20,7 @@ The design is a walking skeleton. It adds no new runtime dependency. It reuses t
 | Prompts | `src/lib/ai/prompt.ts` | new prompt builders |
 | AI mode switch | `src/worker/ai-mode.ts` (`resolveAiMode`) | unchanged |
 | Worker entry, error shape, body limit, logging | `src/worker/index.ts`, `src/worker/http.ts` | new API routes; `/legacy/*` dispatch; `LogEntry` unchanged |
-| Rate limiting | `RATE_LIMITER` binding in `wrangler.jsonc` | same binding, key `route:ip` |
+| Rate limiting | two bindings in `wrangler.jsonc`: `RATE_LIMITER_ANALYZE` (20 per 60 s) and `RATE_LIMITER_TRANSLATE` (60 per 60 s); each route names its binding in `RouteDef.rateLimiter` in `src/worker/index.ts` | no new binding; `/api/pages/analyze` uses `RATE_LIMITER_ANALYZE`, the Slice 2 page re-translation and cached-plan routes use `RATE_LIMITER_TRANSLATE`; key `route:ip` |
 | Answer validation | `src/packs/country/validate.ts` (`validateAnswer`), `my.ts` (`myPack`), `dates.ts` (`isValidCalendarDate`, `formatDate`, `detectDateFormat`, `DATE_FORMATS`) | unchanged |
 | Language registry and i18n | `src/packs/language/registry.ts`, `src/frontend/i18n.tsx` | new `accessforge.*` keys |
 | Shared question UI | `src/frontend/components/FieldQuestion.tsx`, `ValidationMessage.tsx`, `MachineTranslatedLabel.tsx`, `StatusMessage.tsx`, `ScreenHeading.tsx` | reused through an adapter (see "Reuse of FormBridge components and validators") |
@@ -1155,7 +1155,15 @@ It parses both confirmation documents with `parseConfirmation` and asserts: iden
 
 ## API Routes
 
-The routes are added to `ROUTES` in `src/worker/index.ts` and inherit the existing pipeline: POST only (except the Slice 2 cached-plan GET), byte limit before JSON parse, zod validation (400 `BAD_REQUEST` with schema paths only), per-IP rate limit through `RATE_LIMITER` with key `route:ip` (10 requests per 60 s, the binding's current setting), metadata-only log entry.
+The routes are added to `ROUTES` in `src/worker/index.ts` and inherit the existing pipeline: POST only (except the Slice 2 cached-plan GET), byte limit before JSON parse, zod validation (400 `BAD_REQUEST` with schema paths only), per-IP rate limit with key `route:ip` through the binding the route names in `RouteDef.rateLimiter`, metadata-only log entry. There are two bindings, as configured in `wrangler.jsonc` and the formbridge-pdf design: `RATE_LIMITER_ANALYZE` at 20 requests per 60 s for analysis calls and `RATE_LIMITER_TRANSLATE` at 60 requests per 60 s for translation calls. Because the key includes the route, each route has its own count even when two routes share a binding. AccessForge adds no binding.
+
+| Route | Binding | Limit per IP |
+|---|---|---|
+| `POST /api/pages/analyze` (Slice 1) | `RATE_LIMITER_ANALYZE` | 20 per 60 s |
+| `POST /api/pages/retranslate` (Slice 2) | `RATE_LIMITER_TRANSLATE` | 60 per 60 s |
+| `GET /api/pages/cached-plan` (Slice 2) | `RATE_LIMITER_TRANSLATE` | 60 per 60 s |
+
+The `/legacy/*` routes call no AI and use no rate-limiting binding.
 
 ### POST /api/pages/analyze (Slice 1)
 
