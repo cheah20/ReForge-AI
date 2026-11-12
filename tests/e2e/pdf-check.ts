@@ -114,7 +114,7 @@ export async function expectTextInsideFields(bytes: Uint8Array, expected: Record
   return checked;
 }
 
-/** Render every page of the PDF in the browser with pdf.js (form appearances on) and screenshot it. */
+/** Render every page of the PDF in the browser with pdf.js (widget appearance streams drawn) and screenshot it. */
 export async function screenshotPdfPages(page: Page, bytes: Uint8Array, pathPrefix: string): Promise<string[]> {
   const base64 = Buffer.from(bytes).toString('base64');
   const pageCount: number = await page.evaluate(async (data) => {
@@ -135,7 +135,10 @@ export async function screenshotPdfPages(page: Page, bytes: Uint8Array, pathPref
       canvas.height = viewport.height;
       canvas.dataset['page'] = String(n);
       host.appendChild(canvas);
-      await p.render({ canvas, canvasContext: canvas.getContext('2d')!, viewport, annotationMode: pdfjs.AnnotationMode.ENABLE_FORMS }).promise;
+      // ENABLE draws each widget's own appearance stream, as a printed or flattened view
+      // would. ENABLE_FORMS leaves form widgets to an HTML form layer that this canvas
+      // never has, which showed empty text fields and every option as selected.
+      await p.render({ canvas, canvasContext: canvas.getContext('2d')!, viewport, annotationMode: pdfjs.AnnotationMode.ENABLE }).promise;
     }
     return doc.numPages;
   }, base64);
