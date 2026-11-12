@@ -84,11 +84,20 @@ async function drawnText(bytes: Uint8Array): Promise<DrawnText[]> {
   return items;
 }
 
-const inside = (inner: Rect, outer: Rect, tolerance = 0.5) =>
-  inner.left >= outer.left - tolerance &&
-  inner.right <= outer.right + tolerance &&
-  inner.bottom >= outer.bottom - tolerance &&
-  inner.top <= outer.top + tolerance;
+/**
+ * Horizontal padding every filled value must keep from its field's left and right
+ * edges (fill PADDING, fixture spec: ink within the field allowing 3pt internal
+ * padding). Vertically the item box from pdf.js includes the font's full ascent, so
+ * only "inside the field" is required there.
+ */
+export const REQUIRED_PADDING = 3;
+const EPSILON = 0.05;
+
+const inside = (inner: Rect, outer: Rect) =>
+  inner.left >= outer.left + REQUIRED_PADDING - EPSILON &&
+  inner.right <= outer.right - REQUIRED_PADDING + EPSILON &&
+  inner.bottom >= outer.bottom - EPSILON &&
+  inner.top <= outer.top + EPSILON;
 
 /**
  * For each field, the value (or each line of a multi-line value) must be drawn
@@ -107,7 +116,10 @@ export async function expectTextInsideFields(bytes: Uint8Array, expected: Record
       const candidates = drawn.filter((d) => d.str.trim() === line.trim());
       expect(candidates.length, `"${line}" is drawn on the page`).toBeGreaterThan(0);
       const placed = candidates.find((d) => fieldRects!.some((r) => inside(d.box, r)));
-      expect(placed, `"${line}" is drawn inside ${field} ${JSON.stringify(fieldRects)}; drawn at ${JSON.stringify(candidates.map((c) => c.box))}`).toBeDefined();
+      expect(
+        placed,
+        `"${line}" is drawn inside ${field} with ${REQUIRED_PADDING}pt side padding ${JSON.stringify(fieldRects)}; drawn at ${JSON.stringify(candidates.map((c) => c.box))}`,
+      ).toBeDefined();
       checked++;
     }
   }

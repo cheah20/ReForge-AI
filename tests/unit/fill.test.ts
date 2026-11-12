@@ -191,6 +191,45 @@ describe('prefilled fixture: replacing one field leaves the others exactly as th
   });
 });
 
+describe('3pt padding in drawn appearances (fill PADDING, fixture spec appearance checks)', () => {
+  /** x of every "x y Td" text position in a widget's appearance, and the clip box width. */
+  /** x of every text line, from "1 0 0 1 x y Tm" (how pdf-lib places each line). */
+  const textXs = (stream: string) => [...stream.matchAll(/1 0 0 1 (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?) Tm/g)].map((m) => Number(m[1]));
+  const widthOf = (out: Awaited<ReturnType<typeof load>>, name: string) => out.getForm().getField(name).acroField.getWidgets()[0]!.getRectangle().width;
+
+  it.each([
+    ['patient.fullName', text('LIN MEI TEST')],
+    ['contact.address', text('Unit Ujian 8, Jalan Rekaan Ungu\nKawasan Rekaan')],
+    ['contact.state', choice('SGR')],
+  ] as const)('%s: every line starts at least 3pt in, and text is clipped 3pt inside every edge', async (name, answer) => {
+    const out = await load(await fill('clinic-registration.pdf', { [name]: answer }));
+    const field = out.getForm().getField(name);
+    const [stream] = appearanceStreams(field);
+    const xs = textXs(stream!);
+    expect(xs.length).toBeGreaterThan(0);
+    for (const x of xs) expect(x).toBeGreaterThanOrEqual(3);
+    // pdf-lib clips text to "padding" inside the box: the clip rectangle must keep 3pt too.
+    // The clip path is the rectangle drawn just before "W": its corner must be at least 3pt in.
+    const clip = stream!.match(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?) m\n[^\n]+ l\n(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?) l\n[^\n]+ l\nh\nW/);
+    expect(clip).not.toBeNull();
+    const [x1, y1, x2, y2] = [clip![1], clip![2], clip![3], clip![4]].map(Number) as [number, number, number, number];
+    const rect = field.acroField.getWidgets()[0]!.getRectangle();
+    expect(x1).toBeGreaterThanOrEqual(3);
+    expect(y1).toBeGreaterThanOrEqual(3);
+    expect(x2).toBeLessThanOrEqual(rect.width - 3);
+    expect(y2).toBeLessThanOrEqual(rect.height - 3);
+    expect(widthOf(out, name)).toBeGreaterThan(6);
+  });
+
+  it('a short value in a narrow field keeps its 10pt size and the 3pt start', async () => {
+    // visit.shortCode is 100pt wide with MaxLen 4: four wide letters at 10pt fit inside the 94pt inner width.
+    const out = await load(await fill('clinic-registration.pdf', { 'visit.shortCode': text('WWWW') }));
+    const [stream] = appearanceStreams(out.getForm().getTextField('visit.shortCode'));
+    expect(textXs(stream!)[0]).toBeGreaterThanOrEqual(3);
+    expect(stream).toMatch(/\/\S+ 10 Tf/);
+  });
+});
+
 describe('fonts', () => {
   it('chooses the first font that covers every character, and reports the first missing one', () => {
     expect(chooseFont([FULL_FONT], 'LUC\u00cdA P\u00c9REZ \u00d1')).toHaveProperty('source');

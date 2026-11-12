@@ -29,7 +29,9 @@ import {
   PDFString,
   PDFTextField,
   type PDFFont,
+  type PDFWidgetAnnotation,
 } from 'pdf-lib';
+import { borderWidthOf, dropdownAppearance, textAppearance } from './appearance.js';
 import { chooseFont, embedFont, type FontMap } from './font.js';
 import { fitText, type Box, type Metrics } from './overflow.js';
 
@@ -84,6 +86,13 @@ export function defaultFontSize(da: string | undefined): number {
 
 const length = (s: string) => [...s].length;
 
+/** The widget's box inside its border; overflow.ts then keeps PADDING inside that. */
+function innerBox(widget: PDFWidgetAnnotation): Box {
+  const r = widget.getRectangle();
+  const b = borderWidthOf(widget);
+  return { width: r.width - 2 * b, height: r.height - 2 * b };
+}
+
 function metricsOf(font: PDFFont): Metrics {
   return { widthOfTextAtSize: (t, s) => font.widthOfTextAtSize(t, s), heightAtSize: (s) => font.heightAtSize(s) };
 }
@@ -127,15 +136,12 @@ export async function fillPdf(
       }
       const font = await fontFor(fieldId, value);
       const widgets = field.acroField.getWidgets();
-      const boxes: Box[] = widgets.map((w) => {
-        const r = w.getRectangle();
-        return { width: r.width, height: r.height };
-      });
+      const boxes: Box[] = widgets.map(innerBox);
       const start = defaultFontSize(field.acroField.getDefaultAppearance());
       const { size } = fitText(metricsOf(font), fieldId, value, boxes, start, field.isMultiline());
       field.setText(value);
-      field.setFontSize(size);
-      field.updateAppearances(font);
+      // Drawn with the same padding and size the fit check used (appearance.ts).
+      field.updateAppearances(font, textAppearance(size));
       continue;
     }
 
@@ -154,10 +160,16 @@ export async function fillPdf(
       const option = options[index]!;
       const display = (option.display ?? option.value).decodeText();
       const font = await fontFor(fieldId, display);
-      // pdf-lib draws /V as the visible text, so show the display label while the
-      // appearance is built, then store the export value.
-      acro.dict.set(PDFName.of('V'), pdfText(display));
-      field.updateAppearances(font);
+      // The appearance shows the display label; /V stores the export value (7.8).
+      if (field instanceof PDFDropdown) {
+        const start = defaultFontSize(acro.getDefaultAppearance());
+        const { size } = fitText(metricsOf(font), fieldId, display, acro.getWidgets().map(innerBox), start, false);
+        field.updateAppearances(font, dropdownAppearance(display, size));
+      } else {
+        // List boxes keep pdf-lib's list appearance, which draws every option; it reads /V for the highlight.
+        acro.dict.set(PDFName.of('V'), pdfText(display));
+        field.updateAppearances(font);
+      }
       acro.dict.set(PDFName.of('V'), pdfText(answer.exportValue));
       acro.dict.set(PDFName.of('I'), pdfDoc.context.obj([index]));
       continue;
