@@ -126,7 +126,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-page-versions.test.ts`: for GET `/legacy/` and GET `/legacy/register`, the hash recomputed from the served HTML equals the served meta, `PAGE_VERSIONS` and `SUPPORTED_PAGE_VERSIONS`; confirmation, error and not-found documents carry no version meta; the test fails when any file in `src/worker/cache/precomputed/pages/` is keyed by an unsupported version (an absent folder passes).
     - _Requirements: 3.4_
   - [x] 5.10 Write the CPU measurement test (Slice 1)
-    - `tests/unit/legacy-cpu.test.ts`: for GET `/legacy/`, GET `/legacy/register` and a valid POST with values at their `maxlength`, warm up 50 calls of `handleLegacy`, then time 500; fail when the 99th percentile exceeds 2 ms (a fifth of the 10 ms free-plan CPU limit). Record the Node p50 and p99 in the CPU table of design Question 6. The deployed reading is task 23.1.
+    - `tests/cpu/legacy-cpu.test.ts`, run alone with `npm run test:cpu` (outside the default `npx vitest run`, because parallel test files distort wall-clock timing): for GET `/legacy/`, GET `/legacy/register` and a valid POST with values at their `maxlength`, warm up 50 calls of `handleLegacy`, then time 500; fail when the 99th percentile exceeds 2 ms (a fifth of the 10 ms free-plan CPU limit). Record the Node p50 and p99 in the CPU table of design Question 6. The deployed reading is task 23.1.
     - _Requirements: 2.12_
   - [x] 5.11 Wire the legacy routes into the Worker (Slice 1)
     - **Shared files:** `src/worker/index.ts`, `wrangler.jsonc`.
@@ -134,8 +134,8 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/legacy-routes.test.ts`: the Worker serves no `/legacy/` documents other than those Requirement 1.1 lists; a legacy POST log entry contains no field name and no value.
     - _Requirements: 1.1, 4.7, 13.5_
 
-- [ ] 6. Checkpoint: legacy portal (Slice 1)
-  - Run `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
+- [x] 6. Checkpoint: legacy portal (Slice 1)
+  - Run `npx vitest run` and `npm run test:cpu`. Ensure both pass, ask the user if questions arise.
 
 - [ ] 7. Element_Ids, Allow_List and Revival_Generation (Slice 1)
   - [ ] 7.1 Implement `src/lib/accessforge/element-id.ts` (Slice 1)

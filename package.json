@@ -15,6 +15,7 @@
     "deploy": "vite build && wrangler deploy --var AI_MODE:real",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest",
+    "test:cpu": "vitest run --config vitest.cpu.config.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "generate-fixtures": "tsx scripts/create-fixtures/create-fixtures.ts",

@@ -1,18 +1,22 @@
 /**
- * tests/unit/legacy-cpu.test.ts
+ * tests/cpu/legacy-cpu.test.ts
  *
  * accessforge-skeleton task 5.10 (Requirement 2.12): the time handleLegacy
  * takes for each of the three requests, warm, in Node. Fails when the 99th
  * percentile exceeds 2 ms, a fifth of the free-plan 10 ms CPU limit. The
  * figures are printed so they can be recorded in design.md; the deployed
  * reading comes from Workers Logs (task 23.1).
+ *
+ * Runs alone with `npm run test:cpu` (vitest.cpu.config.ts), outside the
+ * default `npx vitest run`: the timing is wall-clock, and other test files
+ * running in parallel pushed the 99th percentile past the bound.
  */
 
 import { describe, it, expect } from 'vitest';
 import { performance } from 'node:perf_hooks';
 import { handleLegacy } from '../../src/worker/legacy/handler.js';
 import { LEGACY_FORM } from '../../src/worker/legacy/form-spec.js';
-import { DEPS } from './legacy-helpers.js';
+import { DEPS } from '../unit/legacy-helpers.js';
 
 /** A valid body with every text value at its maxlength. */
 function maxBody(): string {
