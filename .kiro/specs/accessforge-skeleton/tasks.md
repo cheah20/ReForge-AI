@@ -164,11 +164,11 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-extract-examples.test.ts`: the ten Element_Ids of design Question 2; label, neighbouring-cell and nearby text of each field; `nextRowText` set for the consent checkbox and empty for every other control; truncation at 200 characters; 50 controls accepted and 51 refused; no form; two forms; zero and two submit buttons give `SUBMIT_COUNT`; unreadable document; extraction finishes within 1 second with no network request (fetch spy).
     - _Requirements: 5.1, 5.3, 5.4, 5.6, 5.10, 6.19_
 
-- [ ] 9. Plan validator (Slice 1)
-  - [ ] 9.1 Implement `src/lib/accessforge/plan-validator.ts` (Slice 1)
+- [x] 9. Plan validator (Slice 1)
+  - [x] 9.1 Implement `src/lib/accessforge/plan-validator.ts` (Slice 1)
     - `validatePlan(model, rawEntries)` with rules 1 to 7 of design Question 3: envelope, strict entry parse, known non-button target, first wins, compatibility table with implied type and confidence 0, coverage (mapped or Do_It_Yourself), buttons by control type alone. Options never come from the plan.
     - _Requirements: 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.12, 6.13_
-  - [ ] 9.2 Write property test for plan validation (Slice 1, core)
+  - [x] 9.2 Write property test for plan validation (Slice 1, core)
     - **Property 1: Plan validation keeps only trustworthy entries and covers every field**
     - `tests/unit/accessforge-plan-validator.test.ts`, at least 100 runs, seed printed on failure, no `skip` or `only`; generator includes every case of Requirement 17.2 and a fully valid plan that must map every field.
     - **Validates: Requirements 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.12, 6.13, 17.1, 17.2, 17.9**
