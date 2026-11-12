@@ -152,15 +152,15 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-allow-list-examples.test.ts` (jsdom, documents from `generated/templates.ts` and `tests/e2e/helpers/hostile-pages.ts`): each of the four transitions accepted; another origin, `/legacy/register/`, a query string, a hash, a missing and an unknown page type refused; the real form passes `checkFormTarget`; the hostile form `action` and the foreign `formaction` fail it.
     - _Requirements: 3.2, 4.4, 4.9_
 
-- [ ] 8. Page extractor (Slice 1)
-  - [ ] 8.1 Implement `src/lib/accessforge/extract.ts` (Slice 1)
+- [x] 8. Page extractor (Slice 1)
+  - [x] 8.1 Implement `src/lib/accessforge/extract.ts` (Slice 1)
     - `extractPageModel(doc, pageVersion)` reading attributes and text nodes only, never `.value`, `.checked`, `.selected` or their defaults, skipping hidden inputs; one entry per Legacy_Field with radio groups combined and option Element_Ids listed; evidence of Requirement 5.4 including `nextRowText` for a checkbox; limits of Requirement 5.6; refusals `UNREADABLE`, `NO_FORM`, `MULTIPLE_FORMS`, `TOO_MANY_CONTROLS` and `SUBMIT_COUNT` (zero or more than one submit button). No network request.
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.10, 6.19_
-  - [ ] 8.2 Write property test for entered state (Slice 1, core)
+  - [x] 8.2 Write property test for entered state (Slice 1, core)
     - **Property 4: Entered state never reaches the Page_Model**
     - `tests/unit/accessforge-extract.test.ts`, jsdom against `TEMPLATES.register` parsed with `DOMParser`; at least 100 runs, seed printed on failure, no `skip` or `only`; asserts the untouched page has ten entries.
     - **Validates: Requirements 5.2, 5.5, 5.7, 17.5, 17.9**
-  - [ ] 8.3 Write example tests for evidence and refusals (Slice 1)
+  - [x] 8.3 Write example tests for evidence and refusals (Slice 1)
     - `tests/unit/accessforge-extract-examples.test.ts`: the ten Element_Ids of design Question 2; label, neighbouring-cell and nearby text of each field; `nextRowText` set for the consent checkbox and empty for every other control; truncation at 200 characters; 50 controls accepted and 51 refused; no form; two forms; zero and two submit buttons give `SUBMIT_COUNT`; unreadable document; extraction finishes within 1 second with no network request (fetch spy).
     - _Requirements: 5.1, 5.3, 5.4, 5.6, 5.10, 6.19_
 
