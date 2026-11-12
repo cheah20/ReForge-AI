@@ -26,7 +26,7 @@ The plan builds the Document_Path in TypeScript in the order the design's data p
 | 15 Docs and human checks (with the understanding step) | 0.5 (plus developer time for sessions) |
 | **Total** | **14.75** |
 
-The developer accepted an estimate of 11.5 days on 2026-11-12. The updated requirements and design add the digit view, the Numeric_Fragment merge, the Personal_Word_Rules, the Label_Vocabulary, table cell and Mixed_Cell detection, the C1 to C7 preselection rule, three new properties, the default-selection and injection tests, the Export_Action checks and the understanding step. That adds 3.25 days, for 14.75 days in total. The developer has not yet accepted this revised total. Slice 1 stays whole (open decision 10): no cut order is applied, and the final acceptance checkpoint (task 17) covers the Answer_Sheet PDF download, "Add another page" and Share. The AccessForge sub-tasks of task 2 are counted in the AccessForge plan, not here.
+The developer accepted an estimate of 11.5 days on 2026-11-12. The updated requirements and design add the digit view, the Numeric_Fragment merge, the Personal_Word_Rules, the Label_Vocabulary, table cell and Mixed_Cell detection, the C1 to C8 preselection rule, three new properties, the default-selection and injection tests, the Export_Action checks and the understanding step. That adds 3.25 days, for 14.75 days in total. The developer has not yet accepted this revised total. Slice 1 stays whole (open decision 10): no cut order is applied, and the final acceptance checkpoint (task 17) covers the Answer_Sheet PDF download, "Add another page" and Share. The AccessForge sub-tasks of task 2 are counted in the AccessForge plan, not here.
 
 **Order and file ownership (open decision 4, decided 2026-11-12).**
 
@@ -41,15 +41,17 @@ Three files that design Q10 does not list are left alone by this spec: `src/fron
 
 ## Tasks
 
-- [ ] 1. Prerequisite gate (Slice 1, 0 days of coding)
-  - [ ] 1.1 Receive the developer's approval of the revised Privacy_Steering wording (Slice 1)
+- [x] 1. Prerequisite gate (Slice 1, 0 days of coding)
+  - [x] 1.1 Receive the developer's approval of the revised Privacy_Steering wording (Slice 1)
+    - Done 2026-11-12: the developer approved the design Q10 steering block and the matching Privacy_Notice sentence exactly as written.
     - **Needs the developer.** Open decision 3 is still open. The revised wording in design Q10 ("Privacy_Steering wording") and the matching Privacy_Notice sentence are ready for developer approval. They are not approved and are not used as approved text.
     - The developer approves that wording or sends changed wording. The approved wording must cover every point of Requirement 24.4, including the Export_Actions rule (answers stay on the device unless the user chooses Translate, Share, Print or Download; Share hands the Answer_Sheet to the app the user picks; these are not network disclosure by the app) and the binding rules (the logging, error-message and storage rules apply to the Document_Path; the rules for page text near a widget apply only to the Fillable_Path; document text stays inside the prompt data delimiters).
     - Task 2 does not start until the approved wording has arrived.
     - _Requirements: 24.4, 24.5, 24.10, 24.11_
-  - [ ] 1.2 Check that the decided open decisions are recorded (Slice 1)
+  - [x] 1.2 Check that the decided open decisions are recorded (Slice 1)
+    - Done 2026-11-12. Also decided that day: 27 (low-confidence lines are not preselected, condition C8); the extra rules (P5, item-number exception) and the side effects of 21 to 26 are approved for Slice 1; the in-memory prompt record with the Vitest fallback of task 13.12 is approved; Slice 1 stays uncut at 14.75 days and the 2026-11-20 checkpoint decides any cut.
     - No developer question remains for these. Confirm that "Open decisions" in design.md records them as decided on 2026-11-12, and apply them as written: 1 (Malay bar), 4 (order and ownership), 10 (Slice 1 whole, no cuts), 11 (slow-page and stall values), 12 (classifier failure blocks a page), 13 (selector-only changes to `tests/e2e/upload.spec.ts`), 14 (a push-button-only PDF goes to the Document_Path), 15 (GET requests for the app's own static assets are allowed in Original_Label_Mode), 16 (re-translation through `/api/forms/retranslate` with a 64-zero `contentHash`), 17 (digit rule V2: 6 or more digits anywhere) and 20 (OCR model variant by the rule in Q5).
-    - Decisions 2, 6, 7, 8, 9, 18 and 21 to 27 are still open and are taken as the design's proposal: 21 (lines ending with `?` start unselected), 22 (Confusable_Character map as listed), 23 (item numbers are not Numeric_Fragments), 24 (CJK numerals count as digits in text-layer labels), 25 (no surname lists for scripts without letter case in Slice 1), 26 (uncertain table cells make their labels `ambiguous`) and 27 (low-confidence `likely-label` lines stay preselected with "Check this yourself"). Decision 3 is task 1.1.
+    - Decisions 2, 6, 7, 8, 9, 18 and 21 to 27 are still open and are taken as the design's proposal: 21 (lines ending with `?` start unselected), 22 (Confusable_Character map as listed), 23 (item numbers are not Numeric_Fragments), 24 (CJK numerals count as digits in text-layer labels), 25 (no surname lists for scripts without letter case in Slice 1), 26 (uncertain table cells make their labels `ambiguous`) and 27 (decided 2026-11-12: low-confidence lines are not preselected). Decision 3 is task 1.1.
     - _Requirements: 2.2, 5.2, 9.1, 10.7, 11.2, 11.4, 11.12, 11.13, 11.14, 14.3_
 
 - [ ] 2. Combined shared-file task for both specs, landed as one change (Slice 1, about 1.75 days)
@@ -267,7 +269,7 @@ Three files that design Q10 does not list are left alone by this spec: `src/fron
     - **Validates: Requirements 10.3**
 
 - [ ] 6. Answer_Areas, table cells and the four-stage Label_Classifier (Slice 1, about 2.5 days)
-  - All sub-tasks are required Slice 1 work. Every rule id below (V1 to V10, P1 to P5, C1 to C7) has its own example unit test with the exact pattern of design Q1 (Requirement 11.8).
+  - All sub-tasks are required Slice 1 work. Every rule id below (V1 to V10, P1 to P5, C1 to C8) has its own example unit test with the exact pattern of design Q1 (Requirement 11.8).
   - [ ] 6.1 Implement the digit view (Slice 1)
     - `src/lib/document/digit-view.ts`: `digitView(nfkcText)` returns a string of the same length, with the three mappings of design Q1 in order: every `\p{Nd}` character to its ASCII digit through a bundled table of the zero code point of every `Nd` block (Unicode 15.1); the listed CJK numerals, formal CJK numerals and multiplier numerals (placeholder 0), and Roman numeral letters inside a token that already holds at least 2 digits (I, l and D at 1, 1 and 0; V, X, L, C and M at the placeholder 1); then the Confusable_Character map (O, o, D, Q to 0; S, s to 5; I, l, the vertical bar, ! to 1; B to 8; Z, z to 2; G to 6; T to 7; g, q to 9) only inside a digit-bearing token or in an all-confusable token of 2 or more characters next to a run of 2 or more digits, repeated until nothing changes.
     - Every code point is written as a `\u` escape in the source, so the file holds no non-Latin characters.
@@ -321,16 +323,16 @@ Three files that design Q10 does not list are left alone by this spec: `src/fron
     - In `tests/unit/document-table-cells.test.ts`: a cell with `Nama` and `Ali bin Abu` on two lines; a cell with `Nama: Ali`; a cell with `Nama penuh` only (not mixed); the same label in an uncertain cell (treated as mixed).
     - _Requirements: 11.3, 11.4, 11.14_
   - [ ] 6.16 Implement page classification with the preselection rule (Slice 1)
-    - `src/lib/document/classify.ts`: `classifyPage(lines, areas, cells)` in the four stages of design Q1 (digit view, fragment merge before any candidate, value rules V1 to V10 first, then the preselection rule); the whole-line rule; the colon split with the part before the colon `ambiguous`; the preselection conditions C1 to C7, where text that meets all of them is `likely-label` and other text is `ambiguous` with the first failing reason (`mixed-line`, `too-long`, `no-prompt`, `question`, `P1` to `P5`, `mixed-cell`, `undecidable`); its zod self-check with the `classifier-failed` page status; and `isValueLikeText` for edits (V1 to V6, V8, V9 and V10 within the edited text, on its digit view, with no geometry).
+    - `src/lib/document/classify.ts`: `classifyPage(lines, areas, cells)` in the four stages of design Q1 (digit view, fragment merge before any candidate, value rules V1 to V10 first, then the preselection rule); the whole-line rule; the colon split with the part before the colon `ambiguous`; the preselection conditions C1 to C8, where text that meets all of them is `likely-label` and other text is `ambiguous` with the first failing reason (`mixed-line`, `too-long`, `no-prompt`, `question`, `P1` to `P5`, `mixed-cell`, `undecidable`); its zod self-check with the `classifier-failed` page status; and `isValueLikeText` for edits (V1 to V6, V8, V9 and V10 within the edited text, on its digit view, with no geometry).
     - `valueRule` and `ambiguousReason` are kept for tests only and never sent or logged.
     - _Requirements: 11.1, 11.3, 11.4, 11.5, 11.6, 11.9, 11.14, 12.5_
-  - [ ] 6.17 Write one example test per preselection condition C1 to C7 (Slice 1)
-    - `tests/unit/document-classify.test.ts`: one test per condition C1 to C7 with its failing reason; every row of the worked examples table of design Q1; a line ending with `?` is `ambiguous` with reason `question`; each undecidable case of C7 (no grey image, an OCR page without word boxes, a ruling line within 20% of a threshold, an uncertain cell edge, a colon that cannot be placed); a throwing rule and a failing self-check give no candidate from that page and leave other pages unchanged.
+  - [ ] 6.17 Write one example test per preselection condition C1 to C8 (Slice 1)
+    - `tests/unit/document-classify.test.ts`: one test per condition C1 to C8 with its failing reason; every row of the worked examples table of design Q1; a line ending with `?` is `ambiguous` with reason `question`; each undecidable case of C7 (no grey image, an OCR page without word boxes, a ruling line within 20% of a threshold, an uncertain cell edge, a colon that cannot be placed); a throwing rule and a failing self-check give no candidate from that page and leave other pages unchanged.
     - _Requirements: 11.3, 11.4, 11.6, 11.8, 11.14_
   - [ ] 6.18 Write the property test for classification rules (Slice 1)
     - **Property 1: Classification is total, deterministic and follows the label rules**
     - **Validates: Requirements 11.1, 11.3, 11.4, 11.10**
-    - In `tests/unit/document-classify.property.test.ts`, 100 runs. Generated pages hold Text_Lines, Answer_Areas and table cells; the test checks one classification per line, the same result on a second call, `value-like` for empty or punctuation-only lines, `likely-label` exactly for whole lines that meet C1 to C7, and `ambiguous` for every other line or part, including every line ending with `?`.
+    - In `tests/unit/document-classify.property.test.ts`, 100 runs. Generated pages hold Text_Lines, Answer_Areas and table cells; the test checks one classification per line, the same result on a second call, `value-like` for empty or punctuation-only lines, `likely-label` exactly for whole lines that meet C1 to C8, and `ambiguous` for every other line or part, including every line ending with `?`.
   - [ ] 6.19 Write the property test for value exclusion (Slice 1)
     - **Property 2: No Label_Candidate contains a value part or a fragment of one**
     - **Validates: Requirements 11.2, 11.5, 11.7, 11.9, 11.11, 11.12, 11.13, 12.2**
@@ -707,7 +709,7 @@ Three files that design Q10 does not list are left alone by this spec: `src/fron
 
 - Slice 1 sub-tasks have no optional marker: every Slice 1 test, including every property test and every per-rule test of the classifier, is required. Slice 2 sub-tasks carry `*` because the whole slice is optional; task 2.22 is a Slice 2 sub-task inside the combined task.
 - Each correctness property of design.md (Properties 1 to 37) has exactly one property test sub-task in Slice 1, with at least 100 runs (Property 29: 25 runs) and the tag `// Feature: formbridge-any-document, Property {n}: {property title}`. Task 18.9 extends Property 3 for Slice 2 formats.
-- Every classifier rule id (V1 to V10, P1 to P5, C1 to C7) has its own example test: V1 to V9 in task 6.5, V10 in task 6.10, P1 to P5 in task 6.14 and C1 to C7 in task 6.17.
+- Every classifier rule id (V1 to V10, P1 to P5, C1 to C8) has its own example test: V1 to V9 in task 6.5, V10 in task 6.10, P1 to P5 in task 6.14 and C1 to C8 in task 6.17.
 - Tasks marked **Needs the developer** (1.1, 3.4, 15.2, 15.4) cannot be done by code. Task 15.4 is a human study with three people, including the understanding step. Task 2 cannot start before task 1.1.
 - Tasks marked **Coordinated change** (15.1, 15.2, and any entry left out of task 2 under its "No placeholders" rule) touch files frozen after task 2 and are agreed with the AccessForge chat first.
 - No task calls real AI. Real OCR runs only in tasks 3.3 and 14.1. No raw OCR output, model output, personal data or secrets are committed. Fixture scripts and classifier tables write every non-Latin code point as a `\u` escape.

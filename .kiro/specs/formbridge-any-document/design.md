@@ -645,6 +645,7 @@ P5 catches a name after a label on the same line without a colon, in any letter 
 | C4 | the line ends with a label-ending colon (after removing trailing leaders and whitespace), or a Fill_In_Line starts to its right on the same row (vertical overlap at least 50%, gap at most 3 median line heights) or directly below it (gap at most 1.5 median line heights, horizontal overlap at least 30%) | `no-prompt`; a line ending with `?` gets `question` |
 | C5 | no Personal_Word_Rule (P1 to P5) matches | `P1` to `P5` |
 | C6 | the line lies in no Mixed_Cell and in no uncertain cell | `mixed-cell` |
+| C8 | the line carries no "check this yourself" mark: on an `ocr` page its confidence is at least 0.60 and its page is not a Low_Quality_Page the user continued with (Requirement 11.3, decision 27) | `low-confidence` |
 | C7 | every condition above could be decided (Requirement 11.14) | `undecidable` |
 
 **Undecidable conditions (C7, Requirement 11.14).** A condition counts as not met when it cannot be decided. The cases are:
@@ -661,7 +662,7 @@ A question-mark ending is always `ambiguous` (Requirement 11.4). For example, "H
 
 | Line (and context) | Result | Why |
 |---|---|---|
-| `Nama penuh:` | `likely-label`, selected | C1 to C7 hold |
+| `Nama penuh:` | `likely-label`, selected | C1 to C8 hold |
 | `Phone no. ________` | `likely-label`, selected | `phone no` is in the vocabulary, so P2 does not see `no.`; the leader is a Fill_In_Line |
 | `Name: Siti Aminah` | part `Name:` `ambiguous` (unselected); `Siti Aminah` `value-like` | V8, C2 |
 | `Name Siti Aminah` | `ambiguous` | P5, P3 |
@@ -694,7 +695,7 @@ A question-mark ending is always `ambiguous` (Requirement 11.4). For example, "H
   - **fragmentation:** one ID, phone or SSN value split into 2 to 5 pieces across words, adjacent Text_Lines or adjacent cells, within the neighbour distances above;
   - **Confusable_Character substitution:** each digit replaced by a confusable with probability 0.3;
   - **Non_Decimal_Numerals:** digits written with the CJK numerals above, with `Nd` digits of other scripts, or with Roman numeral letters inside an ID-like run.
-- **Rule tests.** One example test per rule V1 to V10, P1 to P5 and C1 to C7, with the exact pattern listed above (Requirement 11.8).
+- **Rule tests.** One example test per rule V1 to V10, P1 to P5 and C1 to C8, with the exact pattern listed above (Requirement 11.8).
 - **Sensitive fixture.** The synthetic prefilled fixture `prefilled-sensitive` (Requirement 25.1) carries these Canary_Values:
   - name `ZQXNAME KAPPA`;
   - IC `900101-14-5678` (fictional);
@@ -1057,7 +1058,7 @@ Notes on the table:
 - `docs/kiro-usage-log.md` is the one exception to strict ownership: both chats append rows and never edit a row they did not write.
 - Splitting the locale files into one fragment per spec was considered and rejected: the project rule is one locale file per language, so the combined task adds every named key at once instead, and later key or wording changes are coordinated changes.
 
-**Privacy_Steering wording: Proposed, ready for developer approval (not approved)** (open decision 3). This text is a proposal only. If the developer approves it, or sends changed wording, the approved wording goes into `privacy.md` and replaces this block in the combined task. The task does not start before that approval.
+**Privacy_Steering wording: Approved by the developer on 2026-11-12, exactly as written** (open decision 3). The combined task copies this block into `privacy.md` word for word.
 
 > **Photos, scans and PDFs without fields (FormBridge Document_Path)**
 >
@@ -1077,7 +1078,7 @@ Notes on the table:
 >
 > The app may cache the OCR engine and its language files, downloaded from its own origin, in the browser. That cache holds only those engine and language files.
 
-**Matching Privacy_Notice sentence (plain language, `en`; Proposed, ready for developer approval, not approved).** It goes into `upload.privacyNotice`, `review.privacyNotice` and the Label_Review notice, translated in every Core_Language locale file in the same change (Requirement 24.5):
+**Matching Privacy_Notice sentence (plain language, `en`; approved by the developer on 2026-11-12).** It goes into `upload.privacyNotice`, `review.privacyNotice` and the Label_Review notice, translated in every Core_Language locale file in the same change (Requirement 24.5):
 
 > Your file, your photos and your answers stay on this device unless you choose Translate, Share, Print or Download. Share hands the sheet to the app you pick. The words you keep on the label check are sent to the AI service to write the questions. If you choose to translate a description, that answer is sent too.
 
@@ -1332,7 +1333,7 @@ For any page of generated Text_Lines, Answer_Areas and table cells, `classifyPag
 
 - exactly one classification per line, and the same result on a second call with the same input;
 - `value-like` for every empty or punctuation-only line;
-- `likely-label` exactly for whole lines that meet conditions C1 to C7: no value part, no text after a label-ending colon, trimmed length 1 to 60, ending with a label-ending colon or followed by a Fill_In_Line, no Personal_Word_Rule match, in no Mixed_Cell or uncertain cell, and every condition decidable;
+- `likely-label` exactly for whole lines that meet conditions C1 to C8: no value part, no text after a label-ending colon, trimmed length 1 to 60, ending with a label-ending colon or followed by a Fill_In_Line, no Personal_Word_Rule match, in no Mixed_Cell or uncertain cell, no "check this yourself" mark, and every condition decidable;
 - `ambiguous` for every other line or line part, including every line that ends with `?`.
 
 **Validates: Requirements 11.1, 11.3, 11.4, 11.10**
@@ -1563,11 +1564,12 @@ For any generated page, no Label_Candidate that meets any of the following is `l
 - it lies in a Mixed_Cell or an uncertain cell;
 - it is the part before a colon on a line with text after the colon, or any other part of a mixed line;
 - it ends with `?`;
+- it carries the "check this yourself" mark (low OCR line confidence, or a Low_Quality_Page the user continued with; decision 27);
 - one of its preselection conditions is undecidable (no grey image, missing word boxes, a ruling line within 20% of a threshold, or an uncertain cell edge).
 
 Each such candidate is listed as `ambiguous` and starts unselected. The generated pages include fictional names, honorifics, address lines, Mixed_Cells and uncertain geometry.
 
-**Validates: Requirements 11.3, 11.4, 11.5, 11.14, 12.3**
+**Validates: Requirements 9.5, 11.3, 11.4, 11.5, 11.14, 12.3**
 
 ### Property 36: Editing never selects a candidate
 
@@ -1675,7 +1677,7 @@ The browser never retries automatically after a failure; it moves to Original_La
 
 ### Unit tests (Slice 1)
 
-- One test per classifier rule V1 to V10, P1 to P5 and C1 to C7, with its exact pattern (11.8). Also one test per Confusable_Character mapping, one per listed CJK numeral code point, the `Nd` zero-table check, the item-number exception (`3. Name:`), and the merge neighbour cases (same line, adjacent lines, adjacent cells, a gap one step beyond each distance).
+- One test per classifier rule V1 to V10, P1 to P5 and C1 to C8, with its exact pattern (11.8). Also one test per Confusable_Character mapping, one per listed CJK numeral code point, the `Nd` zero-table check, the item-number exception (`3. Name:`), and the merge neighbour cases (same line, adjacent lines, adjacent cells, a gap one step beyond each distance).
 - Label_Vocabulary guards (Q1): every fixture expected label is masked; no entry has a digit or matches P1 or P4.
 - Label_Review rendering: the instruction of 12.14 appears above the list; the send button label shows the selected count and changes on every toggle (12.15); the 12.11 message appears with 0 selected.
 - Prompt-injection example test with the `injection-labels` fixture (Q2, 24.13).
@@ -1729,7 +1731,7 @@ Numbers 1 to 12 follow requirements.md; numbers 13 to 27 came from this design. 
 
 1. **Malay OCR validation bar.** Decided (2026-11-12): the bar of Requirement 9.1 is approved (at least 90% of labels at a character error rate of 10% or less on clean synthetic photos). Malay ships in Slice 1 only if the spike passes it, through `VALIDATED_OCR_LANGUAGES`. If it does not pass, the language question and the README say that printed Malay forms cannot be read yet (Requirements 9.8, 28.5; see the OCR language question screen).
 2. **Answer_Sheet format.** Open. Proposal: as designed, printable HTML first, PDF for Latin-script Form_Languages in Slice 1, CJK and Tamil PDF in Slice 2 reusing the `formbridge-pdf` CJK font work.
-3. **Privacy_Steering wording.** Wording revised and ready for developer approval; not approved. The revised text in Q10 covers every point of Requirement 24.4 and comes with the matching Privacy_Notice sentence of Requirement 24.5. The combined shared-file task does not start until the developer approves this wording or sends changed wording.
+3. **Privacy_Steering wording.** Decided (2026-11-12): approved by the developer exactly as written in Q10 (the steering block and the matching Privacy_Notice sentence).
 4. **Order relative to `accessforge-skeleton`.** Decided (2026-11-12): one combined shared-file task first, covering both specs, then the two specs in parallel chats with strict file ownership, and a status-only progress checkpoint on 2026-11-20. Details and the ownership table are in Q10.
 5. **Note in `formbridge-pdf/requirements.md`.** Decided (2026-11-12): a dated note (2026-11-12) in that file states that a PDF with no fields now goes to the Document_Path (Requirement 2.4). That edit is made separately from this spec's files.
 6. **Fillable PDFs between 10 MB and 15 MB.** Open. Proposal: keep the existing 10 MB rejection for `fillable-pdf` (Q6), so the Fillable_Path stays exactly as before.
@@ -1753,4 +1755,4 @@ Numbers 1 to 12 follow requirements.md; numbers 13 to 27 came from this design. 
 24. **CJK numerals in text-layer labels.** Open. Counting CJK numerals as digits (Requirement 11.13) can turn a Chinese text-layer label with several numeral characters into `value-like` text, which is then not listed at all. Proposal: accept this for Slice 1, because Slice 1 OCR reads only English and Malay and the loss is fail-closed. Measure it on the Chinese fixtures in Slice 2 before changing anything.
 25. **Names in scripts without letter case.** Open. P3 cannot detect Chinese or Tamil names. Such a name is still never preselected unless it sits before a Fill_In_Line or ends with a colon. Proposal: no extra rule in Slice 1. In Slice 2, add per-language surname lists, written as code points in data files, if the Chinese and Tamil fixtures show a gap.
 26. **Uncertain table cells reduce preselection.** Open (follows Requirement 11.14). Tables with horizontal rules only make every label in them `ambiguous`, so the user ticks those labels by hand. Proposal: keep this for Slice 1, and record the share of fixture labels affected in "OCR Spike Result".
-27. **Low-confidence lines and preselection.** Open. Requirements 11.3 and 9.5 still preselect a `likely-label` line with low OCR confidence; it carries "Check this yourself". Proposal: keep it preselected with the notice, so a clean form needs no extra taps. The alternative is to start such lines unselected, which is more conservative but costs taps on every poor photo.
+27. **Low-confidence lines and preselection.** Decided (2026-11-12): low-confidence lines are NOT preselected (condition C8). The text below records the options that were weighed. Requirements 11.3 and 9.5 still preselect a `likely-label` line with low OCR confidence; it carries "Check this yourself". Proposal: keep it preselected with the notice, so a clean form needs no extra taps. The alternative is to start such lines unselected, which is more conservative but costs taps on every poor photo.
