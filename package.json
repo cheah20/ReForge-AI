@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "prepare": "git config core.hooksPath scripts/git-hooks || exit 0",
+    "build:legacy": "tsx scripts/build-legacy-templates.ts",
+    "predev": "npm run build:legacy",
     "dev": "vite",
+    "prebuild": "npm run build:legacy",
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "vite build && wrangler deploy --var AI_MODE:real",

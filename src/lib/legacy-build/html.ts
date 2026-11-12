@@ -28,7 +28,10 @@ export type AllowedTag = (typeof ALLOWED_TAGS)[number];
 export type SlotName = 'reference' | 'summaryRows' | 'failingNames' | 'name' | 'value';
 
 /** `tag` is a plain string so test-only hostile trees can hold any element; h() restricts it. */
-export type Node = { tag: string; attrs: Record<string, string>; children: Node[] } | { text: string } | { slot: SlotName };
+export type SlotRef = { slot: SlotName };
+/** An attribute value is a string, or a slot filled per request (always escaped and quoted). */
+export type AttrValue = string | SlotRef;
+export type Node = { tag: string; attrs: Record<string, AttrValue>; children: Node[] } | { text: string } | SlotRef;
 
 const GLOBAL_ATTRS = ['class', 'id', 'lang', 'colspan', 'width', 'scope', 'data-name', 'data-value'];
 const TAG_ATTRS: Partial<Record<AllowedTag, string[]>> = {
@@ -45,13 +48,13 @@ const VOID = new Set(['meta', 'link', 'input', 'br', 'hr']);
 
 const isAllowedTag = (tag: string): tag is AllowedTag => (ALLOWED_TAGS as readonly string[]).includes(tag);
 
-export function h(tag: AllowedTag, attrs: Record<string, string> = {}, ...children: Array<Node | string>): Node {
+export function h(tag: AllowedTag, attrs: Record<string, AttrValue> = {}, ...children: Array<Node | string>): Node {
   if (!isAllowedTag(tag)) throw new Error(`h(): "${String(tag)}" is not an allowed tag`);
   return { tag, attrs: { ...attrs }, children: children.map((c) => (typeof c === 'string' ? { text: c } : c)) };
 }
 
 export const text = (value: string): Node => ({ text: value });
-export const slot = (name: SlotName): Node => ({ slot: name });
+export const slot = (name: SlotName): SlotRef => ({ slot: name });
 
 /** True when a URL attribute value is an allowed target for that tag. */
 function allowedUrl(tag: AllowedTag, attr: string, value: string): boolean {
@@ -69,12 +72,18 @@ function sanitizeNode(node: Node): Node | null {
   if ('text' in node || 'slot' in node) return node;
   if (!isAllowedTag(node.tag)) return null; // the whole subtree goes
   const tag = node.tag;
-  if (tag === 'input' && !INPUT_TYPES.includes((node.attrs['type'] ?? 'text').toLowerCase())) return null;
+  const type = node.attrs['type'] ?? 'text';
+  if (tag === 'input' && (typeof type !== 'string' || !INPUT_TYPES.includes(type.toLowerCase()))) return null;
   const allowed = new Set([...GLOBAL_ATTRS, ...(TAG_ATTRS[tag] ?? [])]);
-  const attrs: Record<string, string> = {};
+  const attrs: Record<string, AttrValue> = {};
   for (const [name, value] of Object.entries(node.attrs)) {
     const key = name.toLowerCase();
     if (!allowed.has(key)) continue;
+    if (typeof value !== 'string') {
+      // A slot may fill only a plain data attribute, never a URL, type or name.
+      if (key === 'data-name' || key === 'data-value') attrs[key] = value;
+      continue;
+    }
     if (!allowedUrl(tag, key, value)) continue;
     // Requirement 4.1 forbids these in any attribute, not only in URL attributes.
     if (unsafeValue(value)) continue;
@@ -116,10 +125,17 @@ export function serializeParts(node: Node): SerializedParts {
       return;
     }
     if (n.tag === 'html') out('<!doctype html>\n');
-    const attrs = Object.entries(n.attrs)
-      .map(([k, v]) => ` ${k}="${escapeHtmlText(v)}"`)
-      .join('');
-    out(`<${n.tag}${attrs}>`);
+    out(`<${n.tag}`);
+    for (const [k, v] of Object.entries(n.attrs)) {
+      if (typeof v === 'string') out(` ${k}="${escapeHtmlText(v)}"`);
+      else {
+        out(` ${k}="`);
+        slots.push(v.slot);
+        segments.push('');
+        out('"');
+      }
+    }
+    out('>');
     if (VOID.has(n.tag)) return;
     n.children.forEach(walk);
     out(`</${n.tag}>`);

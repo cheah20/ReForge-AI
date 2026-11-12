@@ -397,7 +397,9 @@ export function checkFormTarget(doc: Document, appOrigin: string): { ok: true } 
 export type SlotName = 'reference' | 'summaryRows' | 'failingNames' | 'name' | 'value'; // name and value: row templates only
 export interface GeneratedTemplate { segments: readonly string[]; slots: readonly SlotName[] } // segments.length === slots.length + 1
 export const TEMPLATES: Record<'home' | 'register' | 'confirmation' | 'error' | 'notFound', GeneratedTemplate>;
-export const ROW_TEMPLATES: { summaryRow: GeneratedTemplate; failingName: GeneratedTemplate };
+export const ROW_TEMPLATES: { summaryRow: GeneratedTemplate; failingName: GeneratedTemplate; unknownField: GeneratedTemplate };
+// unknownField has no slot: the fixed content-file sentence for a body with a name outside the form,
+// so the Worker never needs the content file and never shows the unknown name.
 export const PAGE_VERSIONS: { home: string; register: string };
 
 // src/worker/legacy/render.ts

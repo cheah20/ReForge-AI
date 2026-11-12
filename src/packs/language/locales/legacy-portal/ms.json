@@ -1,0 +1,65 @@
+{
+  "banner.ms": "PORTAL DEMONSTRASI REKAAN. Ini bukan perkhidmatan sebenar.",
+  "banner.en": "FICTIONAL DEMONSTRATION PORTAL. This is not a real service.",
+  "portal.name": "Sistem Pendaftaran Pesakit Dalam Talian, Klinik Komuniti Rekaan Awan Ungu",
+  "page.title.home": "Laman Utama",
+  "page.title.register": "Pendaftaran Pesakit",
+  "page.title.confirmation": "Pendaftaran Diterima",
+  "page.title.error": "Ralat Pendaftaran",
+  "page.title.notFound": "Halaman Tidak Dijumpai",
+
+  "menu.home": "Laman Utama",
+  "menu.about": "Mengenai Kami",
+  "menu.services": "Perkhidmatan",
+  "menu.notices": "Pengumuman",
+  "menu.others": "Lain-lain",
+  "menu.register": "Pendaftaran pesakit baru",
+
+  "home.welcome": "Selamat datang ke sistem pendaftaran dalam talian.",
+  "home.hours": "Waktu operasi kaunter: Isnin hingga Jumaat, 8.00 pagi hingga 5.00 petang.",
+  "home.notice": "Sila gunakan menu di atas untuk mendapatkan perkhidmatan.",
+
+  "register.heading": "BORANG PENDAFTARAN PESAKIT",
+  "register.intro": "Sila isi semua ruangan bertanda * dengan lengkap. Maklumat yang tidak lengkap tidak akan diproses.",
+
+  "field.nama.label": "Nama*",
+  "field.nokp.label": "No. K/P*",
+  "field.tlahir.label": "Tkh. Lahir*",
+  "field.tlahir.hint": "(hh/bb/tttt)",
+  "field.jantina.label": "Jantina*",
+  "field.tel.label": "No. Tel. Bimbit*",
+  "field.poskod.label": "Poskod*",
+  "field.tujuan.label": "Tujuan*",
+  "field.akuan.label": "Akuan*",
+
+  "option.L": "Lelaki",
+  "option.P": "Perempuan",
+  "option.empty": "-- Sila pilih --",
+  "option.PERIKSA": "Pemeriksaan am",
+  "option.SUSULAN": "Rawatan susulan",
+  "option.VAKSIN": "Suntikan vaksin",
+  "option.LAIN": "Lain-lain",
+
+  "consent.explanation": "Dengan menanda kotak akuan, saya mengesahkan bahawa maklumat di atas adalah benar dan bersetuju maklumat ini digunakan oleh klinik untuk tujuan pendaftaran sahaja.",
+
+  "button.submit": "Hantar",
+  "button.reset": "Isi semula",
+
+  "confirm.heading": "PENDAFTARAN DITERIMA",
+  "confirm.received": "Pendaftaran anda telah diterima oleh sistem.",
+  "confirm.notAppointment": "Perhatian: ini bukan pengesahan temujanji. Pihak klinik akan menghubungi anda.",
+  "confirm.summaryHeading": "Maklumat yang diterima:",
+  "confirm.referenceLabel": "No. Rujukan:",
+  "confirm.message": "Sila simpan nombor rujukan ini untuk sebarang pertanyaan.",
+  "confirm.formLink": "Isi borang pendaftaran klinik (PDF)",
+
+  "error.heading": "RALAT",
+  "error.intro": "Pendaftaran tidak dapat diproses. Sila semak ruangan berikut:",
+  "error.unknownField": "Borang mengandungi ruangan yang tidak dikenali.",
+  "error.back": "Kembali ke borang pendaftaran",
+
+  "notFound.message": "Halaman yang diminta tidak dijumpai.",
+  "notFound.home": "Kembali ke laman utama",
+
+  "footer.text": "Hak cipta terpelihara. Paparan terbaik dengan resolusi 800 x 600."
+}

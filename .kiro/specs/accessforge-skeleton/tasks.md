@@ -70,28 +70,28 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/legacy-html.test.ts`: `findUnsafeConstructs(serialize(tree))` reports every one of those constructs; `findUnsafeConstructs(serialize(sanitizeTree(tree)))` is empty; text inside a removed element is absent from the output; text in kept elements is unchanged; an escaped `javascript:` text value gives no finding.
     - _Requirements: 4.1, 4.7, 4.8_
 
-- [ ] 4. Legacy portal content, stylesheet and template generator (Slice 1)
-  - [ ] 4.1 Create the legacy form specification and the Malay content file (Slice 1)
+- [x] 4. Legacy portal content, stylesheet and template generator (Slice 1)
+  - [x] 4.1 Create the legacy form specification and the Malay content file (Slice 1)
     - `src/worker/legacy/form-spec.ts` with `LEGACY_FORM` (eight fields, names, controls, `maxlength`, `required`, option and checkbox values) as in design "Legacy form specification".
     - `src/packs/language/locales/legacy-portal/ms.json` with the typed keys of design "Templates and content", and `src/lib/legacy-build/content.ts` that loads it with typed keys. Only invented names and organisations; no real agency name, logo or domain.
     - _Requirements: 1.3, 1.5, 1.7_
-  - [ ] 4.2 Create `public/legacy-assets/portal.css` and its check (Slice 1)
+  - [x] 4.2 Create `public/legacy-assets/portal.css` and its check (Slice 1)
     - The 2005-style stylesheet of design "Design Plan: Legacy_Portal": px sizes at 12 px or less, label `#808080` on `#E0E0E0` and body `#999999` on white, 760 px table layout, nested menu with `:hover` and `:focus-within`, banner black on `#FFFF99`. No `url(` and no `@import`.
     - `tests/unit/legacy-css.test.ts`: no `url(` or `@import`; the label and body colour pairs stay below 4.5:1; the banner pair is at least 7:1.
     - _Requirements: 1.6, 1.9, 1.12, 4.1_
-  - [ ] 4.3 Implement the template trees in `src/lib/legacy-build/templates.ts` (Slice 1)
+  - [x] 4.3 Implement the template trees in `src/lib/legacy-build/templates.ts` (Slice 1)
     - Requires task 1.6 (`SAMPLE_FORM_PATH`) and task 7.2 (`ALLOW_LIST`).
     - `homePage()`, `registerPage()`, `confirmationPage()`, `errorPage()` and `notFoundPage()` built only with `h()` from one layout: banner first, five-entry menu with the register link nested in the last ("others") entry and the other four plain text or links to `/legacy/`, content table, footer, `lang="ms"`, `portal-page` meta, empty `portal-page-version` meta on home and register, one stylesheet link to `/legacy-assets/portal.css`.
     - Registration form with every field empty and the eight legacy traits; consent explanation in the next control-free row. Confirmation tree with `#ringkasan-diterima`, `#rujukan`, `#mesej-pengesahan`, the slots `reference` and `summaryRows`, and the Malay link to `SAMPLE_FORM_PATH`. Error tree with the `failingNames` slot and a link to `/legacy/register`. Not-found tree with the banner, a short message, no form controls and exactly one link, to `/legacy/`. Row templates for summary rows and failing names.
     - _Requirements: 1.1, 1.2, 1.4, 1.5, 1.6, 1.7, 1.8, 1.10, 2.1, 2.3, 3.11, 4.10, 11.6_
-  - [ ] 4.4 Implement `src/lib/legacy-build/page-version.ts` (Slice 1)
+  - [x] 4.4 Implement `src/lib/legacy-build/page-version.ts` (Slice 1)
     - `computePageVersion(html)`: SHA-256, lowercase hex, of the UTF-8 bytes with the `portal-page-version` content set to the empty string (design Question 1), using `crypto.subtle.digest`.
     - _Requirements: 3.4_
-  - [ ] 4.5 Implement the template generator `scripts/build-legacy-templates.ts` (Slice 1)
+  - [x] 4.5 Implement the template generator `scripts/build-legacy-templates.ts` (Slice 1)
     - **Shared file:** `package.json` scripts (`build:legacy`, and calls from `prebuild` and `predev`).
     - Build each tree, run `sanitizeTree`, `serialize`, then `findUnsafeConstructs` over the joined segments with every slot replaced by a hostile probe value. On any finding exit non-zero with the template name and the construct. Stamp the Page_Version of the home and registration templates. Write the committed file `src/worker/legacy/generated/templates.ts` with `TEMPLATES`, `ROW_TEMPLATES`, `PAGE_VERSIONS` and the `GeneratedTemplate` and `SlotName` types.
     - _Requirements: 2.11, 3.4, 4.1, 4.8_
-  - [ ] 4.6 Write the template tests (Slice 1)
+  - [x] 4.6 Write the template tests (Slice 1)
     - `tests/unit/legacy-templates.test.ts`: regenerating every template in memory equals the committed `generated/templates.ts` (stale-file test); no listed construct in any generated template; the generator fails with template name and construct on a hostile tree (fake input); banner is the first visible element on every document; five menu entries with the register link nested in the last; form structure equals `LEGACY_FORM`; DOM-checkable legacy traits; `lang="ms"`; every GET text node comes from the content file; empty initial state; no images; not-found has no form control and exactly one link, to `/legacy/`.
     - _Requirements: 1.2, 1.4, 1.5, 1.6, 1.7, 1.8, 1.10, 4.1, 4.8_
 
