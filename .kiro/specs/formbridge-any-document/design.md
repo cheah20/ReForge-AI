@@ -2,7 +2,7 @@
 
 **Spec:** formbridge-any-document
 **Workflow:** Requirements-First
-**Status:** Design written; the OCR spike results (sizes, timings, Malay validation) are still to be filled in (see "Spike plan").
+**Status:** Design updated to the requirements of 2026-11-12, including the developer decisions of that date (see "Open decisions"). The OCR spike results (sizes, timings, Malay validation) are still to be filled in (see "Spike plan"). The Privacy_Steering wording is still open.
 
 Every section and component is labelled **Slice 1** or **Slice 2**, matching the Slice lines in requirements.md. Slice 1 never depends on a Slice 2 part.
 
@@ -99,6 +99,7 @@ flowchart TD
 | Label_Classifier rules (pure) | `src/lib/document/label-rules.ts`, `src/lib/document/classify.ts` | 1 |
 | Document_Model builder and invariants | `src/lib/document/model.ts` | 1 |
 | Label review logic (pure) and request builder | `src/lib/document/review.ts`, `src/lib/document/request.ts` | 1 |
+| Re-translation request builder for document sessions (pure) | `src/lib/document/retranslate.ts` | 1 |
 | Document session glue (Kept_Labels to `FieldState`) | `src/frontend/document/session.ts` | 1 |
 | Page_Crop drawing | `src/frontend/document/crops.ts` | 1 |
 | Read-aloud voice matching | `src/frontend/speech.ts` | 1 |
@@ -146,6 +147,8 @@ export const MAX_KEPT_LABELS = 150;                  // (13.2)
 export const LABEL_BATCH_SIZE = 30;                  // (13.11), same as BATCH_SIZE in src/lib/batch.ts
 export const TEXT_ANSWER_MAX = 200;                  // code points (16.2)
 export const DESCRIPTION_ANSWER_MAX = 2000;          // code points (16.2)
+/** Set from the spike: 'msa' is listed only if Malay passes the OCR_Validation_Bar (9.1, 9.8, 28.5). */
+export const VALIDATED_OCR_LANGUAGES: readonly OcrLanguage[] = ['eng'];
 ```
 
 A 10 MB fillable PDF limit stays in `src/lib/pdf-extract/rejection.ts` (`MAX_FILE_SIZE_BYTES`), unchanged.
@@ -426,7 +429,7 @@ export interface SessionState {
 | `status` | `'mapped'` (the low-confidence view of the Fillable_Path is not used; `checkYourself` covers OCR doubt) |
 | `origin` | as above |
 
-The analysis cache keyed by `contentHash` is not used on the Document_Path (there is no content hash: hashing the photo is unnecessary and the key would never repeat). Switching the interface language after label analysis re-translates through the existing `/api/forms/retranslate` route, which carries only AI-written labels and questions (already allowed by the Privacy_Steering); `contentHash` is filled with 64 zeros for document sessions, which the route accepts and which never matches a fixture-cache entry. In Original_Label_Mode a language switch only re-renders the locale sentence: no request.
+The analysis cache keyed by `contentHash` is not used on the Document_Path (there is no content hash: hashing the photo is unnecessary and the key would never repeat). **Re-translation after an Interface_Language switch (Requirement 10.7, decided 2026-11-12).** Switching the interface language after label analysis re-translates through the existing `/api/forms/retranslate` route. The browser builds the request with a pure function, `buildDocumentRetranslateRequests(fields, targetLanguage)` in `src/lib/document/retranslate.ts`, that copies for each AI-analysed field only `fieldId` (the Label_Id, which encodes no text), the AI-written `humanLabel` and `question`, and the target Interface_Language. It never reads `origin.text`, Text_Lines, Page_Crops or answers. `contentHash` is filled with 64 zeros for document sessions, which the route accepts and which never matches a fixture-cache entry. Fields in Original_Label_Mode are not sent; in Original_Label_Mode a language switch only re-renders the locale sentence, with no request.
 
 ### API schemas (`src/shared/schemas.ts`, Slice 1)
 
@@ -513,7 +516,7 @@ A text part lies **inside** an Answer_Area when at least 50% of its box area ove
 | Rule | Pattern (after normalisation) | Source |
 |---|---|---|
 | V1 digit run | `/\d{4,}/` | Requirement 11.2 |
-| V2 digit count (stricter design addition) | 6 or more digits anywhere in the text | design: catches spaced numbers such as `9 0 0 1 0 1` |
+| V2 digit count | 6 or more digits in total anywhere in the text, in any script, even when other characters separate them (count of `\d` after digit mapping is at least 6) | Requirement 11.2 (decided 2026-11-12): catches spaced numbers such as `9 0 0 1 0 1` |
 | V3 email | `/[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[^\s@.]{2,}/` (the unanchored `EMAIL_RE` exported from `universal.ts` as `EMAIL_SEARCH`), and any text containing `@` | universal pack |
 | V4 phone | a substring matching `/\+?\d[\d\s().-]{5,}\d/` that holds 7 or more digits. Every number `validateMyPhone`, `validateUsPhone` or `validateInternationalPhone` accepts has at least 7 digits, so this is a superset of all three pack patterns. A property test generates valid numbers from each pack validator and checks V4 matches them. | MY, US, universal packs |
 | V5 ID numbers | `MY_IC_SEARCH = /(?<!\d)\d{6}[- ]?\d{2}[- ]?\d{4}(?!\d)/` (the exported `IC_PATTERN` from `my.ts` without anchors) and `US_SSN_SEARCH = /(?<!\d)\d{3}[- ]?\d{2}[- ]?\d{4}(?!\d)/` (exported from `us.ts`) | MY, US packs |
@@ -674,7 +677,7 @@ The path is versioned, so a new engine version gets a new URL and never mixes wi
 | `msa.traineddata.gz` | 2 to 11 MB, depending on the model variant |
 | **First use, one language** | **about 5 to 15 MB** |
 
-The spike measures both the default `best_int` models and the `fast` models. Decision rule: use `best_int` unless its download is above 12 MB or the clean-page time on the reference phone is above 30 s, in which case use `fast` if it still passes the OCR_Validation_Bar.
+The spike measures both the default `best_int` models and the `fast` models. Decision rule (approved 2026-11-12): use `best_int` unless its download is above 12 MB or the clean-page time on the reference phone is above 30 s, in which case use `fast` if it still passes the OCR_Validation_Bar. The spike result applies the rule; the chosen variant and the measurements behind it are recorded in "OCR Spike Result".
 
 **Worst-case first-use time (estimate).**
 
@@ -706,7 +709,7 @@ with `B` the throttled bandwidth in bit/s, `T_init` the engine start-up and `T_p
 
 The file name and MIME type never change the result; they only choose the wording of the refusal message (Requirement 2.1).
 
-**PDF structure read** (`classifyPdf`, bounded by `PDF_STRUCTURE_READ_MAX`, the whole file up to 15 MB): `PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false })`, then the low-level catalog lookup of `/AcroForm` (decision: never `getForm()`, which deletes XFA). `fillable-pdf` when `/XFA` is present, or when the field count from the same traversal `rejection.ts` uses is at least one. Everything else is `pdf-without-fields`, including an encrypted file whose AcroForm cannot be read and a malformed file that pdf-lib cannot load; the Document_Path then shows the encryption or decoding message of Requirement 3.6. This mapping is the defined classification, not an error swallowed: each outcome has its own test. Deviation to confirm: a PDF whose only fields are push buttons is `pdf-without-fields` (see Open decisions).
+**PDF structure read** (`classifyPdf`, bounded by `PDF_STRUCTURE_READ_MAX`, the whole file up to 15 MB): `PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false })`, then the low-level catalog lookup of `/AcroForm` (decision: never `getForm()`, which deletes XFA). `fillable-pdf` when `/XFA` is present, or when the same field traversal `rejection.ts` uses finds at least one answer field (a terminal field whose type is not a push button: `/FT /Btn` with the push-button flag, bit 17 of `/Ff`, does not count). Everything else is `pdf-without-fields`, including an encrypted file whose AcroForm cannot be read and a malformed file that pdf-lib cannot load; the Document_Path then shows the encryption or decoding message of Requirement 3.6. This mapping is the defined classification, not an error swallowed: each outcome has its own test. Push buttons do not count as answer fields, so a PDF whose only fields are push buttons is `pdf-without-fields` (Requirement 2.2, decided 2026-11-12).
 
 **Limits** (Requirement 3): the size check runs before decoding; the page-count check runs before any page is processed and offers "continue with pages 1 to 5" or "stop"; the pixel check reads the image header (PNG `IHDR`, JPEG `SOFn` within the first 1 MB) and skips an image over 20,000,000 pixels without allocating a bitmap. A PDF page is always rendered so that its long edge is 2,200 px, so it can never exceed 20 MP; the check still runs on the computed size. Image width and height swap for EXIF orientations 5 to 8 before the long edge is computed.
 
@@ -753,6 +756,7 @@ The file name and MIME type never change the result; they only choose the wordin
 |---|---|---|
 | Classifier never offers a value-like string | fast-check (Properties 1, 2) | Requirements 11.2, 11.7, 25.2 |
 | Request carries only Kept_Labels | fast-check (Property 9) and a unit test of `strict()` rejection | 13.1, 24.1 |
+| Re-translation carries only AI-written labels and questions | fast-check (Property 34) on `buildDocumentRetranslateRequests`, plus the scenario 8 request log after an Interface_Language switch | 10.7, 24.1 |
 | Sniffer sends nothing | unit test with a fetch spy and a Canary_Value inside the bytes | 2.9 |
 | Worker logs and errors carry no label text | unit test: canary label text through the route with a recording logger, invalid bodies and a provider that throws; the canary is absent from every log entry and response | 13.13, 24.3 |
 | Prompt carries only labels and settings | unit test with a recording provider: the prompt holds Kept_Label canaries and none of the prefilled canaries | 24.1, 24.7 |
@@ -761,7 +765,7 @@ The file name and MIME type never change the result; they only choose the wordin
 | axe | `@axe-core/playwright`, tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`, in `en` and `zh-Hans`, on each screen listed in 23.8, failing on any violation | 23.8 |
 | Mobile | Playwright project `mobile-chromium` (Pixel 7 descriptor, 360×640 override, touch) for scenario 10 in `zh-Hans`; 44 px targets measured with `boundingBox()` on every primary control | 1.1, 23.1, 27.9 |
 | Throttled network | Playwright on Chromium with a CDP network throttle at the "Slow 3G" values, asserting the download notice shows the size, progress advances, and cancel ends it within 2 s; plus a manual run on a throttled phone recorded in the checklist | 8.5, 8.6, 23.9 |
-| Offline Original_Label_Mode | Playwright: `context.setOffline(true)` after the Label_Review, then the full wizard, review and Answer_Sheet complete, and no request is attempted | 14.3 |
+| Offline Original_Label_Mode | Playwright: `context.setOffline(true)` after the Label_Review, then the full wizard, review and Answer_Sheet complete; every request attempted in that span is a GET for the app's own static assets (such as a font) with no Canary_Value or document-derived data in its URL, headers or body, and a failed font GET does not block completion | 14.3 (read as decided 2026-11-12: no request carrying document or answer data) |
 | Manual | `docs/accessibility-checklist.md` entries of 23.9 with date and result; Usability_Test_Record sessions of Requirement 26 | 23.9, 26 |
 
 ### Q9. Contracts
@@ -794,29 +798,59 @@ Older browsers are not blocked, but the README lists only these as tested. OCR n
 
 **Measurable completion criteria for tests with representative users** (Requirement 26). Pass bar: at least two of three participants complete scenario 2 on a phone without any instruction or gesture from the observer. Recorded per session, without a pass bar: minutes and seconds from the Entry_Screen to the Answer_Sheet, the number of hesitations (pause over 10 s or a question to the observer), the screen of each hesitation and error, whether read-aloud was used, and the participant's own comment. Participants are identified by code only. If the bar is not met, the changes made and at least one further session are recorded.
 
-### Q10. Shared files this spec changes, and the order relative to `accessforge-skeleton`
+### Q10. Shared files, file ownership and the order relative to `accessforge-skeleton`
+
+**Files this spec changes outside its own folders** (the ownership table below says which task changes each one):
 
 | File | Change | Also touched by `accessforge-skeleton` |
 |---|---|---|
-| `.kiro/steering/privacy.md` | adds Kept_Labels to "What may reach the Worker and the AI service"; adds every Source_Kind's Input_File, decoded images, Page_Crops and non-kept Text_Lines to "What stays in the browser"; allows the OCR asset cache (wording below, open decision 3) | yes |
+| `.kiro/steering/privacy.md` | adds Kept_Labels to "What may reach the Worker and the AI service"; adds every Source_Kind's Input_File, decoded images, Page_Crops and non-kept Text_Lines to "What stays in the browser"; allows the OCR asset cache (approved wording only, open decision 3) | yes |
 | every locale file in `src/packs/language/locales/` | new `entry.*`, `document.*` keys; new text for `upload.privacyNotice`, `review.privacyNotice`, `upload.title`, `upload.button` | yes (`accessforge.*` keys, privacy notice) |
 | `src/worker/index.ts` | one new `ROUTES` entry | yes (new routes, `/legacy/*` dispatch) |
 | `src/lib/ai/interface.ts`, `cf-workers.ts`, `mock.ts`, `prompt.ts` | `analyzeLabels` method and prompt | yes (`analyzePage`, `retranslatePage`) |
-| `src/shared/schemas.ts`, `src/shared/types.ts` | label schemas and types (additions only) | yes (page model schemas) |
-| `wrangler.jsonc` | no change: the route uses the existing `RATE_LIMITER_ANALYZE` binding, OCR assets are ordinary static assets and `run_worker_first` stays `["/api/*", ...]` | yes (`run_worker_first` adds `/legacy`) |
+| `src/shared/schemas.ts`, `src/shared/types.ts` | label schemas and types (additions only) | AccessForge keeps its page schemas in its own `src/shared/page-schemas.ts`; `types.ts` may gain its types |
+| `wrangler.jsonc` | no change for this spec: the route uses the existing `RATE_LIMITER_ANALYZE` binding, OCR assets are ordinary static assets | yes (`run_worker_first` adds `/legacy` and `/legacy/*`) |
 | `public/_headers` (new) | cache headers for `/ocr/*` | possibly (CSP for legacy pages); both specs append their own path blocks |
 | `package.json` | `tesseract.js` and language data packages; `predev`/`prebuild` run `scripts/copy-ocr-assets.ts`; `generate-fixtures` also builds document fixtures | possibly |
 | `.gitignore` | `public/ocr/` (generated) | no |
-| `README.md` | Document_Path privacy wording, tested inputs and OCR_Languages, handwriting not supported, disclosure rows for Tesseract.js and language data, untagged PDF note | yes |
+| `README.md` | Document_Path privacy wording (same as the Privacy_Notice, 24.8), tested inputs and OCR_Languages, handwriting not supported, the statement that printed Malay forms cannot be read yet if Malay fails the bar (28.5), disclosure rows for Tesseract.js and language data, untagged PDF note | yes |
 | `docs/accessibility-checklist.md` | entries of Requirement 23.9 | yes |
 | `src/frontend/state.ts`, `wizard-logic.ts`, `App.tsx`, `screens/Upload.tsx`, `QuestionWizard.tsx`, `ReviewScreen.tsx` | additions described above | AccessForge reuses `QuestionWizard` parts |
 | `src/packs/country/my.ts`, `us.ts`, `universal.ts`, `dates.ts` | export `IC_PATTERN` (as `MY_IC_PATTERN`), `MY_IC_SEARCH`, `US_SSN_SEARCH`, `EMAIL_SEARCH`; no behaviour change | AccessForge reads `dates.ts` exports |
-| `tests/e2e/upload.spec.ts` | the "no fields" rejection case becomes a routing assertion (Requirement 2.4); the file-chooser label changes (open decision 13) | no |
+| `tests/e2e/upload.spec.ts` | the "no fields" rejection case becomes a routing assertion (Requirement 2.4); selector-only changes for the new file-chooser label, with no assertion changed (Requirement 5.2) | no |
 | `tests/e2e/accessibility.spec.ts` and `nov17-acceptance.spec.ts` | none: they select the file input by `t('upload.button')`, which still labels the same input | no |
 
-**Recommended order.** Finish `accessforge-skeleton` Slice 1 first, because it is further along and also edits the Privacy_Steering, the privacy notice strings, the Worker route table and the AI provider interface. Then start this spec with one shared-files task that, in one change: updates `privacy.md`, rewrites the privacy notice in every locale file, adds the route entry and the `analyzeLabels` provider method with its mock, and adds the schemas. Every later task in this spec then touches only Document_Path files. If both specs must run in parallel, this spec's shared-files task rebases on the latest AccessForge versions of those files and keeps both provider methods.
+**Order (decided 2026-11-12).**
 
-**Proposed Privacy_Steering wording** (to be approved before the change, open decision 3):
+1. **One combined shared-file task comes first.** It covers both this spec and `accessforge-skeleton`, and makes every change to the shared files in one change:
+   - `.kiro/steering/privacy.md`, with the developer's approved wording only (open decision 3). The task does not start until that wording has arrived.
+   - The privacy notice strings in every Core_Language locale file, in the same change (Requirement 24.5): `upload.privacyNotice`, `review.privacyNotice` and the new notice keys of this spec, and the `accessforge.notice.*` keys.
+   - Every other new locale key that the two designs name (`entry.*` and `document.*` here, `accessforge.*` there), in every Core_Language locale file.
+   - The Worker `ROUTES` entries for both specs and the `/legacy/*` dispatch in `src/worker/index.ts`, plus the `run_worker_first` change in `wrangler.jsonc`. Each entry points to that spec's own route module.
+   - The shared schema and type additions for both specs: the label schemas in `src/shared/schemas.ts`, the new `src/shared/page-schemas.ts`, and the additions to `src/shared/types.ts`.
+   - The AiProvider methods for both specs (`analyzeLabels` here; `analyzePage` and its Slice 2 sibling there) in `interface.ts`, `cf-workers.ts` and `mock.ts`, with their prompt builders in `prompt.ts` and the mock replies.
+   - The pattern exports from the country packs that the Label_Classifier needs.
+   - Dependency and script entries in `package.json`, `public/_headers` with both path blocks, the `.gitignore` line for `public/ocr/`, and the new `mobile-chromium` project in the Playwright config.
+2. **Then the two specs run in parallel chats with strict file ownership** (table below). After the combined task, neither chat edits a file the other chat owns or a file of the combined task. Any further shared-file need goes back through a small coordinated change: one change, agreed before it is made, that touches only the shared files it needs and that both chats pick up before their next task.
+3. **Progress checkpoint on 2026-11-20.** It reviews the status of both specs only. It changes no scope, no requirement and no file ownership.
+
+**File ownership after the combined task.**
+
+| Owner | Files |
+|---|---|
+| Combined task (frozen afterwards; changes only through a coordinated change) | `.kiro/steering/privacy.md`; every locale file in `src/packs/language/locales/`; `src/worker/index.ts`; `wrangler.jsonc`; `src/shared/schemas.ts`, `src/shared/page-schemas.ts`, `src/shared/types.ts`; `src/lib/ai/interface.ts`, `cf-workers.ts`, `mock.ts`, `prompt.ts`; `src/packs/country/my.ts`, `us.ts`, `universal.ts`, `dates.ts`; `package.json` and the lock file; `public/_headers`; `.gitignore`; `playwright.config.ts`; `README.md`; `docs/accessibility-checklist.md` |
+| This spec only | `src/lib/document/`; `src/frontend/document/`; `src/lib/analysis/run-labels.ts`, `src/lib/analysis/detection.ts`; `src/worker/routes/analyze-labels.ts`; `src/frontend/speech.ts`; the new screens and components listed in "Where the code lives"; `src/frontend/state.ts`, `wizard-logic.ts`, `App.tsx`, `tokens.css`, `components/AppHeader.tsx`, `screens/Upload.tsx`, `QuestionWizard.tsx`, `ReviewScreen.tsx`; `scripts/copy-ocr-assets.ts`, `scripts/create-fixtures/documents.ts`; `tests/e2e/upload.spec.ts`; every new test file named in "Testing Strategy" |
+| `accessforge-skeleton` only | the files its design names: `scripts/build-legacy-templates.ts`, `src/lib/legacy-build/`, `src/worker/legacy/`, `src/lib/accessforge/`, `src/frontend/accessforge/`, its route modules under `src/worker/routes/`, the page plans under `src/worker/cache/precomputed/pages/`, its fixtures and its test files |
+| Read-only for both | the existing shared components (`FieldQuestion.tsx`, `ValidationMessage.tsx`, `MachineTranslatedLabel.tsx`, `StatusMessage.tsx`, `ScreenHeading.tsx`), `src/packs/country/validate.ts`, `src/packs/language/registry.ts`, `src/frontend/i18n.tsx`, `src/worker/http.ts`, `src/worker/ai-mode.ts` |
+
+Notes on the table:
+
+- `App.tsx` belongs to this spec. If AccessForge needs an entry in it, the combined task adds that entry.
+- `README.md` and `docs/accessibility-checklist.md` hold text from both specs, so they stay with the combined task. Each spec's README and checklist content (Requirements 23.9, 24.8, 28) is written in a coordinated change when that spec's results exist; the Malay statement of Requirement 28.5 waits for the spike result.
+- `docs/kiro-usage-log.md` is the one exception to strict ownership: both chats append rows and never edit a row they did not write.
+- Splitting the locale files into one fragment per spec was considered and rejected: the project rule is one locale file per language, so the combined task adds every named key at once instead, and later key or wording changes are coordinated changes.
+
+**Proposed, not approved: Privacy_Steering wording** (open decision 3). This text is a proposal only. The developer sends the approved wording before the combined task starts, and that wording replaces this proposal in `privacy.md` and in this design.
 
 > For FormBridge photos, scans and PDFs without fields, these may also reach the Worker and the AI service:
 > - Kept_Labels: label text that the user saw on the label review, next to the crop of the page it came from, and left in the send list, with its Label_Id, page number and reading-order index.
@@ -894,7 +928,7 @@ Each button is a `<label>` styled as a button for a visually hidden `<input type
 │ Choose another file             │ secondary
 ```
 
-### OCR language question (Requirement 9.2, 9.3, 9.7)
+### OCR language question (Requirement 9.2, 9.3, 9.7, 9.8)
 
 ```
 │ Which language is the paper    │ h1
@@ -903,10 +937,12 @@ Each button is a `<label>` styled as a button for a visually hidden `<input type
 │ ( ) Bahasa Melayu              │ (only if Malay passes)
 │ ( ) Another language           │
 │ Handwriting cannot be read.    │
+│ This app cannot read printed   │ only if Malay did not pass
+│ Malay forms yet.               │ (document.ocrLanguage.malayNotYet)
 │ [ Continue ]                   │
 ```
 
-A `fieldset` with `legend`; radios 44 px rows.
+A `fieldset` with `legend`; radios 44 px rows. The radio list and the Malay line both come from one constant, `VALIDATED_OCR_LANGUAGES` in `src/lib/document/limits.ts`, set from the spike result. When `msa` is not in it, the Malay radio is absent and `document.ocrLanguage.malayNotYet` is shown (Requirement 9.8, decided 2026-11-12). The README test of Requirement 28.1 and the README statement of Requirement 28.5 read the same constant.
 
 ### OCR download and reading progress (Requirements 8.5 to 8.7, 8.10, 3.8)
 
@@ -1056,7 +1092,7 @@ For any page of generated Text_Lines and Answer_Areas, `classifyPage` returns ex
 
 ### Property 2: No Label_Candidate contains a value part
 
-For any Text_Line built from label words with a generated value (an MY IC with or without separators, a phone number accepted by `validateMyPhone`, `validateUsPhone` or `validateInternationalPhone`, a US SSN, an `example.invalid` email, a date in any `DATE_FORMATS` format, or a run of 4 or more digits in ASCII, full-width or Tamil digits) placed at any position, after a label-ending colon, or inside an Answer_Area, no Label_Candidate text contains the value, and a line whose value is not separated by a colon or an Answer_Area boundary yields no candidate at all.
+For any Text_Line built from label words with a generated value (an MY IC with or without separators, a phone number accepted by `validateMyPhone`, `validateUsPhone` or `validateInternationalPhone`, a US SSN, an `example.invalid` email, a date in any `DATE_FORMATS` format, a run of 4 or more digits, or 6 or more digits in total separated by other characters, with digits in ASCII, full-width or Tamil script) placed at any position, after a label-ending colon, or inside an Answer_Area, no Label_Candidate text contains the value, and a line whose value is not separated by a colon or an Answer_Area boundary yields no candidate at all.
 
 **Validates: Requirements 11.2, 11.5, 11.7, 11.9, 12.2**
 
@@ -1246,6 +1282,12 @@ For any Label_Candidate, the Page_Crop alt text contains the candidate text and 
 
 **Validates: Requirements 23.6, 23.11**
 
+### Property 34: Re-translation carries only AI-written labels and questions
+
+For any document session (Kept_Label texts containing Canary_Values, any mix of AI-analysed and Original_Label_Mode fields, any answers) and any target Interface_Language, the requests from `buildDocumentRetranslateRequests` pass `RetranslateRequestSchema`, hold one entry per AI-analysed field and none for Original_Label_Mode fields, each entry holding only the Label_Id and that field's AI-written `humanLabel` and `question`, with the 64-zero `contentHash` and the target language; and a Canary_Value placed in Kept_Label text, Text_Lines or answers, and absent from the AI-written wording, never appears in any request.
+
+**Validates: Requirements 10.7, 24.1**
+
 ---
 
 ## Error Handling
@@ -1280,6 +1322,7 @@ A fillable PDF keeps its existing `upload.error.*` messages unchanged.
 | Cancel | none | worker terminated, downloads aborted, model discarded, back to Entry_Screen |
 | Low quality | `document.retake.advice` | Retake_Advice |
 | "Another language" | `document.ocrLanguage.notYet` | try a validated language, stop |
+| Malay did not pass the bar | `document.ocrLanguage.malayNotYet` | Malay not offered; the line is shown on the language question (9.8) |
 
 ### Worker: `POST /api/documents/analyze-labels` (Slice 1)
 
@@ -1326,7 +1369,7 @@ The browser never retries automatically after a failure; it moves to Original_La
 | `tests/unit/document-pipeline.property.test.ts` | 18 |
 | `tests/unit/document-review.property.test.ts` | 9, 10 |
 | `tests/unit/analyze-labels.property.test.ts` | 11, 12, 13, 31, 32 |
-| `tests/unit/document-session.property.test.ts` | 14, 22, 24, 25, 26, 30 |
+| `tests/unit/document-session.property.test.ts` | 14, 22, 24, 25, 26, 30, 34 |
 | `tests/unit/answer-sheet.property.test.ts` | 15, 28, 29 |
 | `tests/unit/speech.property.test.ts` | 27 |
 | `tests/unit/document-a11y.property.test.ts` | 33 |
@@ -1344,7 +1387,9 @@ The browser never retries automatically after a failure; it moves to Original_La
 - Locale completeness for every new key in every Core_Language; the jargon scan of `entry.*` (1.2); the phrase scan of 28.2; the README OCR-language list equals the offered Validated_OCR_Languages (28.1).
 - Token contrast test extended to the high-contrast set (23.2).
 - Fixture generator determinism: two runs, byte-identical output (25.1).
-- Existing tests: the "no fields" UI rejection case in `tests/e2e/upload.spec.ts` is changed to assert routing to the Document_Path (2.4); `tests/unit/rejection.test.ts` stays as it is, because `extractFields` still returns `NO_FIELDS` for that file at library level.
+- Existing tests: the "no fields" UI rejection case in `tests/e2e/upload.spec.ts` is changed to assert routing to the Document_Path (2.4), and the file's three selectors for the old "Choose PDF file" label change to the new label with no assertion changed (5.2); `tests/unit/rejection.test.ts` stays as it is, because `extractFields` still returns `NO_FIELDS` for that file at library level.
+- Malay gate (9.8, 28.5): with `VALIDATED_OCR_LANGUAGES` set to `['eng']`, the language question lists no Malay radio and shows `document.ocrLanguage.malayNotYet`, and the README test finds the statement that printed Malay forms cannot be read yet; with `['eng', 'msa']`, the radio is present and the line is absent.
+- V2 example test: `9 0 0 1 0 1`, `A1-B2-C3-D4-E5-F6` and `Form KP01 (Rev. 1/2020)` are `value-like`; `Item 12345` is `value-like` by V1; `Section 2, part 3` (2 digits) is not.
 
 ### Playwright (Slice 1)
 
@@ -1370,28 +1415,25 @@ Each delivered format adds its malformed and oversized cases to Property 3's gen
 
 ## Open decisions
 
-Carried forward from requirements.md, each with the design's proposal:
+Numbers 1 to 12 follow requirements.md; numbers 13 to 20 came from this design. Items still open carry the design's proposal.
 
-1. **Malay OCR validation bar.** Proposal: keep 90% of labels at a character error rate of 10% or less; the spike records the result and Malay is offered only if it passes.
-2. **Answer_Sheet format.** Proposal: as designed, printable HTML first, PDF for Latin-script Form_Languages in Slice 1, CJK and Tamil PDF in Slice 2 reusing the `formbridge-pdf` CJK font work.
-3. **Privacy_Steering wording.** The proposed text is in Q10. It needs the developer's approval before the shared-files task.
-4. **Order relative to `accessforge-skeleton`.** Proposal in Q10: AccessForge Slice 1 first, then one shared-files task here.
-5. **Note in `formbridge-pdf/requirements.md`.** Proposal: add a dated note under its Requirement 1.3 pointing to this spec's Requirement 2.4; the note is a separate, explicitly approved change because this spec does not edit other specs.
-6. **Fillable PDFs between 10 MB and 15 MB.** Proposal: keep the existing 10 MB rejection for `fillable-pdf` (Q6), so the Fillable_Path stays exactly as before.
-7. **AI explanation and example on the Fillable_Path.** Proposal: not in this spec; the Fillable_Path schema, request body and fixture cache stay unchanged (Requirement 5.3).
-8. **Instruction lines as context.** Proposal: Slice 2. In Slice 1 the user may keep an instruction line as its own item (Q9).
-9. **Choice questions on paper forms.** Proposal: Slice 2 option detection; Slice 1 asks free text.
-10. **Seven-day fit.** Proposal: keep the cut order of requirements.md (PDF download, then "Add another page", then Share). The task list orders these last in Slice 1 so they can be cut without touching other tasks.
-11. **Slow-page and stall values.** Proposal: keep 60 s and 30 s, no automatic stop.
-12. **Classifier failure blocks a page.** Proposal: keep the fail-closed behaviour; retake or continue with other pages.
-
-New decisions from the design:
-
-13. **File-chooser label versus Requirement 5.2.** Requirement 1.2 forbids "PDF" on the Entry_Screen, but `tests/e2e/upload.spec.ts` selects the input with the literal label "Choose PDF file". The design keeps the key `upload.button` on the same input (so the other suites, which use `t('upload.button')`, pass unchanged) and changes its English text. `upload.spec.ts` must then change its selector in three places. Proposal: amend Requirement 5.2 to allow selector-only changes in that file, with no assertion changed.
-14. **PDFs whose only fields are push buttons.** Requirement 2.2 says "lists at least one field"; the design counts answer fields with the same traversal as `rejection.ts`, so such a PDF goes to the Document_Path instead of the "no fields" rejection. Proposal: amend 2.2 to "at least one answer field".
-15. **Font requests after a language switch in Original_Label_Mode.** Switching the interface language to a new script loads its UI font (a static GET with no document data), which conflicts with the strict "no network request" of Requirement 14.3. Proposal: preload nothing extra; the offline test covers the flow without a language switch, and 14.3 is read as "no request carrying document or answer data". Confirm, or require preloading every core-language font before the first question.
-16. **Re-translation after a language switch on the Document_Path.** The design reuses `/api/forms/retranslate` with a `contentHash` of 64 zeros, which sends only AI-written labels and questions (already allowed by the Privacy_Steering). Confirm, or keep the questions in the old language until the user restarts.
-17. **Stricter digit rule V2.** The design adds "6 or more digits anywhere in the line" to the value rules. It only removes candidates (fail-closed); a label such as "Form KP01 (Rev. 1/2020)" becomes value-like and is not listed. Confirm.
-18. **WebKit in Playwright.** iOS Safari is tested by hand only. Proposal: add a Playwright WebKit project for the Document_Path scenarios if CI time allows; not required for acceptance.
-19. **Rate-limit binding naming.** `accessforge-skeleton/design.md` refers to a single `RATE_LIMITER` binding, while `wrangler.jsonc` has `RATE_LIMITER_ANALYZE` and `RATE_LIMITER_TRANSLATE`. This spec uses `RATE_LIMITER_ANALYZE`. The AccessForge design should be checked against the current config when its routes are added.
-20. **OCR model variant.** Decision rule in Q5 (`best_int` unless over 12 MB or 30 s per clean page on the reference phone). The spike result decides; the developer confirms the chosen variant.
+1. **Malay OCR validation bar.** Decided (2026-11-12): the bar of Requirement 9.1 is approved (at least 90% of labels at a character error rate of 10% or less on clean synthetic photos). Malay ships in Slice 1 only if the spike passes it, through `VALIDATED_OCR_LANGUAGES`. If it does not pass, the language question and the README say that printed Malay forms cannot be read yet (Requirements 9.8, 28.5; see the OCR language question screen).
+2. **Answer_Sheet format.** Open. Proposal: as designed, printable HTML first, PDF for Latin-script Form_Languages in Slice 1, CJK and Tamil PDF in Slice 2 reusing the `formbridge-pdf` CJK font work.
+3. **Privacy_Steering wording.** Open. The text in Q10 is proposed, not approved. The developer sends the approved wording before the combined shared-file task starts; that wording replaces the proposal, and the task does not start without it (Requirements 24.4, 24.5).
+4. **Order relative to `accessforge-skeleton`.** Decided (2026-11-12): one combined shared-file task first, covering both specs, then the two specs in parallel chats with strict file ownership, and a status-only progress checkpoint on 2026-11-20. Details and the ownership table are in Q10.
+5. **Note in `formbridge-pdf/requirements.md`.** Decided (2026-11-12): a dated note (2026-11-12) in that file states that a PDF with no fields now goes to the Document_Path (Requirement 2.4). That edit is made separately from this spec's files.
+6. **Fillable PDFs between 10 MB and 15 MB.** Open. Proposal: keep the existing 10 MB rejection for `fillable-pdf` (Q6), so the Fillable_Path stays exactly as before.
+7. **AI explanation and example on the Fillable_Path.** Open. Proposal: not in this spec; the Fillable_Path schema, request body and fixture cache stay unchanged (Requirement 5.3).
+8. **Instruction lines as context.** Open. Proposal: Slice 2. In Slice 1 the user may keep an instruction line as its own item (Q9).
+9. **Choice questions on paper forms.** Open. Proposal: Slice 2 option detection; Slice 1 asks free text.
+10. **Seven-day fit.** Decided (2026-11-12): Slice 1 stays exactly as written, with no cuts. The earlier cut order (PDF download, "Add another page", Share) is not applied, and the task list does not treat these items as optional.
+11. **Slow-page and stall values.** Decided (2026-11-12): 60 s for the slow-page notice and 30 s for a stalled download, with no automatic stop (Requirements 3.8, 8.10, 15.8).
+12. **Classifier failure blocks a page.** Decided (2026-11-12): fail closed per page; the user sees a notice and can retake that page or continue with the other pages (Requirement 11.6).
+13. **File-chooser label and `upload.spec.ts`.** Decided (2026-11-12): Requirement 5.2 allows selector-only changes to `tests/e2e/upload.spec.ts` with no assertion changed. The design keeps the key `upload.button` on the same input and changes its English text; the file's three selectors follow it.
+14. **PDFs whose only fields are push buttons.** Decided (2026-11-12): a PDF is `fillable-pdf` only with at least one answer field (Requirement 2.2); a push-button-only PDF goes to the Document_Path (Q6).
+15. **Font requests in Original_Label_Mode.** Decided (2026-11-12): Requirement 14.3 means no request that carries document-derived or answer data; GET requests for the app's own static assets, such as fonts, are allowed. No extra font preloading (Q8 offline check).
+16. **Re-translation after a language switch.** Decided (2026-11-12): the Document_Path reuses `/api/forms/retranslate` with a 64-zero `contentHash` and sends only the AI-written human labels and questions and the target language (Requirements 10.7, 24.1; Data Models; Property 34).
+17. **Digit rule V2.** Decided (2026-11-12): a line with 6 or more digits anywhere is `value-like`, in addition to the run of 4 or more digits (Requirement 11.2; Q1; Property 2). A label such as "Form KP01 (Rev. 1/2020)" is therefore not listed.
+18. **WebKit in Playwright.** Open. Proposal: add a Playwright WebKit project for the Document_Path scenarios if CI time allows; not required for acceptance.
+19. **Rate-limit binding naming.** Resolved: the current `accessforge-skeleton` design names both existing bindings, `RATE_LIMITER_ANALYZE` and `RATE_LIMITER_TRANSLATE`, matching `wrangler.jsonc`. This spec uses `RATE_LIMITER_ANALYZE`.
+20. **OCR model variant.** Decided (2026-11-12): the variant is chosen from the spike result by the rule in Q5 (`best_int` unless over 12 MB or 30 s per clean page on the reference phone, then `fast` if it still passes the bar). The result is recorded in "OCR Spike Result".

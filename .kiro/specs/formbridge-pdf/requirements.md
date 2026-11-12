@@ -41,6 +41,8 @@ ReForge AI is a global product for people completing essential forms across a la
 - Files that exceed any of the limits in 1.2.
 - Files that are not valid PDFs.
 
+Note (2026-11-12): a PDF with no answer fields is no longer rejected. It now goes to the photo, scan and PDF-without-fields path of the `formbridge-any-document` spec (its Requirement 2.4), and the rejection test changes with that work. A PDF with real answer fields keeps the path in this spec unchanged.
+
 **1.4** Error messages for rejection cases must be available in all languages with translation status `core` in the language registry (see Requirement 2-L) and rendered before any AI call is made. Languages with status `experimental` fall back to English for rejection messages until their locale file is complete. Because the language is chosen before upload, the correct locale is always available at rejection time.
 
 ---
