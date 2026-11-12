@@ -297,12 +297,12 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 36.3 Run `checkA11y()` on every screen in the Nov 17 path; assert zero violations
     - _Requirements: 15.2, 13.11_
 
-- [ ] 37. Milestone 1 — Deploy and smoke test [needs CF access]
+- [x] 37. Milestone 1 — Deploy and smoke test [needs CF access]
   - [x] 37.1 Run `scripts/generate-fixture-cache.ts` for `fixtures/clinic-registration.pdf` × all core languages; commit the precomputed JSON files
     - _Requirements: 12.7_
-  - [ ] 37.2 Run `wrangler deploy`; confirm app loads at public URL; run the Nov 17 acceptance scenario manually against the live URL using the real Workers AI model (live smoke test); record actual neuron costs observed; add a row to `docs/kiro-usage-log.md`
+  - [x] 37.2 Run `wrangler deploy`; confirm app loads at public URL; run the Nov 17 acceptance scenario manually against the live URL using the real Workers AI model (live smoke test); record actual neuron costs observed; add a row to `docs/kiro-usage-log.md`
     - _Requirements: 15.2, tech.md_
-  - [ ] 37.3 **Demo 3 (non-blocking):** live public URL with real AI; write try-it steps for desktop and phone into `.local/kiro-progress.md` under "Demos ready"
+  - [x] 37.3 **Demo 3 (non-blocking):** live public URL with real AI; write try-it steps for desktop and phone into `.local/kiro-progress.md` under "Demos ready"
 
 - [ ] 38. US validation pack (Dec 1 gate)
   - Confirm the US pack from task 23 is fully wired into the country pack registry and e2e path: `getCountryPack("US")` returns the US pack, ZIP and phone validation active in the wizard for US forms
