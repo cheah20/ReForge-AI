@@ -61,11 +61,11 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-schemas.test.ts`: strict objects reject extra keys; label 1 to 80 and question 1 to 200 characters; blank text rejected; confidence bounds; `ActionSchema` rejects `Click` and `submit`; a question containing `<a href="https://example.com">` passes the schema (the schema caps length only and makes no claim about content).
     - _Requirements: 6.6, 6.17, 8.2_
 
-- [ ] 3. Legacy HTML builder and sanitiser, build and test only (Slice 1)
-  - [ ] 3.1 Implement `src/lib/legacy-build/html.ts` (Slice 1)
+- [x] 3. Legacy HTML builder and sanitiser, build and test only (Slice 1)
+  - [x] 3.1 Implement `src/lib/legacy-build/html.ts` (Slice 1)
     - `h()`, `sanitizeTree()` (removes elements outside the allow-list together with their whole subtree), `serialize()` (escapes text and attributes, turns slots into split points) and `findUnsafeConstructs()` (scans tag text only), with the tag, attribute and URL rules of design Question 6. No DOM dependency. Never imported by `src/worker/`.
     - _Requirements: 4.1, 4.8, 4.10, 2.10_
-  - [ ] 3.2 Write the hostile tree tests (Slice 1)
+  - [x] 3.2 Write the hostile tree tests (Slice 1)
     - Create `tests/e2e/helpers/hostile-pages.ts` (test-only, never under `src/`) with the hostile node tree: script, inline handler, `javascript:` link, external image and stylesheet, meta refresh, foreign form `action`, submit button with a foreign `formaction`.
     - `tests/unit/legacy-html.test.ts`: `findUnsafeConstructs(serialize(tree))` reports every one of those constructs; `findUnsafeConstructs(serialize(sanitizeTree(tree)))` is empty; text inside a removed element is absent from the output; text in kept elements is unchanged; an escaped `javascript:` text value gives no finding.
     - _Requirements: 4.1, 4.7, 4.8_
@@ -141,7 +141,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [ ] 7.1 Implement `src/lib/accessforge/element-id.ts` (Slice 1)
     - `elementIdFor()` and `parseElementId()` with the formula of design Question 2 (`encodeURIComponent` on name and radio value), including radio option ids.
     - _Requirements: 5.3, 8.3, 8.13_
-  - [ ] 7.2 Implement `src/lib/accessforge/allow-list.ts` (Slice 1)
+  - [x] 7.2 Implement `src/lib/accessforge/allow-list.ts` (Slice 1)
     - `ALLOW_LIST` with the four entries, `checkFrameDocument()` with the four steps of design Question 1 (origin, exact path, no query or hash, page type meta), and `checkFormTarget()` for the form `action`, `method` and the submit button's `formaction`, `formmethod` and `formtarget`. Document in a comment that the check is defence in depth after load.
     - _Requirements: 3.1, 3.2, 3.11, 4.4_
   - [ ] 7.3 Implement `src/lib/accessforge/generation.ts` (Slice 1)
