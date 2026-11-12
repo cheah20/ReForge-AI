@@ -137,18 +137,18 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
 - [x] 6. Checkpoint: legacy portal (Slice 1)
   - Run `npx vitest run` and `npm run test:cpu`. Ensure both pass, ask the user if questions arise.
 
-- [ ] 7. Element_Ids, Allow_List and Revival_Generation (Slice 1)
-  - [ ] 7.1 Implement `src/lib/accessforge/element-id.ts` (Slice 1)
+- [x] 7. Element_Ids, Allow_List and Revival_Generation (Slice 1)
+  - [x] 7.1 Implement `src/lib/accessforge/element-id.ts` (Slice 1)
     - `elementIdFor()` and `parseElementId()` with the formula of design Question 2 (`encodeURIComponent` on name and radio value), including radio option ids.
     - _Requirements: 5.3, 8.3, 8.13_
   - [x] 7.2 Implement `src/lib/accessforge/allow-list.ts` (Slice 1)
     - `ALLOW_LIST` with the four entries, `checkFrameDocument()` with the four steps of design Question 1 (origin, exact path, no query or hash, page type meta), and `checkFormTarget()` for the form `action`, `method` and the submit button's `formaction`, `formmethod` and `formtarget`. Document in a comment that the check is defence in depth after load.
     - _Requirements: 3.1, 3.2, 3.11, 4.4_
-  - [ ] 7.3 Implement `src/lib/accessforge/generation.ts` (Slice 1)
+  - [x] 7.3 Implement `src/lib/accessforge/generation.ts` (Slice 1)
     - `FrameHandle` and `nextGeneration(handle, doc)` as in design "Revival_Generation"; a helper that tells whether an effect's generation and document are still current.
     - `tests/unit/accessforge-generation.test.ts`: the counter increases on every call; a handle with a replaced document is not current even at the same Page_Version.
     - _Requirements: 3.9, 3.10_
-  - [ ] 7.4 Write example tests for the frame and form-target checks (Slice 1)
+  - [x] 7.4 Write example tests for the frame and form-target checks (Slice 1)
     - `tests/unit/accessforge-allow-list-examples.test.ts` (jsdom, documents from `generated/templates.ts` and `tests/e2e/helpers/hostile-pages.ts`): each of the four transitions accepted; another origin, `/legacy/register/`, a query string, a hash, a missing and an unknown page type refused; the real form passes `checkFormTarget`; the hostile form `action` and the foreign `formaction` fail it.
     - _Requirements: 3.2, 4.4, 4.9_
 
