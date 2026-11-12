@@ -14,6 +14,7 @@ import type { ApiClient, ApiReply } from '../../src/frontend/api.js';
 import { AppContext } from '../../src/frontend/app-context.js';
 import { I18nProvider } from '../../src/frontend/i18n.js';
 import { LanguagePicker } from '../../src/frontend/screens/LanguagePicker.js';
+import { CJK_FORMS_SUPPORTED, ConfirmLanguage, isBlockedFormLanguage } from '../../src/frontend/screens/ConfirmLanguage.js';
 import { QuestionWizard, resultOnChange, resultOnCommit } from '../../src/frontend/screens/QuestionWizard.js';
 import { Upload, type Extractor } from '../../src/frontend/screens/Upload.js';
 import { analyzeForm, confirmFormSettings, createSession, createSessionStore, type SessionStore } from '../../src/frontend/state.js';
@@ -257,6 +258,41 @@ describe('QuestionWizard (tasks 31.1, 31.4)', () => {
     expect(store.get().fields[0]).toMatchObject({ skipped: true });
     expect(store.get().fields[0]!.normalizedOutput).toBeUndefined();
     expect(container.textContent).toContain(translate('en', 'wizard.step', { current: 2, total: 2 }));
+  });
+});
+
+describe('Chinese-language forms are blocked until task 41 ships CJK fonts (5.3a, task 14)', () => {
+  it('flags every Chinese tag and nothing else', () => {
+    expect(CJK_FORMS_SUPPORTED).toBe(false);
+    for (const tag of ['zh-Hans', 'zh-Hant', 'zh', 'zh-CN']) expect(isBlockedFormLanguage(tag), tag).toBe(true);
+    for (const tag of ['ms', 'en', 'ta', 'es']) expect(isBlockedFormLanguage(tag), tag).toBe(false);
+  });
+
+  it('shows the message and cannot continue when the form language is Chinese; Malay continues', async () => {
+    const api = new RecordingApi();
+    const store = await analysedStore(api, [evidence('a')], 'zh-Hans');
+    store.set((s) => ({ ...s, formLanguage: 'zh-Hans' }));
+    let confirmed = 0;
+    render(<ConfirmLanguage onConfirmed={() => confirmed++} />, store, api, 'zh-Hans');
+    const message = translate('zh-Hans', 'confirm.cjkUnsupported');
+    expect(container.textContent).toContain(message);
+    const submit = buttonByText(translate('zh-Hans', 'confirm.continue'))!;
+    expect(submit.disabled).toBe(true);
+    act(() => submit.closest('form')!.requestSubmit());
+    expect(confirmed).toBe(0);
+    // Submitting while blocked did not confirm a Chinese output language.
+    expect(store.get().formLanguage).toBe('zh-Hans');
+
+    // The first select is the form language (the generic is avoided: Worker and DOM types clash on HTMLSelectElement).
+    const select = container.querySelector('select') as unknown as { value: string; dispatchEvent(e: Event): boolean };
+    act(() => {
+      select.value = 'ms';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(container.textContent).not.toContain(message);
+    act(() => buttonByText(translate('zh-Hans', 'confirm.continue'))!.click());
+    expect(confirmed).toBe(1);
+    expect(store.get().formLanguage).toBe('ms');
   });
 });
 

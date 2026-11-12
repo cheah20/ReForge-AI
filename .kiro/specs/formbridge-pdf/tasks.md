@@ -121,7 +121,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - Selection: ≥ 2/3 valid and ≤ 5% omissions to pass; prefer Gemma unless Qwen is clearly better; fill in `## Model Selection Result` in design.md
   - _Gates: tasks 14 (CfWorkersAiProvider model ID), 15 (analyze route)_
 
-- [ ] 14. Spike 2 — CJK font embedding prototype
+- [x] 14. Spike 2 — CJK font embedding prototype
   - Create `src/lib/pdf-fill/cjk-prototype.ts` as a standalone runnable script; load `fixtures/school-enrolment.pdf`, embed subsetted Noto Sans SC via `@pdf-lib/fontkit`, write a Chinese test name (two Simplified Chinese characters) into one text field using `field.updateAppearances(cjkFont)`, save with `{ updateFieldAppearances: false }`, read back and assert value, render with pdf.js and screenshot in headless Chromium and Firefox; use `font.hasGlyphForCodePoint` (not `encodeText`) for glyph check; record pass/fail and Option A/B in `## CJK Prototype Result` in design.md
   - If Spike 2 fails: add a "Chinese-language forms are not supported yet" message to the ConfirmLanguage screen when `formLanguage` is `zh-Hans` or `zh-Hant`; add a unit test that this message is shown and that `fillPdf` is never called for CJK form output
   - _Gates: tasks 37, 38 (CJK output, if pass); Chinese-fallback message (if fail)_

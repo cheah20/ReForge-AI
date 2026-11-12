@@ -720,13 +720,15 @@ Known issue: pdf-lib issue tracker notes CJK subsetting reliability issues (#494
 
 ### CJK Prototype Result
 
-> **⚠ PLACEHOLDER — fill in after Spike 2.**
->
-> Prototype status: _TBD (pass / fail)_  
-> Font loading approach chosen: _Option A / Option B_  
-> Approximate subsetted font size: ___ KB  
-> Render confirmed in: Chromium __ / Firefox __ / Acrobat Reader __  
-> Notes: _TBD_
+Run 2026-11-12 with `src/lib/pdf-fill/cjk-prototype.ts` (standalone script, not part of the app).
+
+- **Status: pass in Chromium.** Firefox and Acrobat Reader were not available on the development machine and are **not checked**.
+- **Approach: Option A (runtime subsetting) works.** The real `fillPdf` wrote two Simplified Chinese characters into `student.name` of `fixtures/school-enrolment.pdf`, with the font map [Noto Sans, Noto Sans SC subsetted]. No change to the fill code was needed: `chooseFont` fell through to the SC font because Noto Sans has no CJK glyphs.
+- **Source font:** `NotoSansSC-Regular.otf` from the noto-cjk "SubsetOTF/SC" set, 8.3 MB, SIL OFL 1.1. Not committed; the script reads it from `CJK_FONT_PATH`.
+- **Size:** the embedded subset for two characters is 69,922 bytes (CFF, `FontFile3 /CIDFontType0C`); the filled PDF grew by 42 KB. Fill time 277 to 297 ms in Node.
+- **Checks, all passed:** the value reads back exactly; the appearance draws glyph ids 1 and 2 (no glyph 0, the `.notdef` box); pdf.js extracts the same two characters from the drawn appearance; Chrome renders them legibly in the field (visual check of a pdf.js render).
+- **Not yet known:** behaviour with longer Chinese text and many distinct characters (subset size, the pdf-lib CFF subsetting issues 494 and 1396), Traditional Chinese, and how the 8.3 MB source file reaches the browser. The glyph check in `font.ts` (`hasGlyphForCodePoint`) runs on the source font before embedding, which is where it belongs.
+- **Consequence for the app:** `CJK_FORMS_SUPPORTED` in `ConfirmLanguage.tsx` stays `false` until task 41 ships the SC and TC fonts (needs a decision on hosting the font files). Until then Chinese-language forms still show "Chinese-language forms are not supported yet". Chinese *interface* text is unaffected.
 
 ---
 
