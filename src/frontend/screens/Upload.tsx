@@ -42,6 +42,8 @@ export interface UploadProps {
   extractor?: Extractor;
   /** "Try a sample form" (task 28.5): read this PDF as if the user had chosen it. */
   sample?: SampleSource | undefined;
+  /** First screen after page load (opened at SAMPLE_FORM_PATH): leave focus at the top so Tab reaches the skip link. */
+  firstScreen?: boolean;
 }
 
 type UploadState =
@@ -66,7 +68,7 @@ function fieldName(f: FieldEvidence): string {
   return f.tooltip?.trim() || f.fieldId;
 }
 
-export function Upload({ onContinue, extractor = defaultExtractor, sample }: UploadProps) {
+export function Upload({ onContinue, extractor = defaultExtractor, sample, firstScreen = false }: UploadProps) {
   const { t } = useTranslation();
   const [state, setState] = useState<UploadState>({ kind: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -125,7 +127,7 @@ export function Upload({ onContinue, extractor = defaultExtractor, sample }: Upl
 
   return (
     <>
-      <ScreenHeading>{t('upload.title')}</ScreenHeading>
+      <ScreenHeading autoFocus={!firstScreen}>{t('upload.title')}</ScreenHeading>
 
       <div className="section stack">
         <div className="notice" id={noticeId}>

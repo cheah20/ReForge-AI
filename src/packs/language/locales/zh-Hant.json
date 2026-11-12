@@ -89,6 +89,7 @@
   "review.privacyNotice": "您的答案保留在您的瀏覽器中。PDF 中的表單欄位標籤、提示文字和附近文字，以及您選擇翻譯的任何描述性答案，會傳送給 AI 服務進行處理。答案不會被儲存。",
   "review.field.status.filled": "已填寫",
   "review.field.status.skipped": "已跳過",
+  "review.field.status.skippedRequired": "已略過。此欄為必填欄位，機構可能會要求您補填。",
   "review.field.status.fillYourself": "自行填寫",
   "review.field.status.readOnly": "由表格設定",
   "review.field.status.signed": "列印後簽名",

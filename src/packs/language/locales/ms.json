@@ -89,6 +89,7 @@
   "review.privacyNotice": "Jawapan anda kekal dalam pelayar anda. Label medan borang, petunjuk dan teks berdekatan daripada PDF, serta sebarang jawapan keterangan yang anda pilih untuk diterjemahkan, dihantar kepada perkhidmatan AI untuk diproses. Jawapan tidak disimpan.",
   "review.field.status.filled": "Diisi",
   "review.field.status.skipped": "Dilangkau",
+  "review.field.status.skippedRequired": "Dilangkau. Medan ini wajib, jadi pejabat mungkin meminta anda mengisinya.",
   "review.field.status.fillYourself": "Isi sendiri",
   "review.field.status.readOnly": "Ditetapkan oleh borang",
   "review.field.status.signed": "Tandatangan selepas mencetak",

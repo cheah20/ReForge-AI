@@ -87,6 +87,7 @@
   "review.privacyNotice": "Jawaban Anda tetap di browser Anda. Label bidang formulir, tooltip, dan teks di dekatnya dari PDF, serta jawaban deskripsi yang Anda pilih untuk diterjemahkan, dikirim ke layanan AI untuk diproses. Jawaban tidak disimpan.",
   "review.field.status.filled": "Terisi",
   "review.field.status.skipped": "Dilewati",
+  "review.field.status.skippedRequired": "Dilewati. Kolom ini wajib, jadi kantor mungkin meminta Anda mengisinya.",
   "review.field.status.fillYourself": "Isi sendiri",
   "review.field.status.readOnly": "Ditetapkan oleh formulir",
   "review.field.status.signed": "Tanda tangan setelah mencetak",

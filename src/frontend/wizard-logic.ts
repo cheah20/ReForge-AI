@@ -98,12 +98,21 @@ export function overrideChoices(field: FieldState): AnswerType[] {
   return field.evidence.fieldType === 'text' ? all.filter((t) => isCompatible('text', t)) : [field.evidence.fieldType];
 }
 
-export type ReviewStatus = 'filled' | 'skipped' | 'fillYourself' | 'readOnly' | 'signed' | 'missingRequired' | 'unanswered';
+export type ReviewStatus =
+  | 'filled'
+  | 'skipped'
+  | 'skippedRequired'
+  | 'fillYourself'
+  | 'readOnly'
+  | 'signed'
+  | 'missingRequired'
+  | 'unanswered';
 
 export function reviewStatus(field: FieldState): ReviewStatus {
   const reason = reviewOnlyReason(field);
   if (reason) return reason;
-  if (field.skipped) return 'skipped';
+  // Requirement 7.7: a required field may be skipped on purpose, with a visible warning.
+  if (field.skipped) return field.evidence.required ? 'skippedRequired' : 'skipped';
   if (hasWritableAnswer(field)) return 'filled';
   return field.evidence.required ? 'missingRequired' : 'unanswered';
 }

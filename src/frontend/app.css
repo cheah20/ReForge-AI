@@ -136,6 +136,10 @@ a {
   max-inline-size: var(--column-width);
   margin-inline: auto;
   padding: var(--space-6) var(--space-4) var(--space-7);
+  /* The question card slides in from 24px aside; on a narrow phone that must not
+     add a horizontal scrollbar for the length of the slide. "clip" does not create
+     a scroll container, and the side padding keeps focus rings visible. */
+  overflow-x: clip;
 }
 
 .page__heading {
@@ -381,6 +385,14 @@ a {
   border: 2px solid var(--color-alert-red);
   border-radius: var(--radius);
   background: var(--color-surface);
+}
+
+summary {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--target-min);
+  color: var(--color-stamp-blue);
+  cursor: pointer;
 }
 
 .field-list {

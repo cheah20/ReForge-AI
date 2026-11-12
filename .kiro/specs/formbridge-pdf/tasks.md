@@ -283,10 +283,10 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 34.2 Question card slide-in animation (150ms ease-out, `translateX(24px) → 0`; reverse on back; `prefers-reduced-motion` → 100ms opacity fade, no translate)
     - _Requirements: 13.10_
 
-- [ ] 35. Accessibility pass
-  - [ ] 35.1 Audit all screens: `<label for>` on every input; `aria-describedby` on every error; `aria-live="polite"` on validation output; visible focus ring; logical tab order; `lang` on `<html>` and on elements in a different language; touch targets ≥ 44×44 px; 360px layout; 200% zoom; color + icon/text errors; `prefers-reduced-motion`
+- [x] 35. Accessibility pass
+  - [x] 35.1 Audit all screens: `<label for>` on every input; `aria-describedby` on every error; `aria-live="polite"` on validation output; visible focus ring; logical tab order; `lang` on `<html>` and on elements in a different language; touch targets ≥ 44×44 px; 360px layout; 200% zoom; color + icon/text errors; `prefers-reduced-motion`
     - _Requirements: 13.1–13.10_
-  - [ ] 35.2 Run `checkA11y()` via `axe-playwright` on every main screen: LanguagePicker, Upload, QuestionWizard (text field, checkbox, radio, dropdown each), ReviewScreen, DownloadConfirm; assert zero violations
+  - [x] 35.2 Run `checkA11y()` via `axe-playwright` on every main screen: LanguagePicker, Upload, QuestionWizard (text field, checkbox, radio, dropdown each), ReviewScreen, DownloadConfirm; assert zero violations
     - _Requirements: 13.11_
 
 - [x] 36. Nov 17 end-to-end acceptance test

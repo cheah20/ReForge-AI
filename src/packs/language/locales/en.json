@@ -89,11 +89,12 @@
   "review.privacyNotice": "Your answers stay in your browser. The form field labels, tooltips, and nearby text from the PDF — and any description answer you choose to translate — are sent to the AI service for processing. Answers are not stored.",
   "review.field.status.filled": "Filled",
   "review.field.status.skipped": "Skipped",
+  "review.field.status.skippedRequired": "Skipped. This field is required, so the office may ask you to fill it in.",
   "review.field.status.fillYourself": "Fill yourself",
   "review.field.status.readOnly": "Set by form",
   "review.field.status.signed": "Sign after printing",
   "review.edit": "Edit",
-  "review.required.warning": "Required field left blank — please fill in or skip.",
+  "review.required.warning": "Required field not answered. Answer it, or skip it on purpose.",
   "review.confirm": "Confirm and download PDF",
 
   "download.preparing": "Preparing your PDF…",

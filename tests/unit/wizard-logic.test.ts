@@ -122,6 +122,8 @@ describe('review status', () => {
   it('names each state in words', () => {
     expect(reviewStatus(field('a', { normalizedOutput: 'x' }))).toBe('filled');
     expect(reviewStatus(field('a', { skipped: true }))).toBe('skipped');
+    // Requirement 7.7: skipping a required field is allowed, with its own warning status.
+    expect(reviewStatus(field('a', { skipped: true }, { required: true }))).toBe('skippedRequired');
     expect(reviewStatus(field('a'))).toBe('unanswered');
     expect(reviewStatus(field('a', {}, { required: true }))).toBe('missingRequired');
     expect(reviewStatus(field('a', {}, { readOnly: true }))).toBe('readOnly');

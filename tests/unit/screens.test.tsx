@@ -15,6 +15,7 @@ import { AppContext } from '../../src/frontend/app-context.js';
 import { I18nProvider } from '../../src/frontend/i18n.js';
 import { LanguagePicker } from '../../src/frontend/screens/LanguagePicker.js';
 import { CJK_FORMS_SUPPORTED, ConfirmLanguage, isBlockedFormLanguage } from '../../src/frontend/screens/ConfirmLanguage.js';
+import { ReviewScreen } from '../../src/frontend/screens/ReviewScreen.js';
 import { QuestionWizard, resultOnChange, resultOnCommit } from '../../src/frontend/screens/QuestionWizard.js';
 import { Upload, type Extractor } from '../../src/frontend/screens/Upload.js';
 import { analyzeForm, confirmFormSettings, createSession, createSessionStore, type SessionStore } from '../../src/frontend/state.js';
@@ -258,6 +259,37 @@ describe('QuestionWizard (tasks 31.1, 31.4)', () => {
     expect(store.get().fields[0]).toMatchObject({ skipped: true });
     expect(store.get().fields[0]!.normalizedOutput).toBeUndefined();
     expect(container.textContent).toContain(translate('en', 'wizard.step', { current: 2, total: 2 }));
+  });
+});
+
+describe('review error summary (task 35)', () => {
+  // The wizard never lets a required field end up unanswered (Next blocks it, Skip marks it skipped),
+  // so this state is a safeguard and is set up directly in the store.
+  it('blocks the download, shows a focused summary linking to the field, and keeps the inline status', async () => {
+    const api = new RecordingApi();
+    const store = await analysedStore(api, [evidence('person.name', { required: true }), evidence('notes')]);
+    let confirmed = 0;
+    render(<ReviewScreen onConfirm={() => confirmed++} onBack={() => {}} />, store, api);
+    click(buttonByText(translate('en', 'review.confirm')));
+    expect(confirmed).toBe(0);
+    const summary = container.querySelector<HTMLElement>('.error-panel')!;
+    expect(summary).not.toBeNull();
+    expect(document.activeElement).toBe(summary);
+    expect(summary.getAttribute('aria-labelledby')).toBe(summary.querySelector('h2')!.id);
+    const link = summary.querySelector('a')!;
+    expect(link.getAttribute('href')).toBe('#review-person_name');
+    expect(container.querySelector('#review-person_name')!.textContent).toContain(translate('en', 'review.required.warning'));
+  });
+
+  it('a skipped required field gets a warning but does not block the download (7.7)', async () => {
+    const api = new RecordingApi();
+    const store = await analysedStore(api, [evidence('person.name', { required: true })]);
+    store.set((s) => ({ ...s, fields: s.fields.map((f) => ({ ...f, skipped: true })) }));
+    let confirmed = 0;
+    render(<ReviewScreen onConfirm={() => confirmed++} onBack={() => {}} />, store, api);
+    expect(container.textContent).toContain(translate('en', 'review.field.status.skippedRequired'));
+    click(buttonByText(translate('en', 'review.confirm')));
+    expect(confirmed).toBe(1);
   });
 });
 

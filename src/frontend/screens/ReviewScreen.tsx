@@ -22,6 +22,7 @@ import { answerTypeOf, answersForFill, needsDateFormatChoice, reviewStatus, vali
 const STATUS: Record<ReviewStatus, { key: string; tone: StatusTone }> = {
   filled: { key: 'review.field.status.filled', tone: 'success' },
   skipped: { key: 'review.field.status.skipped', tone: 'info' },
+  skippedRequired: { key: 'review.field.status.skippedRequired', tone: 'caution' },
   unanswered: { key: 'review.field.status.unanswered', tone: 'info' },
   fillYourself: { key: 'review.field.status.fillYourself', tone: 'caution' },
   readOnly: { key: 'review.field.status.readOnly', tone: 'info' },

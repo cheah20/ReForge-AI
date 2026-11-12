@@ -89,6 +89,7 @@
   "review.privacyNotice": "Tus respuestas se quedan en tu navegador. Las etiquetas de los campos, las descripciones emergentes y el texto cercano del PDF, y cualquier respuesta descriptiva que elijas traducir, se envían al servicio de IA para procesarlos. Las respuestas no se guardan.",
   "review.field.status.filled": "Rellenado",
   "review.field.status.skipped": "Omitido",
+  "review.field.status.skippedRequired": "Omitido. Este campo es obligatorio, así que la oficina puede pedirte que lo completes.",
   "review.field.status.fillYourself": "Rellenar tú mismo",
   "review.field.status.readOnly": "Establecido por el formulario",
   "review.field.status.signed": "Firmar después de imprimir",

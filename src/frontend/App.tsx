@@ -107,6 +107,7 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
           <Upload
             {...(extractor ? { extractor } : {})}
             sample={sample}
+            firstScreen={firstScreen}
             onContinue={(f) => {
               setForm(f);
               show('analysis');
