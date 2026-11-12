@@ -24,7 +24,9 @@ describe('SAMPLE_FORM_PATH for the AccessForge links', () => {
   });
 
   it('is not under /legacy/ or /api/', () => {
-    expect(SAMPLE_FORM_PATH === '/legacy' || SAMPLE_FORM_PATH.startsWith('/legacy/')).toBe(false);
-    expect(SAMPLE_FORM_PATH.startsWith('/api/')).toBe(false);
+    // Widened to string: the constant's literal type would make the comparison a compile error.
+    const path: string = SAMPLE_FORM_PATH;
+    expect(path === '/legacy' || path.startsWith('/legacy/')).toBe(false);
+    expect(path.startsWith('/api/')).toBe(false);
   });
 });
