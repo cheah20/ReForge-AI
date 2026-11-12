@@ -1,12 +1,12 @@
-﻿# FormBridge PDF — Requirements
+﻿# Requirements Document
 
-**Spec:** formbridge-pdf  
+**Spec:** formbridge-pdf (FormBridge PDF)  
 **Target:** deployed and passing acceptance scenario by 2026-11-17  
-**Part of:** ReForge AI (Kiroween 2026, Frankenstein category)
+**Part of:** ReForge AI, built for Kiroween 2026
 
 ---
 
-## Overview
+## Introduction
 
 FormBridge is the PDF form-assistance module of ReForge AI. A user selects their preferred language, uploads an AcroForm PDF, and the app guides them through each form field one question at a time in that language. Answers are validated as they go. At the end, the user reviews every answer, edits if needed, confirms, and downloads the filled PDF.
 

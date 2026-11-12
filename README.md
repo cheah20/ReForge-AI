@@ -4,7 +4,7 @@ AI-powered legacy web modernization and multilingual form assistance.
 
 **FormBridge** walks you through a PDF form one field at a time, in your language. It checks each answer and writes the filled PDF in your browser. The PDF and your answers never leave your device: only field names and nearby printed text go to the AI.
 
-Built for Kiroween 2026, category **Frankenstein**.
+Built for Kiroween 2026. It joins two parts in one web app: AccessForge, which gives an old-style website a modern, accessible view, and FormBridge, which guides you through a form in your language.
 
 ## Public URL
 

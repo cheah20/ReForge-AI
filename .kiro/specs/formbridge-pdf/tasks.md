@@ -27,8 +27,8 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - _Requirements: tech.md (Vitest)_
   - [ ] 1.2 Create a PostFileSave hook that, when `src/packs/language/locales/en.json` is saved, diffs its keys against every other core locale file, lists missing or changed keys, and auto-updates core locale files with machine-translated placeholder values (labelled `[MT]` so translators can find them)
     - _Requirements: 2-L.1, 2-L.6_
-  - [x] 1.3 Create a PreToolUse (or manual trigger) hook that checks staged files for: secrets or API key patterns, files named `local-*`, files from `.local/`, and non-English text in source code, comments, or docs (locale files and `fixtures/` are exempt); block commit and report violations
-    - _Requirements: local-kiroween-rules.md_
+  - [x] 1.3 Create a PreToolUse (or manual trigger) hook that checks staged files for: secrets or API key patterns, the developer's private planning files (which stay out of git), and non-English text in source code, comments, or docs (locale files and `fixtures/` are exempt); block commit and report violations
+    - _Requirements: project contest rules (private steering)_
 
 - [ ] 2. MCP configuration
   - [ ] 2.1 Add Context7 MCP server to `.kiro/settings/mcp.json` for up-to-date documentation for pdf-lib, pdf.js, Cloudflare Workers, and Workers AI; record the first real usage (e.g. "looked up pdf-lib AcroForm API") as a row in `docs/kiro-usage-log.md`
@@ -244,7 +244,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
   - [x] 28.5 "Try a sample form" entry: a secondary button on the language picker, and the route `SAMPLE_FORM_PATH` exported from `src/shared/app-paths.ts`, both open the clinic registration form on the upload screen as if the user had chosen it, with every field empty. The file is `fixtures/clinic-registration-sample.pdf`, made by the fixture generator from the clinic spec with all values removed (the clinic fixture itself keeps its prefilled read-only code and ticked consent for the untouched-field tests). It is bundled as a static asset, read with the same extraction path, in a fresh session with no answers. No privacy change: the PDF is read in the browser, nothing is sent before the user presses the acknowledgement, and the notice is shown as for any upload. Tests: the constant is a same-origin path with no query string and not under `/legacy/`; the route and the button show the 22 fields; no API request before the acknowledgement; Playwright opens the route in a real browser
     - Prerequisite of `accessforge-skeleton` tasks 1.6, 4.3 and 16.8, which link to `SAMPLE_FORM_PATH`
     - _Requirements: 1.3, 9.5, 11.4, 14.1; accessforge-skeleton 11.5_
-  - [x] 28.4 **Demo 1 (non-blocking):** run the dev server; write the URL and exact try-it steps into `.local/kiro-progress.md` under "Demos ready": pick a language, upload each fixture, see the extracted fields listed or the right rejection message
+  - [x] 28.4 **Demo 1 (non-blocking):** run the dev server; write the URL and exact try-it steps into the developer's private progress notes under "Demos ready": pick a language, upload each fixture, see the extracted fields listed or the right rejection message
 
 - [x] 29. Analysis loading screen
   - [x] 29.1 `src/frontend/screens/AnalysisLoading.tsx`: batch progress "Analyzing batch N of M"; `DemoModeBanner` if mock provider; on complete navigate to ConfirmLanguage if confidence < 0.7 else QuestionWizard
@@ -275,7 +275,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [x] 33. Download confirmation screen
   - [x] 33.1 `src/frontend/screens/DownloadConfirm.tsx`: call `fillPdf()`; handle `CharacterNotRepresentableError` and `TextOverflowError`; trigger browser download as `<name>-filled.pdf`
     - _Requirements: 8.7, 10.1, 10.2, 10.4_
-  - [x] 33.2 **Demo 2 (non-blocking):** full local flow with the mock AI (language → upload clinic form → answer → review → download, then open the PDF); write step-by-step instructions with the synthetic answers from the fixture spec into `.local/kiro-progress.md` under "Demos ready"
+  - [x] 33.2 **Demo 2 (non-blocking):** full local flow with the mock AI (language → upload clinic form → answer → review → download, then open the PDF); write step-by-step instructions with the synthetic answers from the fixture spec into the developer's private progress notes under "Demos ready"
 
 - [x] 34. Design tokens and visual polish
   - [x] 34.1 `src/frontend/tokens.css`: CSS custom properties for color palette and type scale from design.md; `font-family: 'Noto Sans', sans-serif`; max-width 560px on wizard; 68ch line length; CSS logical properties throughout; WCAG AA contrast confirmed for each color pair
@@ -302,7 +302,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
     - _Requirements: 12.7_
   - [x] 37.2 Run `wrangler deploy`; confirm app loads at public URL; run the Nov 17 acceptance scenario manually against the live URL using the real Workers AI model (live smoke test); record actual neuron costs observed; add a row to `docs/kiro-usage-log.md`
     - _Requirements: 15.2, tech.md_
-  - [x] 37.3 **Demo 3 (non-blocking):** live public URL with real AI; write try-it steps for desktop and phone into `.local/kiro-progress.md` under "Demos ready"
+  - [x] 37.3 **Demo 3 (non-blocking):** live public URL with real AI; write try-it steps for desktop and phone into the developer's private progress notes under "Demos ready"
 
 - [ ] 38. US validation pack (Dec 1 gate)
   - Confirm the US pack from task 23 is fully wired into the country pack registry and e2e path: `getCountryPack("US")` returns the US pack, ZIP and phone validation active in the wizard for US forms
@@ -331,7 +331,7 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 42. Milestone 2 — Deploy and smoke test [needs CF access]
   - [ ] 42.1 Run `scripts/generate-fixture-cache.ts` for `fixtures/us-community-clinic.pdf` × core languages; commit new precomputed JSON files; run `wrangler deploy`; smoke-test Dec 1 acceptance scenario on the live URL; add a row to `docs/kiro-usage-log.md`
     - _Requirements: 12.7, 15.3, tech.md_
-  - [ ] 42.2 **Demo 4 (non-blocking):** Spanish → US form and (if Spike 2 passed) the Chinese form on the live URL; write try-it steps into `.local/kiro-progress.md` under "Demos ready"
+  - [ ] 42.2 **Demo 4 (non-blocking):** Spanish → US form and (if Spike 2 passed) the Chinese form on the live URL; write try-it steps into the developer's private progress notes under "Demos ready"
 
 - [ ] 43. README and disclosure
   - [ ] 43.1 Complete `README.md`: public URL, full setup steps, completed `Pre-existing code disclosure` section listing all notable libraries; update `docs/kiro-usage-log.md` with rows for hooks, MCP usage, and PBT results that actually happened (one row per milestone)

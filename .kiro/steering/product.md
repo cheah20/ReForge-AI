@@ -1,7 +1,7 @@
 ﻿# Product: ReForge AI
 
 ReForge AI — AI-Powered Legacy Web Modernization & Multilingual Form Assistance.
-Built for Kiroween 2026, category **Frankenstein** (stitching different technologies into one powerful app).
+Built for Kiroween 2026. It joins different technologies into one web app: legacy-page modernization (AccessForge) and multilingual form assistance (FormBridge).
 
 Pitch: "ReForge turns unfamiliar forms into guided conversations in your language. Proven first in Malaysia; built to travel."
 
