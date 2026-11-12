@@ -95,40 +95,40 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/legacy-templates.test.ts`: regenerating every template in memory equals the committed `generated/templates.ts` (stale-file test); no listed construct in any generated template; the generator fails with template name and construct on a hostile tree (fake input); banner is the first visible element on every document; five menu entries with the register link nested in the last; form structure equals `LEGACY_FORM`; DOM-checkable legacy traits; `lang="ms"`; every GET text node comes from the content file; empty initial state; no images; not-found has no form control and exactly one link, to `/legacy/`.
     - _Requirements: 1.2, 1.4, 1.5, 1.6, 1.7, 1.8, 1.10, 4.1, 4.8_
 
-- [ ] 5. Worker serving, legacy handler and wiring (Slice 1)
-  - [ ] 5.1 Implement `src/worker/legacy/escape.ts` and `src/worker/legacy/render.ts` (Slice 1)
+- [x] 5. Worker serving, legacy handler and wiring (Slice 1)
+  - [x] 5.1 Implement `src/worker/legacy/escape.ts` and `src/worker/legacy/render.ts` (Slice 1)
     - `escapeHtml()` encoding `& < > " '`; `fill(template, values)` that joins segments with already-escaped slot values. No sanitiser, no DOM, no hash.
     - _Requirements: 2.10, 2.11_
-  - [ ] 5.2 Implement `src/worker/legacy/respond.ts` (Slice 1)
+  - [x] 5.2 Implement `src/worker/legacy/respond.ts` (Slice 1)
     - `LEGACY_CSP` (`default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'`) and `legacyResponse()` setting CSP, `Cache-Control: no-store`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` and the content type, for HTML and for shared-error-shape JSON rejections.
     - _Requirements: 2.6, 4.2_
-  - [ ] 5.3 Implement `src/worker/legacy/submission.ts` (Slice 1)
+  - [x] 5.3 Implement `src/worker/legacy/submission.ts` (Slice 1)
     - `parseSubmission()` reads only the body with `URLSearchParams`, keeping order and repeats; `validateSubmission()` applies the rules of Requirement 2.2 against `LEGACY_FORM`, counting length in UTF-16 code units, and returns every failing name plus an `unknownPresent` flag.
     - _Requirements: 2.2, 2.7_
-  - [ ] 5.4 Implement `src/worker/legacy/reference.ts` (Slice 1)
+  - [x] 5.4 Implement `src/worker/legacy/reference.ts` (Slice 1)
     - `newReferenceNumber(now, randomDigits)` giving `SR-DEMO-YYYYMMDD-NNNNNN` from the UTC date and injected digits (`crypto.getRandomValues` in production). No submitted value is an input.
     - _Requirements: 2.9_
-  - [ ] 5.5 Implement `src/worker/legacy/handler.ts` (Slice 1)
+  - [x] 5.5 Implement `src/worker/legacy/handler.ts` (Slice 1)
     - `handleLegacy(request, deps)` with the dispatch table of design "Request dispatch": GET home and register serve `TEMPLATES` unchanged; POST register checks content type and the 16,384-byte limit, parses, validates, and returns the confirmation (200) or error page (422) through `fill`; other methods give `METHOD_NOT_ALLOWED`; unlisted GET paths give the not-found document (404). Values rendered as escaped text only, never logged, never in headers, URLs or redirects. No sanitiser and no hash per request. Imports only `generated/templates.ts`, `escape.ts`, `render.ts` and the modules of this group.
     - _Requirements: 1.1, 1.9, 1.10, 2.1, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.11, 13.5, 13.6_
-  - [ ] 5.6 Write example tests for submissions and the summary (Slice 1)
+  - [x] 5.6 Write example tests for submissions and the summary (Slice 1)
     - `tests/unit/legacy-handler-examples.test.ts`: one body per rule of Requirement 2.2 (missing, blank, repeated and unknown names, wrong consent and gender, over `maxlength` in UTF-16 units); the error page names every failing field at once, links to `/legacy/register`, has no Reference_Number, no submitted value and no unknown name; a valid body with markup characters and surrounding spaces gives a summary of eight entries in order with values exactly as received and no added element; a query string on the URL has no effect; the reference with a fixed clock and random source.
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.7, 2.9, 2.10_
-  - [ ] 5.7 Write example tests for limits, headers and the not-found document (Slice 1)
+  - [x] 5.7 Write example tests for limits, headers and the not-found document (Slice 1)
     - `tests/unit/legacy-handler-limits.test.ts`: 16,384 bytes accepted and 16,385 rejected; a JSON content type rejected; PUT and DELETE rejected; no Reference_Number on any rejection; CSP and `no-store` on every response kind, including JSON rejections and the not-found document; no response header contains a submitted value; `/legacy/x`, `/legacy/register/` and `/legacy/admin` give 404 with the banner, no form control and one link to `/legacy/`.
     - _Requirements: 1.10, 2.6, 2.7, 2.8, 4.2_
-  - [ ] 5.8 Write the served-document safety and static-serving tests (Slice 1)
+  - [x] 5.8 Write the served-document safety and static-serving tests (Slice 1)
     - `tests/unit/legacy-served-safety.test.ts`: every served document (both GET pages, a confirmation and an error page rendered with values containing markup characters, the not-found document) contains no script, no inline handler, no external resource, no form `action` or `formaction` outside the Worker's origin, and none of the other constructs of Requirement 4.1; `a` links point only to Allow_List GET paths and, on the confirmation, `SAMPLE_FORM_PATH`.
     - Spies show that `handleLegacy` calls neither `sanitizeTree`, `findUnsafeConstructs` nor `crypto.subtle.digest`; no module under `src/worker/` imports `src/lib/legacy-build/`; every text node of a served document is a content-file string or an escaped dynamic part of that response.
     - _Requirements: 2.10, 2.11, 3.11, 4.1, 4.7, 4.10_
-  - [ ] 5.9 Record the supported Page_Versions and write the recorded-hash test (Slice 1)
+  - [x] 5.9 Record the supported Page_Versions and write the recorded-hash test (Slice 1)
     - Fill `src/lib/accessforge/supported-versions.ts` (`SUPPORTED_PAGE_VERSIONS`) and the Page_Version table in design Question 1 with the generated hashes.
     - `tests/unit/accessforge-page-versions.test.ts`: for GET `/legacy/` and GET `/legacy/register`, the hash recomputed from the served HTML equals the served meta, `PAGE_VERSIONS` and `SUPPORTED_PAGE_VERSIONS`; confirmation, error and not-found documents carry no version meta; the test fails when any file in `src/worker/cache/precomputed/pages/` is keyed by an unsupported version (an absent folder passes).
     - _Requirements: 3.4_
-  - [ ] 5.10 Write the CPU measurement test (Slice 1)
+  - [x] 5.10 Write the CPU measurement test (Slice 1)
     - `tests/unit/legacy-cpu.test.ts`: for GET `/legacy/`, GET `/legacy/register` and a valid POST with values at their `maxlength`, warm up 50 calls of `handleLegacy`, then time 500; fail when the 99th percentile exceeds 2 ms (a fifth of the 10 ms free-plan CPU limit). Record the Node p50 and p99 in the CPU table of design Question 6. The deployed reading is task 23.1.
     - _Requirements: 2.12_
-  - [ ] 5.11 Wire the legacy routes into the Worker (Slice 1)
+  - [x] 5.11 Wire the legacy routes into the Worker (Slice 1)
     - **Shared files:** `src/worker/index.ts`, `wrangler.jsonc`.
     - Dispatch `/legacy` and `/legacy/*` to `handleLegacy` before the assets binding; set `assets.run_worker_first` to `["/api/*", "/legacy", "/legacy/*"]`; legacy log entries carry only the allowed log items with route `/legacy/` or `/legacy/register`.
     - `tests/unit/legacy-routes.test.ts`: the Worker serves no `/legacy/` documents other than those Requirement 1.1 lists; a legacy POST log entry contains no field name and no value.

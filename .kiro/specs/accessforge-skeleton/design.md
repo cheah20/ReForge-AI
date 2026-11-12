@@ -699,15 +699,15 @@ Confirmation, error and not-found templates carry no version meta (Requirement 3
 
 ```typescript
 export const SUPPORTED_PAGE_VERSIONS = {
-  home: '<filled in by the template task>',
-  register: '<filled in by the template task>',
+  home: 'bb3e7f080dcfd5a27e573fc5925b17eabbb0f1f6dfe71e71aa1a1c5165905e50',
+  register: 'a3250afede9c6413c0a3a170ae4baef4aa6a34681d16ef723a0652cb1e0733d9',
 } as const;
 ```
 
 | Page | Path | Recorded Page_Version |
 |---|---|---|
-| Home | GET `/legacy/` | to be recorded by the template task |
-| Registration | GET `/legacy/register` | to be recorded by the template task |
+| Home | GET `/legacy/` | `bb3e7f080dcfd5a27e573fc5925b17eabbb0f1f6dfe71e71aa1a1c5165905e50` (recorded 2026-11-12) |
+| Registration | GET `/legacy/register` | `a3250afede9c6413c0a3a170ae4baef4aa6a34681d16ef723a0652cb1e0733d9` (recorded 2026-11-12) |
 
 `tests/unit/legacy-templates.test.ts`:
 
@@ -969,9 +969,11 @@ Measurement, `tests/unit/legacy-cpu.test.ts`: for each of GET `/legacy/`, GET `/
 
 | Request | Node p50 / p99 | Deployed CPU time | Limit |
 |---|---|---|---|
-| GET `/legacy/` | to be measured | to be measured | 10 ms |
-| GET `/legacy/register` | to be measured | to be measured | 10 ms |
-| POST `/legacy/register` (valid) | to be measured | to be measured | 10 ms |
+| GET `/legacy/` | 0.054 ms / 0.277 ms | to be measured (task 23.1) | 10 ms |
+| GET `/legacy/register` | 0.028 ms / 0.218 ms | to be measured (task 23.1) | 10 ms |
+| POST `/legacy/register` (valid, at `maxlength`) | 0.094 ms / 0.313 ms | to be measured (task 23.1) | 10 ms |
+
+Node figures: Node on the development machine, Nov 12, 2026.
 
 ### Response headers on every `/legacy/*` response (`src/worker/legacy/respond.ts`)
 

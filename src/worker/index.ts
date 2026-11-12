@@ -20,6 +20,8 @@ import { analyzeRoute, ANALYZE_BODY_LIMIT } from './routes/analyze.js';
 import { retranslateRoute, RETRANSLATE_BODY_LIMIT } from './routes/retranslate.js';
 import { translateRoute, TRANSLATE_BODY_LIMIT } from './routes/translate.js';
 import type { RouteContext, RouteResult } from './routes/types.js';
+import { handleLegacy, legacyLogRoute, type LegacyDeps } from './legacy/handler.js';
+import { cryptoDigits } from './legacy/reference.js';
 
 export interface RateLimiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
@@ -59,6 +61,8 @@ export interface HandlerDeps {
   logger?: Logger;
   now?: () => number;
   requestId?: () => string;
+  /** Clock and random digits for the legacy reference number (tests). */
+  legacy?: LegacyDeps;
 }
 
 export function providerFor(env: Env): AiProvider {
@@ -127,10 +131,25 @@ export function createHandler(deps: HandlerDeps = {}) {
     return response;
   }
 
+  /** The fictional legacy portal (accessforge-skeleton task 5.11). Logs route and status only. */
+  async function legacy(request: Request, pathname: string): Promise<Response> {
+    const started = now();
+    const requestId = newId();
+    const response = await handleLegacy(request, deps.legacy ?? { now: () => new Date(now()), randomDigits: cryptoDigits });
+    const entry: LogEntry = { requestId, route: legacyLogRoute(pathname), status: response.status, durationMs: now() - started };
+    if (response.status >= 400 && response.headers.get('content-type')?.startsWith('application/json')) {
+      // The shared error shape: log its fixed code, never the body that caused it.
+      entry.errorCode = ((await response.clone().json()) as { error: { code: string } }).error.code;
+    }
+    log(entry);
+    return response;
+  }
+
   return {
     async fetch(request: Request, env: Env): Promise<Response> {
       const url = new URL(request.url);
       if (url.pathname === '/api' || url.pathname.startsWith('/api/')) return api(request, env, url.pathname);
+      if (url.pathname === '/legacy' || url.pathname.startsWith('/legacy/')) return legacy(request, url.pathname);
       if (env.ASSETS) return env.ASSETS.fetch(request);
       return errorResponse('NOT_FOUND');
     },
