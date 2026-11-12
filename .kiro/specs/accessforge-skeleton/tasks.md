@@ -52,12 +52,12 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-sample-path.test.ts`: `SAMPLE_FORM_PATH` is exported from `src/shared/app-paths.ts`, is a same-origin path with no query string, and is not under `/legacy/`.
     - _Requirements: 11.5, 11.6_
 
-- [ ] 2. Shared page schemas in their own file (Slice 1)
-  - [ ] 2.1 Create `src/shared/page-schemas.ts` (Slice 1)
+- [x] 2. Shared page schemas in their own file (Slice 1)
+  - [x] 2.1 Create `src/shared/page-schemas.ts` (Slice 1)
     - New file, so `src/shared/schemas.ts` stays untouched. Reuse `AnswerTypeSchema` by import only.
     - Define `ElementIdSchema`, `ControlTypeSchema`, `PageOptionSchema` (with the radio option `elementId`), `PageEntrySchema` (with `nextRowText`), `PageModelSchema`, `PagePlanEntrySchema` (strict, length-capped, non-blank model text), `PagePlanReplySchema`, `AnalysisModeSchema`, `PageAnalyzeRequestSchema`, `PageAnalyzeResponseSchema`, `PrecomputedPagePlanSchema` and `ActionSchema` as in design "Data Models". Export inferred types. The re-translation schemas are added in task 25.1.
     - _Requirements: 6.3, 6.6, 8.1, 8.13, 13.1_
-  - [ ] 2.2 Write unit tests for the page schemas (Slice 1)
+  - [x] 2.2 Write unit tests for the page schemas (Slice 1)
     - `tests/unit/accessforge-schemas.test.ts`: strict objects reject extra keys; label 1 to 80 and question 1 to 200 characters; blank text rejected; confidence bounds; `ActionSchema` rejects `Click` and `submit`; a question containing `<a href="https://example.com">` passes the schema (the schema caps length only and makes no claim about content).
     - _Requirements: 6.6, 6.17, 8.2_
 
