@@ -7,7 +7,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import type { AnswerType } from '../../src/shared/types.js';
 import {
+  AnswerTypeSchema,
   FieldEvidenceSchema,
   FieldAnalysisSchema,
   AnalyzeRequestSchema,
@@ -94,6 +96,23 @@ describe('FieldEvidenceSchema — fieldId boundary', () => {
 // ---------------------------------------------------------------------------
 // FieldAnalysisSchema — humanLabel and question boundaries
 // ---------------------------------------------------------------------------
+
+describe('AnswerTypeSchema (exported for the AccessForge page schemas)', () => {
+  const ALL: AnswerType[] = ['text', 'ic', 'phone', 'postcode', 'date', 'email', 'checkbox', 'radio', 'dropdown', 'description', 'signature'];
+
+  it('lists exactly the eleven answer types, in the same order as before', () => {
+    expect(AnswerTypeSchema.options).toEqual(ALL);
+  });
+
+  it('is the schema FieldAnalysisSchema uses: same accepted and rejected values', () => {
+    for (const answerType of [...ALL, 'listbox', 'ssn', '']) {
+      const direct = AnswerTypeSchema.safeParse(answerType).success;
+      const inField = FieldAnalysisSchema.safeParse(makeFieldAnalysis({ answerType })).success;
+      expect(inField, answerType).toBe(direct);
+    }
+    expect(AnswerTypeSchema.safeParse('listbox').success).toBe(false);
+  });
+});
 
 describe('FieldAnalysisSchema — humanLabel boundary', () => {
   it('accepts humanLabel of exactly 40 characters', () => {

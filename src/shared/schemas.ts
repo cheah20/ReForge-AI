@@ -101,23 +101,26 @@ const visibleText = (max: number) =>
     .max(max)
     .refine((s) => s.trim().length > 0, 'must contain visible text');
 
+/** Answer types the AI can assign to a field. Also imported by the AccessForge page schemas. */
+export const AnswerTypeSchema = z.enum([
+  'text',
+  'ic',
+  'phone',
+  'postcode',
+  'date',
+  'email',
+  'checkbox',
+  'radio',
+  'dropdown',
+  'description',
+  'signature',
+]);
+
 export const FieldAnalysisSchema = z.object({
   fieldId: FieldIdSchema,
   humanLabel: visibleText(40), // enforced: ≤ 40 chars
   question: visibleText(120), // enforced: ≤ 120 chars
-  answerType: z.enum([
-    'text',
-    'ic',
-    'phone',
-    'postcode',
-    'date',
-    'email',
-    'checkbox',
-    'radio',
-    'dropdown',
-    'description',
-    'signature',
-  ]),
+  answerType: AnswerTypeSchema,
   confidence: z.number().min(0).max(1),
 });
 
