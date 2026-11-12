@@ -18,6 +18,13 @@ People use this app to fill in clinic, school and government forms. Their answer
 - One description answer, sent once to `/api/forms/translate`, and only after the user presses the translate button.
 - AI-written labels and questions, for re-translation after a language switch.
 
+For AccessForge (the revived legacy portal), these may also reach the Worker and the AI service:
+
+- The Page_Model of the legacy page: control types, names, ids, label text, neighbouring-cell text, next-row text, option text, nearby text, `required`, `maxlength`, position, and the Page_Version. It is read from attributes and text nodes only, never from what is typed into the page.
+- In Slice 2 only, the re-translation payload: the existing human labels and questions plus the target language.
+
+AccessForge answers never go to the AI service. When the user confirms, the answers go only to the Legacy_Handler on the ReForge app's own Worker. It processes them in memory for that one request, renders them back once in the confirmation page, and never stores or logs them.
+
 Anything else needs a change to this file first.
 
 ## Page text near a widget
@@ -43,6 +50,7 @@ Anything else needs a change to this file first.
 
 - Show it on the upload screen and again on the review screen, in the interface language.
 - Say what leaves the browser and what does not, in plain words: the PDF and answers stay, field labels and nearby text go to the AI service, and so does a translated description if the user asks.
+- AccessForge has its own notice (`accessforge.notice.*`), shown before analysis and again on the review screen: labels and nearby text from the old page go to the AI service; answers stay in the browser until the user confirms; then they go only to the demonstration portal's own form handler. The re-translation sentence is added only in the change that delivers language switching.
 - Do not promise more than the code does. If the code changes what is sent, update the notice in every locale file in the same change.
 
 ## Before finishing a change

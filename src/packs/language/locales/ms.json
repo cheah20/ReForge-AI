@@ -145,5 +145,11 @@
   "review.cancel": "Batal",
   "download.stamp": "Siap",
   "download.checkNote": "Buka PDF dan semak setiap jawapan sebelum anda menyerahkannya. ReForge AI tidak menghantar borang ke mana-mana.",
-  "download.backToReview": "Kembali ke semakan"
+  "download.backToReview": "Kembali ke semakan",
+
+  "accessforge.notice.title": "Apa yang keluar dari pelayar anda",
+  "accessforge.notice.pageText": "Label dan teks berdekatan daripada halaman lama dihantar kepada perkhidmatan AI.",
+  "accessforge.notice.answersStay": "Jawapan anda kekal dalam pelayar ini sehingga anda mengesahkannya.",
+  "accessforge.notice.legacyOnly": "Apabila anda mengesahkan, jawapan anda dihantar hanya kepada pengendali borang portal demonstrasi itu sendiri.",
+  "accessforge.notice.acknowledge": "Saya faham, teruskan"
 }

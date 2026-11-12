@@ -145,5 +145,11 @@
   "review.cancel": "Cancel",
   "download.stamp": "Ready",
   "download.checkNote": "Open the PDF and check every answer before you hand it in. ReForge AI does not send the form anywhere.",
-  "download.backToReview": "Back to review"
+  "download.backToReview": "Back to review",
+
+  "accessforge.notice.title": "What leaves your browser",
+  "accessforge.notice.pageText": "Labels and nearby text from the old page go to the AI service.",
+  "accessforge.notice.answersStay": "Your answers stay in this browser until you confirm.",
+  "accessforge.notice.legacyOnly": "When you confirm, your answers go only to the demonstration portal's own form handler.",
+  "accessforge.notice.acknowledge": "I understand, continue"
 }

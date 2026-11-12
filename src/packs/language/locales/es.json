@@ -145,5 +145,11 @@
   "review.cancel": "Cancelar",
   "download.stamp": "Listo",
   "download.checkNote": "Abre el PDF y revisa cada respuesta antes de entregarlo. ReForge AI no envía el formulario a ningún sitio.",
-  "download.backToReview": "Volver a la revisión"
+  "download.backToReview": "Volver a la revisión",
+
+  "accessforge.notice.title": "Qué sale de tu navegador",
+  "accessforge.notice.pageText": "Las etiquetas y el texto cercano de la página antigua se envían al servicio de IA.",
+  "accessforge.notice.answersStay": "Tus respuestas se quedan en este navegador hasta que confirmes.",
+  "accessforge.notice.legacyOnly": "Cuando confirmas, tus respuestas van solo al gestor de formularios del propio portal de demostración.",
+  "accessforge.notice.acknowledge": "Entiendo, continuar"
 }

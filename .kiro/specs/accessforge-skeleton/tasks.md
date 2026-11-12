@@ -28,26 +28,26 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
 
 ## Tasks
 
-- [ ] 1. Apply and record the approved decisions (Slice 1, runs before every other AccessForge task)
-  - [ ] 1.1 Apply the approved privacy rule change (Slice 1)
+- [x] 1. Apply and record the approved decisions (Slice 1, runs before every other AccessForge task)
+  - [x] 1.1 Apply the approved privacy rule change (Slice 1)
     - **Shared file:** `.kiro/steering/privacy.md`. Done as the first implementation step.
     - Add the decision A text: for AccessForge, the Page_Model (control types, names, ids, label, neighbouring-cell, next-row, option and nearby text, `required`, `maxlength`, position, Page_Version) and, in Slice 2, the re-translation payload (existing human labels and questions plus the target language) may reach the Worker and the AI service. Confirmed answers go only to the Legacy_Handler on the ReForge app's own Worker, which processes them in memory for that request, renders them back once, and never stores or logs them.
     - _Requirements: 13.1, 13.2, 13.3, 13.5, 13.12_
-  - [ ] 1.2 Apply the approved privacy notice text to every locale file (Slice 1)
+  - [x] 1.2 Apply the approved privacy notice text to every locale file (Slice 1)
     - **Shared file:** every interface locale file (`en`, `ms`, `zh-Hans`, `zh-Hant`, `ta`, `es`, plus experimental files only where they already carry the FormBridge notice). Done as the first implementation step, in the same change as 1.1.
     - Keep the FormBridge notice as it is. Add the Slice 1 AccessForge data notice keys of design Question 7 (`accessforge.notice.title`, `.pageText`, `.answersStay`, `.legacyOnly`, `.acknowledge`). Leave out the Slice 2 key `accessforge.notice.retranslate` (task 25.5 adds it).
     - _Requirements: 13.7, 13.9_
-  - [ ] 1.3 Record decision B as decided (Slice 1)
+  - [x] 1.3 Record decision B as decided (Slice 1)
     - The Malay portal content lives at `src/packs/language/locales/legacy-portal/ms.json`, outside the Language_Registry. The same rule covers the mock page-plan table `fixtures/mock-analysis/legacy-register.json`. Tasks 4.1, 13.1 and 21.2 use these paths.
     - _Requirements: 1.7, 1.11_
-  - [ ] 1.4 Record decision F as decided (Slice 1)
+  - [x] 1.4 Record decision F as decided (Slice 1)
     - For a checkbox only, the visible text of the next control-free table row is one more evidence item (`nextRowText`, at most 200 characters). Requirements 5.4, 5.6 and 9.8 and design Question 2 already say so; task 8.1 implements it.
     - _Requirements: 5.4, 5.6, 9.8_
-  - [ ] 1.5 Record decisions D, E, G, H, I and J as decided and decision C as deferred (Slice 1)
+  - [x] 1.5 Record decisions D, E, G, H, I and J as decided and decision C as deferred (Slice 1)
     - D: answers do not carry into FormBridge. E: below 1024 px the frame sits behind a show control. G: the FormBridge sample-form route exports `SAMPLE_FORM_PATH`. H: larger-text scale 1.25 inside the Mirror. I: lengths counted in UTF-16 code units. J: the banner keeps at least 7:1.
     - C (how the module is described in the README, the Mirror scope notice and the submission text) is deferred to gate G2 (Nov 25). Keep those words out of code until it is decided, and raise it again in task 23.2 if still open.
     - _Requirements: 9.9, 11.5, 12.4, 14.11, 17.8, 1.12_
-  - [ ] 1.6 Check that the FormBridge sample-form route is in place (Slice 1)
+  - [x] 1.6 Check that the FormBridge sample-form route is in place (Slice 1)
     - Prerequisite of tasks 4.3 and 16.8. The FormBridge "Try a sample form" task in the `formbridge-pdf` spec must be done first; this file does not add that task.
     - `tests/unit/accessforge-sample-path.test.ts`: `SAMPLE_FORM_PATH` is exported from `src/shared/app-paths.ts`, is a same-origin path with no query string, and is not under `/legacy/`.
     - _Requirements: 11.5, 11.6_

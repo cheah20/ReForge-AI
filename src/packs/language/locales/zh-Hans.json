@@ -145,5 +145,11 @@
   "review.cancel": "取消",
   "download.stamp": "完成",
   "download.checkNote": "提交前请打开 PDF 检查每个答案。ReForge AI 不会把表格发送到任何地方。",
-  "download.backToReview": "返回检查"
+  "download.backToReview": "返回检查",
+
+  "accessforge.notice.title": "哪些内容会离开您的浏览器",
+  "accessforge.notice.pageText": "旧网页上的标签和附近文字会发送给 AI 服务。",
+  "accessforge.notice.answersStay": "在您确认之前，您的答案一直留在此浏览器中。",
+  "accessforge.notice.legacyOnly": "您确认后，答案只会发送给演示门户自己的表单处理程序。",
+  "accessforge.notice.acknowledge": "我明白，继续"
 }

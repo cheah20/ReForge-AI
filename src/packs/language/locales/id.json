@@ -143,5 +143,11 @@
   "review.cancel": "Batal",
   "download.stamp": "Siap",
   "download.checkNote": "Buka PDF dan periksa setiap jawaban sebelum Anda menyerahkannya. ReForge AI tidak mengirim formulir ke mana pun.",
-  "download.backToReview": "Kembali ke tinjauan"
+  "download.backToReview": "Kembali ke tinjauan",
+
+  "accessforge.notice.title": "Apa yang keluar dari peramban Anda",
+  "accessforge.notice.pageText": "Label dan teks di sekitarnya dari halaman lama dikirim ke layanan AI.",
+  "accessforge.notice.answersStay": "Jawaban Anda tetap di peramban ini sampai Anda mengonfirmasi.",
+  "accessforge.notice.legacyOnly": "Saat Anda mengonfirmasi, jawaban Anda hanya dikirim ke pengelola formulir milik portal demonstrasi itu sendiri.",
+  "accessforge.notice.acknowledge": "Saya mengerti, lanjutkan"
 }
