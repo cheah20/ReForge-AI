@@ -207,7 +207,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-verifier-examples.test.ts`: a changed value, a missing `filled` entry, an unknown name, an absent and a malformed reference each give a difference; a checkbox matches on its own `value`; skipped and do-it-yourself fields are not compared; a missing `#mesej-pengesahan` gives `originalText: null`.
     - _Requirements: 10.10, 10.11, 10.12, 11.7_
 
-- [ ] 12. Checkpoint: pure agent logic (Slice 1)
+- [x] 12. Checkpoint: pure agent logic (Slice 1)
   - Run `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. AI provider method and page-analysis route (Slice 1)
