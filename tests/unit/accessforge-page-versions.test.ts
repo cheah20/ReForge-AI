@@ -50,7 +50,8 @@ describe('Page_Version', () => {
     const dir = 'src/worker/cache/precomputed/pages';
     if (!existsSync(dir)) return;
     const supported = new Set<string>(Object.values(SUPPORTED_PAGE_VERSIONS));
-    for (const file of readdirSync(dir)) {
+    // Plans are .json files; the folder also holds a .gitkeep.
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
       const version = file.match(/^([0-9a-f]{64})-/)?.[1];
       expect(version && supported.has(version), file).toBe(true);
     }
