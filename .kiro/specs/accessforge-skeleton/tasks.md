@@ -243,18 +243,18 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-mock.test.ts`: identical Page_Model and language give an identical plan; reason for visit has confidence 0.6; `zh-Hans` and `en` texts come from the table.
     - _Requirements: 7.1_
 
-- [ ] 14. Agent-loop reducer (Slice 1)
-  - [ ] 14.1 Implement `src/lib/accessforge/agent-machine.ts` (Slice 1)
+- [x] 14. Agent-loop reducer (Slice 1)
+  - [x] 14.1 Implement `src/lib/accessforge/agent-machine.ts` (Slice 1)
     - `agentReducer(state, event)` returning `{ state, effects }` with the Slice 1 states and rules of design Question 4: `versionUnsupported`, `notice` (no analysis effect before acknowledgement), `unreadable` (including `SUBMIT_COUNT`), `analysisFailed` (error, `AI_UNAVAILABLE`, 45 s), expected loads, results with an older generation dropped and `ABORT_PENDING` emitted, one click per confirm press, 15 s `unknownOutcome`, error-page rewrite, edits and `halted`, consent, cancel, required do-it-yourself notice, language picker locked while active.
     - Pure helpers for the step list, the low-confidence check (below 0.7) and review rows.
     - _Requirements: 3.3, 3.6, 3.8, 3.9, 3.10, 5.10, 6.9, 6.11, 6.15, 6.19, 7.10, 7.11, 8.10, 9.1, 9.2, 9.3, 9.8, 10.2, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.13, 12.1, 12.6, 12.7, 12.8, 13.8_
-  - [ ] 14.2 Write example tests for submission safety (Slice 1)
+  - [x] 14.2 Write example tests for submission safety (Slice 1)
     - `tests/unit/accessforge-agent-machine-submit.test.ts`: the acceptance path emits exactly one click after one confirm press; no click on reaching review, Enter or a timeout; a read-back mismatch moves to `halted` with no further Action; an error page leads to reload, rewrite and a new confirm press; a timeout gives `unknownOutcome` and a late confirmation is still verified; `filled` only after an equal read-back.
     - _Requirements: 10.2, 10.6, 10.7, 10.8, 10.9, 10.13, 12.1, 12.7_
-  - [ ] 14.3 Write example tests for stops and refusals (Slice 1)
+  - [x] 14.3 Write example tests for stops and refusals (Slice 1)
     - `tests/unit/accessforge-agent-machine-stops.test.ts`: a stale analysis reply after a reload is dropped; a reload during the question flow stops the loop; the home page during the flow stops it; an unrecorded registration version gives `versionUnsupported` with no effects; `SUBMIT_COUNT` gives `unreadable` with no analysis effect; `AI_UNAVAILABLE` gives `analysisFailed`; cancel confirmed discards answers and reloads, cancel declined keeps the step; the language picker stays locked while active.
     - _Requirements: 3.3, 3.6, 3.8, 3.9, 5.10, 6.15, 6.19, 7.10, 7.11, 12.6, 13.8_
-  - [ ] 14.4 Write the instruction-like page example test (Slice 1)
+  - [x] 14.4 Write the instruction-like page example test (Slice 1)
     - `tests/unit/accessforge-instructions.test.ts`: one variant of the registration template whose label, cell, next-row, option and nearby texts tell the agent to press reset or submit, change answers, follow a URL or use a selector gives the same Element_Ids, control types, option values and allowed Action kinds as the real page, and the reducer emits no Action that does not follow a user answer or a confirm press.
     - _Requirements: 4.6_
 

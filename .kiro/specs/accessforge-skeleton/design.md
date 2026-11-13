@@ -361,6 +361,18 @@ Added while building (task 10.1): `ctx` also takes an optional `today`, passed t
 export function agentReducer(state: AgentState, event: AgentEvent): { state: AgentState; effects: Effect[] };
 ```
 
+Added while building (task 14.1):
+
+- Effects: `EXTRACT`, `ANALYZE`, `ABORT_PENDING { before }`, `EXECUTE { action, submitArmed, consentGiven }`, `READ_BACK`, `RELOAD_FRAME`, `START_SUBMIT_TIMER { attempt }`, `CLEAR_SUBMIT_TIMER` and `VERIFY_RESULT { filled }`. `FRAME_LOADED` carries the page type from `checkFrameDocument` (`not-allowed` when it fails), whether the version is recorded, and for an error page the failing names. The hook runs `compareReceived` and answers `VERIFY_RESULT` with `RESULT_VERIFIED`.
+- The open step is named by Element_Id, so a field that becomes do it yourself mid-flow does not shift the steps.
+- The 15 s timer event carries the submit attempt instead of the generation, because the generation changes right after the click and again when the response loads.
+- The `rewriting` state of the diagram is the `writing` and `verifying` states with a queue of fields; `reloading` waits for the registration page after "try again".
+- Unticking consent after it was ticked writes "unchecked" to the legacy box (Requirement 8.7) and keeps the step open with `accessforge.consent.required`.
+- A field the Executor refuses for a reason other than a missing or duplicated element becomes do it yourself with reason `REJECTED`; `FORM_TARGET` stops the loop with the form-target message and `VERSION_CHANGED` with the page-changed message.
+- A frame load while the data notice is open returns to `idle` instead of stopping, because the loop has not started.
+- Results that arrive while the cancel question is open are applied to the interrupted state, so declining resumes where the loop was.
+- After a stop, answers are kept in memory and fill the steps again on the next revival; each one is written only after the user presses next again.
+
 The reducer is pure. `useAgentLoop` performs effects (extract, call API, execute, read back, reload frame, start or clear the 15 s timer) and feeds results back as events. Every effect and every result event carries a `generation` field. The states and transitions are in "Question 4".
 
 ### Revival_Generation (`src/lib/accessforge/generation.ts`)
