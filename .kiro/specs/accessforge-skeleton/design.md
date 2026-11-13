@@ -343,6 +343,8 @@ export function legacyLength(value: string): number;                 // UTF-16 c
 export function detectLegacyDateFormat(entry: PageEntry): DateFormat | 'ambiguous' | undefined;
 ```
 
+Added while building (task 10.1): `ctx` also takes an optional `today`, passed to the IC century rule so tests are deterministic. An unticked required consent box returns `accessforge.consent.required` (Requirement 9.8); task 15 adds that string with the other Mirror strings. An answer kind that does not fit the field (for example an option answer for a text field) throws a `TypeError`, because it is a caller bug, not a user error.
+
 `toIntendedValue` delegates every rule to the shared pack code (see "Reuse of FormBridge components and validators"): text, IC, phone and postcode go through `validateAnswer(myPack, answerType, value, { required })`; dates go through `isValidCalendarDate` and `formatDate`. It then applies the legacy length check itself, in UTF-16 code units (decision I), because the shared `checkMaxLength` counts code points as PDF viewers do. The shared validator stays unchanged; `maxLength` is not passed to it.
 
 ### Agent loop (`src/lib/accessforge/agent-machine.ts`, `src/frontend/accessforge/useAgentLoop.ts`)

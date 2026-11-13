@@ -173,15 +173,15 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-plan-validator.test.ts`, at least 100 runs, seed printed on failure, no `skip` or `only`; generator includes every case of Requirement 17.2 and a fully valid plan that must map every field.
     - **Validates: Requirements 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.12, 6.13, 17.1, 17.2, 17.9**
 
-- [ ] 10. Answer transformations (Slice 1)
-  - [ ] 10.1 Implement `src/lib/accessforge/transformations.ts` (Slice 1)
+- [x] 10. Answer transformations (Slice 1)
+  - [x] 10.1 Implement `src/lib/accessforge/transformations.ts` (Slice 1)
     - `toIntendedValue()` calling the shared `validateAnswer` with `myPack`, then the legacy length check with `legacyLength()` (UTF-16 code units); the date from three parts through `isValidCalendarDate` and `formatDate`; `detectLegacyDateFormat()` with the shared `detectDateFormat` plus the `HH/BB/TTTT` rule, returning `ambiguous` when two formats are found. No change to the shared validators and no own validation rule.
     - _Requirements: 9.5, 9.7, 9.9, 9.10, 9.11, 9.14, 15.4_
-  - [ ] 10.2 Write property test for answer acceptance (Slice 1, core)
+  - [x] 10.2 Write property test for answer acceptance (Slice 1, core)
     - **Property 7: The Mirror accepts exactly the answers that are present, well-typed and fit**
     - `tests/unit/accessforge-transformations.test.ts`, at least 100 runs, seed printed on failure, no `skip` or `only`; blank and whitespace-only answers, answers failing and passing the `MY` rule, characters outside the Basic Multilingual Plane, lengths 0 to `maxlength` + 5 including both edges; rejected answers kept untruncated; accepted values also pass `validateSubmission`.
     - **Validates: Requirements 9.5, 9.6, 9.9, 2.2, 17.8, 17.9**
-  - [ ] 10.3 Write example tests for the documented transformations (Slice 1)
+  - [x] 10.3 Write example tests for the documented transformations (Slice 1)
     - `tests/unit/accessforge-transformations-examples.test.ts`: every row of the per-field table in design Question 8; dates 1 January 1990, 29 February 2000 accepted and 29 February 1990, day 32, month 13 rejected with no value; `HH/BB/TTTT` gives `DD/MM/YYYY`; two formats give `ambiguous`.
     - _Requirements: 9.7, 9.10, 9.11, 15.4, 15.5, 15.6_
 
