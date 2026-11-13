@@ -57,11 +57,12 @@ function inputType(el: Element): string {
   return KNOWN_INPUT_TYPES.has(raw) ? raw : 'text';
 }
 
-function isHiddenInput(el: Element): boolean {
+export function isHiddenInput(el: Element): boolean {
   return tagOf(el) === 'input' && inputType(el) === 'hidden';
 }
 
-function controlTypeOf(el: Element): ControlType {
+/** The Page_Model control type of a form control. The Executor and Verifier locate controls with the same rule. */
+export function controlTypeOf(el: Element): ControlType {
   const tag = tagOf(el);
   if (tag === 'select') return el.hasAttribute('multiple') ? 'unsupported' : 'select';
   if (tag === 'button') {

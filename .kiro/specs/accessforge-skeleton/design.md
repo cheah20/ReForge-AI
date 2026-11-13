@@ -326,6 +326,14 @@ export function parseConfirmation(doc: Document): ConfirmationRead | null;
 export function compareReceived(read: ConfirmationRead, filled: readonly FilledField[], model: PageModel): Difference[];
 ```
 
+Added while building (tasks 11.1 and 11.4):
+
+- `ExecutorContext` also carries `liveDocument` (the iframe's `contentDocument` now) and `appOrigin` (for `checkFormTarget`); `readBack` takes `liveDocument` as a fourth argument. Both use them for the document-identity check of rule 2.
+- `RESET_BUTTON` is checked before `KIND_MISMATCH`, so an Action to the reset button always reports `RESET_BUTTON`. `FORM_TARGET` runs before every Action, which is stricter than "before the first Action and before a click" and needs no extra state. Every checkbox is treated as the consent box, because the Legacy_Form has one checkbox.
+- A `select` value that the frame's own `select` element does not offer is refused before the write, so a refusal never clears the selection.
+- Location lives in `src/lib/accessforge/locate.ts` and uses the extractor's `controlTypeOf`, so the extractor, Executor and Verifier classify controls with one rule.
+- `FilledField = { entry: PageEntry; intended: string | boolean }`. `Difference` is one of `value` (name, intended, received), `missing`, `repeated` (a name received twice), `unknownName`, or `reference` (absent or not matching the pattern). An unticked box expects no summary row.
+
 ### Transformations (`src/lib/accessforge/transformations.ts`)
 
 ```typescript

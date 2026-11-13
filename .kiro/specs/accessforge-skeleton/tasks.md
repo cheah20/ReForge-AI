@@ -185,25 +185,25 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-transformations-examples.test.ts`: every row of the per-field table in design Question 8; dates 1 January 1990, 29 February 2000 accepted and 29 February 1990, day 32, month 13 rejected with no value; `HH/BB/TTTT` gives `DD/MM/YYYY`; two formats give `ambiguous`.
     - _Requirements: 9.7, 9.10, 9.11, 15.4, 15.5, 15.6_
 
-- [ ] 11. Executor and verifier (Slice 1)
-  - [ ] 11.1 Implement `src/lib/accessforge/executor.ts` (Slice 1)
+- [x] 11. Executor and verifier (Slice 1)
+  - [x] 11.1 Implement `src/lib/accessforge/executor.ts` (Slice 1)
     - `execute(action, ctx)` with checks 1 to 13 of design "Executor" in order, all before any write: strict schema, stale generation or replaced document, Page_Version, membership (entry ids and radio option ids), kind and control type (a `check` on the radio group id rejected), reset, Do_It_Yourself, length, option, consent, submit armed, form target, exactly one element. Location through `form.elements` by type, exact name and radio value; no selector from the plan. Submit with `form.requestSubmit()`.
     - _Requirements: 3.9, 4.4, 4.9, 8.1, 8.2, 8.3, 8.4, 8.6, 8.7, 8.8, 8.9, 8.10, 8.13, 8.14, 10.7_
-  - [ ] 11.2 Write property test for the executor (Slice 1, core)
+  - [x] 11.2 Write property test for the executor (Slice 1, core)
     - **Property 2: The Executor accepts exactly the safe actions and changes only their target**
     - `tests/unit/accessforge-executor.test.ts`, jsdom against `TEMPLATES.register`, at least 100 runs, seed printed on failure, no `skip` or `only`; generator includes every case of Requirement 17.3, including the submit guard before and after the confirm press and after a submission, and Actions from an earlier Revival_Generation.
     - **Validates: Requirements 3.9, 8.1, 8.2, 8.3, 8.6, 8.7, 8.8, 8.9, 8.13, 8.14, 10.7, 17.3, 17.9**
-  - [ ] 11.3 Write example tests for executor edge cases (Slice 1)
+  - [x] 11.3 Write example tests for executor edge cases (Slice 1)
     - `tests/unit/accessforge-executor-examples.test.ts`: a missing element gives `NOT_FOUND` and a duplicated one `AMBIGUOUS`, both with no write; a write stamped with an old generation or a replaced document is rejected; a changed version meta rejects every Action; on the hostile form the click is rejected with `FORM_TARGET` and nothing is submitted.
     - _Requirements: 3.9, 4.9, 8.10, 8.14_
-  - [ ] 11.4 Implement `src/lib/accessforge/verifier.ts` (Slice 1)
+  - [x] 11.4 Implement `src/lib/accessforge/verifier.ts` (Slice 1)
     - `readBack()` (with generation check), `sameValue()` (strict `===`), `parseConfirmation()` and `compareReceived()` as in design Question 8.
     - _Requirements: 10.1, 10.3, 10.10, 10.11, 10.12, 11.7_
-  - [ ] 11.5 Write property test for read-back comparison (Slice 1, core)
+  - [x] 11.5 Write property test for read-back comparison (Slice 1, core)
     - **Property 3: Read-back comparison is exact equality**
     - `tests/unit/accessforge-verifier.test.ts`, at least 100 runs, seed printed on failure, no `skip` or `only`; whitespace, case, normalization-form, empty and one-character pairs.
     - **Validates: Requirements 10.1, 10.3, 17.4, 17.9**
-  - [ ] 11.6 Write example tests for received-data comparison (Slice 1)
+  - [x] 11.6 Write example tests for received-data comparison (Slice 1)
     - `tests/unit/accessforge-verifier-examples.test.ts`: a changed value, a missing `filled` entry, an unknown name, an absent and a malformed reference each give a difference; a checkbox matches on its own `value`; skipped and do-it-yourself fields are not compared; a missing `#mesej-pengesahan` gives `originalText: null`.
     - _Requirements: 10.10, 10.11, 10.12, 11.7_
 
