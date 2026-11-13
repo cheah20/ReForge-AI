@@ -226,10 +226,10 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - **Shared file:** `src/lib/ai/cf-workers.ts`.
     - `PAGE_TIMEOUT_MS = 20_000`, `max_completion_tokens` 1,500, temperature 0.2, same model settings as the existing methods. Tests use a fake binding only.
     - _Requirements: 6.2, 6.10_
-  - [ ] 13.5 Implement `runPageAnalyze()` in `src/lib/analysis/run-page.ts` (Slice 1)
+  - [x] 13.5 Implement `runPageAnalyze()` in `src/lib/analysis/run-page.ts` (Slice 1)
     - Retry once on a schema failure or a timeout; no retry on quota, rate limit or unavailable; outcome classified by the last attempt (design "Orchestration").
     - _Requirements: 6.10_
-  - [ ] 13.6 Implement `src/worker/cache/page-plan-cache.ts` (Slice 1)
+  - [x] 13.6 Implement `src/worker/cache/page-plan-cache.ts` (Slice 1)
     - `lookupPagePlanCache(pageVersion, language)` over `import.meta.glob('./precomputed/pages/*.json', { eager: true })`, validated with `PrecomputedPagePlanSchema`; exact version and language only, no fallback. Create the empty `precomputed/pages/` folder.
     - _Requirements: 7.2_
   - [ ] 13.7 Implement and register `POST /api/pages/analyze` (Slice 1)
