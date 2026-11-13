@@ -17,8 +17,8 @@
   "language.picker.trySample": "Coba formulir contoh",
   "language.picker.trySampleHint": "Membuka formulir pendaftaran klinik rekaan, agar Anda bisa melihat cara kerjanya sebelum memakai formulir Anda sendiri.",
 
-  "upload.title": "Unggah formulir Anda",
-  "upload.button": "Pilih file PDF",
+  "upload.title": "Isi formulir Anda",
+  "upload.button": "Pilih file dari perangkat ini",
   "upload.dragHint": "atau seret PDF ke sini",
   "upload.privacyNotice": "Jawaban Anda tetap di browser Anda. Label bidang formulir, tooltip, dan teks di dekatnya dari PDF, serta jawaban deskripsi yang Anda pilih untuk diterjemahkan, dikirim ke layanan AI untuk diproses. Jawaban tidak disimpan.",
   "upload.acknowledge": "Saya mengerti — lanjutkan",
@@ -149,5 +149,9 @@
   "accessforge.notice.pageText": "Label dan teks di sekitarnya dari halaman lama dikirim ke layanan AI.",
   "accessforge.notice.answersStay": "Jawaban Anda tetap di peramban ini sampai Anda mengonfirmasi.",
   "accessforge.notice.legacyOnly": "Saat Anda mengonfirmasi, jawaban Anda hanya dikirim ke pengelola formulir milik portal demonstrasi itu sendiri.",
-  "accessforge.notice.acknowledge": "Saya mengerti, lanjutkan"
+  "accessforge.notice.acknowledge": "Saya mengerti, lanjutkan",
+
+  "document.privacyNotice": "File Anda, foto Anda, dan jawaban Anda tetap di perangkat ini kecuali Anda memilih Terjemahkan, Bagikan, Cetak, atau Unduh. Bagikan menyerahkan lembar jawaban ke aplikasi yang Anda pilih. Kata-kata yang Anda simpan pada pemeriksaan label dikirim ke layanan AI untuk menulis pertanyaan. Jika Anda memilih menerjemahkan sebuah keterangan, jawaban itu juga dikirim.",
+  "document.review.privacyNotice": "File Anda, foto Anda, dan jawaban Anda tetap di perangkat ini kecuali Anda memilih Terjemahkan, Bagikan, Cetak, atau Unduh. Bagikan menyerahkan lembar jawaban ke aplikasi yang Anda pilih. Kata-kata yang Anda simpan pada pemeriksaan label dikirim ke layanan AI untuk menulis pertanyaan. Jika Anda memilih menerjemahkan sebuah keterangan, jawaban itu juga dikirim.",
+  "review.privacyNotice.nothingSent": "Tidak ada apa pun dari formulir Anda yang dikirim. File Anda, foto Anda, dan jawaban Anda tetap di perangkat ini."
 }

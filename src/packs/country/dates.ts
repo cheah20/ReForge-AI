@@ -22,6 +22,11 @@ import type { ValidationResult } from './interface.js';
 export type DateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 export const DATE_FORMATS: readonly DateFormat[] = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
 
+/** The separator characters used by `DATE_FORMATS`, in first-seen order (the Document_Path date rule reads them). */
+export const DATE_FORMAT_SEPARATORS: readonly string[] = [
+  ...new Set(DATE_FORMATS.flatMap((f) => f.replace(/[DMY]/g, '').split(''))),
+];
+
 /** 17 November 2026 in each format, for messages. */
 export const DATE_EXAMPLES: Readonly<Record<DateFormat, string>> = {
   'DD/MM/YYYY': '17/11/2026',

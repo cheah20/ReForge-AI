@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 
 # Build output
@@ -39,3 +39,5 @@ test-out.txt
 # Playwright output (screenshots and traces of test runs)
 test-results/
 playwright-report/
+# OCR engine and language files, copied from node_modules by scripts/copy-ocr-assets.ts
+public/ocr/

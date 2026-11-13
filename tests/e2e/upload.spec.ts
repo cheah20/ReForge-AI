@@ -19,7 +19,7 @@ test.describe('"Try a sample form" (task 28.5)', () => {
     });
     await page.goto('/forms/sample');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('heading', { level: 1, name: 'Upload your form' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Fill in your form' })).toBeVisible();
     await expect(page.getByText('Fields found: 22. Pages: 1.')).toBeVisible();
     expect(posts).toEqual([]);
 
@@ -45,7 +45,7 @@ test.beforeEach(async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await page.getByLabel('English').check();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: 'Upload your form' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Fill in your form' })).toBeVisible();
 });
 
 test('reads the clinic form in the browser and lists its 22 fields, with snippets from pdf.js', async ({ page }) => {
@@ -53,7 +53,7 @@ test('reads the clinic form in the browser and lists its 22 fields, with snippet
   page.on('request', (r) => {
     if (r.method() !== 'GET') uploads.push(r.url());
   });
-  await page.getByLabel('Choose PDF file').setInputFiles(fixture('clinic-registration.pdf'));
+  await page.getByLabel('Choose a file from this device').setInputFiles(fixture('clinic-registration.pdf'));
   await expect(page.getByText('Fields found: 22. Pages: 1.')).toBeVisible();
   await page.getByText('Show the fields we found').click();
   await expect(page.locator('.field-list li')).toHaveCount(22);
@@ -78,7 +78,7 @@ test('reads the clinic form in the browser and lists its 22 fields, with snippet
 });
 
 test('reads the US form (14 fields)', async ({ page }) => {
-  await page.getByLabel('Choose PDF file').setInputFiles(fixture('us-community-clinic.pdf'));
+  await page.getByLabel('Choose a file from this device').setInputFiles(fixture('us-community-clinic.pdf'));
   await expect(page.getByText('Fields found: 14. Pages: 1.')).toBeVisible();
 });
 
@@ -89,10 +89,10 @@ for (const [file, message] of [
   ['no-fields.pdf', 'This PDF has no form fields to fill in.'],
 ] as const) {
   test(`rejects ${file} with its message and offers another try`, async ({ page }) => {
-    await page.getByLabel('Choose PDF file').setInputFiles(fixture(file));
+    await page.getByLabel('Choose a file from this device').setInputFiles(fixture(file));
     await expect(page.getByText(message)).toBeVisible();
     await page.getByRole('button', { name: 'Try another file' }).click();
-    await expect(page.getByLabel('Choose PDF file')).toBeFocused();
+    await expect(page.getByLabel('Choose a file from this device')).toBeFocused();
   });
 }
 });

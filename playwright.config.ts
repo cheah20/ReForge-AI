@@ -7,6 +7,9 @@ export default defineConfig({
   retries: process.env['CI'] ? 2 : 0,
   workers: process.env['CI'] ? 1 : undefined,
   reporter: 'html',
+  // Tests tagged @smoke run against a deployed URL; they are left out unless BASE_URL is set
+  // (accessforge-skeleton task 19.1).
+  ...(process.env['BASE_URL'] ? {} : { grepInvert: /@smoke/ }),
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
@@ -21,6 +24,19 @@ export default defineConfig({
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      // FormBridge Document_Path on a small phone (formbridge-any-document Requirement 27.9).
+      // Only the Document_Path specs that need a phone run here.
+      name: 'mobile-chromium',
+      testMatch: /document-.*mobile.*\.spec\.ts$/,
+      use: {
+        ...devices['Pixel 7'],
+        viewport: { width: 360, height: 640 },
+        hasTouch: true,
+        isMobile: true,
+        ...(process.env['PW_CHANNEL'] ? { channel: process.env['PW_CHANNEL'] } : {}),
+      },
     },
   ],
   webServer: {

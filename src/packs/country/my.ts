@@ -37,6 +37,15 @@ function range(from: number, to: number): number[] {
 /** 12 digits, optionally written with a hyphen or space after digits 6 and 8. */
 const IC_PATTERN = /^(\d{6})[- ]?(\d{2})[- ]?(\d{4})$/;
 
+/** The anchored IC pattern used by `validateIc` and `normalizeIc`, for the Document_Path value rules. */
+export const MY_IC_PATTERN: RegExp = IC_PATTERN;
+
+/**
+ * Unanchored search form of `MY_IC_PATTERN`: finds an IC number inside longer
+ * text, but not inside a longer run of digits.
+ */
+export const MY_IC_SEARCH: RegExp = new RegExp(`(?<!\\d)${IC_PATTERN.source.slice(1, -1)}(?!\\d)`);
+
 /**
  * The 12-digit form of an IC number: separators between the three groups are
  * removed, nothing else is changed. Idempotent.

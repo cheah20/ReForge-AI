@@ -210,3 +210,76 @@ export const ApiErrorSchema = z.object({
     message: z.string().min(1).max(500),
   }),
 });
+
+// ---------------------------------------------------------------------------
+// Label analysis endpoint (FormBridge Document_Path, POST /api/documents/analyze-labels)
+// ---------------------------------------------------------------------------
+
+/** Label_Id `p<page>-l<reading order>`: pages 1..5, reading-order index 0..9999, no leading zeros. */
+export const LABEL_ID_PATTERN = /^p[1-5]-l(?:0|[1-9]\d{0,3})$/;
+
+/** Answer types the AI can assign to a Kept_Label (no choice types: a document has no options). */
+export const LabelAnswerTypeSchema = z.enum([
+  'text',
+  'ic',
+  'phone',
+  'postcode',
+  'date',
+  'email',
+  'description',
+  'signature',
+]);
+
+/** One label the user kept on the Label_Review. Strict: no box, image, value or other text. */
+export const KeptLabelSchema = z
+  .object({
+    labelId: z.string().regex(LABEL_ID_PATTERN),
+    text: visibleText(200), // KEPT_LABEL_MAX_CHARS
+    pageNumber: z.number().int().min(1).max(5),
+    readingOrder: z.number().int().min(0).max(9999),
+  })
+  .strict();
+
+export const LabelAnalysisRequestSchema = z
+  .object({
+    labels: z.array(KeptLabelSchema).min(1).max(150), // MAX_KEPT_LABELS
+    interfaceLanguage: LanguageTagSchema,
+    formLanguage: LanguageTagSchema.optional(),
+    formCountry: z.string().regex(/^[A-Z]{2}$/).optional(),
+  })
+  .strict()
+  .refine((r) => new Set(r.labels.map((l) => l.labelId)).size === r.labels.length, {
+    message: 'labelId values must be unique',
+    path: ['labels'],
+  })
+  .refine((r) => r.labels.every((l) => l.labelId === `p${l.pageNumber}-l${l.readingOrder}`), {
+    message: 'labelId must match pageNumber and readingOrder',
+    path: ['labels'],
+  });
+
+/** Same shape as FieldAnalysisSchema, with the Label_Id in the fieldId position. */
+export const LabelAnalysisSchema = FieldAnalysisSchema.extend({
+  fieldId: z.string().regex(LABEL_ID_PATTERN),
+  answerType: LabelAnswerTypeSchema,
+  explanation: visibleText(200).optional(),
+  example: visibleText(60).optional(),
+});
+
+/** What the model must return for one batch (the envelope is checked; entries are checked one by one). */
+export const LabelBatchReplyEnvelopeSchema = z.object({
+  fields: z.array(z.unknown()).max(30),
+  formLanguage: LanguageTagSchema,
+  formLanguageConfidence: z.number().min(0).max(1),
+  formCountry: z.string().length(2),
+  formCountryConfidence: z.number().min(0).max(1),
+});
+
+export const LabelAnalysisResponseSchema = z.object({
+  fields: z.array(LabelAnalysisSchema).max(150),
+  formLanguage: LanguageTagSchema,
+  formLanguageConfidence: z.number().min(0).max(1),
+  formCountry: z.string().length(2),
+  formCountryConfidence: z.number().min(0).max(1),
+  /** Label_Ids of batches that failed twice; the browser asks those in Original_Label_Mode (13.8). */
+  failedLabelIds: z.array(z.string().regex(LABEL_ID_PATTERN)).max(150),
+});

@@ -25,6 +25,24 @@ For AccessForge (the revived legacy portal), these may also reach the Worker and
 
 AccessForge answers never go to the AI service. When the user confirms, the answers go only to the Legacy_Handler on the ReForge app's own Worker. It processes them in memory for that one request, renders them back once in the confirmation page, and never stores or logs them.
 
+**Photos, scans and PDFs without fields (FormBridge Document_Path)**
+
+These may also reach the Worker and the AI service:
+- Kept_Labels: label text that the user saw on the label review, next to the crop of the page it came from, and kept in the send list, with its Label_Id, page number and reading-order index. Nothing else read from the document is sent.
+- As on the fillable-PDF path: one description answer after the user presses the translate button, and AI-written labels and questions for re-translation after a language switch.
+
+The label review starts with a conservative selection. Only short lines that look like a printed prompt and match no name, address or number rule start selected. Everything else starts unselected, and number-like text is never offered. The user is the last check.
+
+What stays in the browser also includes: the file of every kind (photo, scan, PDF), decoded page images, page crops, and all text read from the page that is not a Kept_Label.
+
+Answers stay on this device unless the user chooses Translate, Share, Print or Download. Print, Share and Download are allowed when the user starts them, and they are not network disclosure by the app. Print hands the answer sheet to the browser's print dialog, Download saves it on the device, and Share hands it to the app the user picks.
+
+The logging, error-message and storage rules of this file apply to the Document_Path unchanged. The rules under "Page text near a widget" apply only to the fillable-PDF path; the Document_Path sends no page-text snippet and chooses what may be sent only through the label classifier and the label review.
+
+Document text is untrusted data. It must stay inside the prompt's data delimiters, and nothing in it may change what the model or the app does.
+
+The app may cache the OCR engine and its language files, downloaded from its own origin, in the browser. That cache holds only those engine and language files.
+
 Anything else needs a change to this file first.
 
 ## Page text near a widget

@@ -19,9 +19,19 @@ import clinic from '../../../fixtures/mock-analysis/clinic-registration.json';
 import us from '../../../fixtures/mock-analysis/us-community-clinic.json';
 import school from '../../../fixtures/mock-analysis/school-enrolment.json';
 import translations from '../../../fixtures/mock-analysis/translations.json';
+import legacyRegister from '../../../fixtures/mock-analysis/legacy-register.json';
 import { translate as t } from '../../packs/language/registry.js';
-import type { AnswerType, FieldAnalysis, FieldEvidence } from '../../shared/types.js';
-import type { AiProvider, AiReply, AnalyzeCall, RetranslateCall, TranslateCall } from './interface.js';
+import type { AnswerType, FieldAnalysis, FieldEvidence, LabelAnswerType } from '../../shared/types.js';
+import type { PageEntry } from '../../shared/page-schemas.js';
+import type {
+  AiProvider,
+  AiReply,
+  AnalyzeCall,
+  LabelAnalyzeCall,
+  PageAnalyzeCall,
+  RetranslateCall,
+  TranslateCall,
+} from './interface.js';
 
 export const MOCK_MODEL = 'mock';
 const GENERIC_CONFIDENCE = 0.5;
@@ -87,6 +97,54 @@ function reply(value: unknown): AiReply {
   return { value, usage: { model: MOCK_MODEL, durationMs: 0 } };
 }
 
+// ---------------------------------------------------------------------------
+// Label analysis (formbridge-any-document Requirement 13.12)
+// ---------------------------------------------------------------------------
+
+/** Keyword table, English and Malay, checked in this order; the first match decides. */
+const LABEL_KEYWORDS: ReadonlyArray<[RegExp, LabelAnswerType]> = [
+  [/tandatangan|signature/i, 'signature'],
+  [/kad pengenalan|\bic\b|mykad/i, 'ic'],
+  [/e-?mel|e-?mail/i, 'email'],
+  [/telefon|phone/i, 'phone'],
+  [/poskod|postcode|\bzip\b/i, 'postcode'],
+  [/tarikh|\bdate\b/i, 'date'],
+  [/sebab|reason|symptoms?/i, 'description'],
+  [/\bnama\b|\bname\b/i, 'text'],
+];
+
+const LABEL_MATCH_CONFIDENCE = 0.9;
+
+export function mockLabelAnswerType(text: string): { answerType: LabelAnswerType; confidence: number } {
+  const hit = LABEL_KEYWORDS.find(([re]) => re.test(text));
+  return hit ? { answerType: hit[1], confidence: LABEL_MATCH_CONFIDENCE } : { answerType: 'text', confidence: GENERIC_CONFIDENCE };
+}
+
+/** The label as a short human label: trailing colon, leaders and spaces removed, at most 40 code points. */
+function shortLabel(text: string): string {
+  const cleaned = text.replace(/[\s:._\u2026]+$/u, '').trim();
+  return clip(cleaned || text.trim(), 40);
+}
+
+// ---------------------------------------------------------------------------
+// AccessForge page analysis (accessforge-skeleton design, AiProvider additions)
+// ---------------------------------------------------------------------------
+
+interface PageTableEntry {
+  answerType: AnswerType;
+  confidence: number;
+  text: Record<string, [string, string]>;
+}
+
+const PAGE_TABLE = (legacyRegister as unknown as { entries: Record<string, PageTableEntry> }).entries;
+
+function genericPageAnswerType(entry: PageEntry): AnswerType {
+  if (entry.control === 'select') return 'dropdown';
+  if (entry.control === 'radio') return 'radio';
+  if (entry.control === 'checkbox') return 'checkbox';
+  return 'text';
+}
+
 export class MockAiProvider implements AiProvider {
   readonly kind = 'mock' as const;
   private readonly tables: MockFormTable[];
@@ -140,5 +198,61 @@ export class MockAiProvider implements AiProvider {
     const known = PAIRS[`${request.sourceLanguage}:${request.targetLanguage}`]?.[request.text.trim()];
     // Unknown text is marked, never passed off as a real translation.
     return reply({ translation: known ?? `[demo translation] ${request.text}` });
+  }
+
+  /**
+   * Deterministic: keyword table for the answer type, confidence 0.9 on a
+   * match and 0.5 otherwise, a `[demo]` question built from the label and the
+   * fixed fictional example of the answer type from the locale files.
+   */
+  async analyzeLabels(call: LabelAnalyzeCall): Promise<AiReply> {
+    const lang = call.interfaceLanguage;
+    const fields = call.labels.map((label) => {
+      const { answerType, confidence } = mockLabelAnswerType(label.text);
+      const humanLabel = shortLabel(label.text);
+      const entry: Record<string, unknown> = {
+        fieldId: label.labelId,
+        humanLabel,
+        question: clip(`[demo] ${t(lang, 'mock.question', { label: humanLabel })}`, 120),
+        answerType,
+        confidence,
+      };
+      if (answerType !== 'signature') entry['example'] = clip(t(lang, `document.example.${answerType}`), 60);
+      return entry;
+    });
+    return reply({
+      fields,
+      formLanguage: call.formLanguage ?? 'en',
+      formLanguageConfidence: this.options.formLanguageConfidence ?? (call.formLanguage ? LABEL_MATCH_CONFIDENCE : GENERIC_CONFIDENCE),
+      formCountry: call.formCountry ?? 'MY',
+      formCountryConfidence: this.options.formCountryConfidence ?? (call.formCountry ? LABEL_MATCH_CONFIDENCE : GENERIC_CONFIDENCE),
+    });
+  }
+
+  /**
+   * Answers from fixtures/mock-analysis/legacy-register.json by Element_Id,
+   * English fallback; unknown controls get a generic entry at confidence 0.5.
+   * Submit and reset controls get no entry.
+   */
+  async analyzePage({ request }: PageAnalyzeCall): Promise<AiReply> {
+    const lang = request.interfaceLanguage;
+    const entries = request.pageModel.entries
+      .filter((e) => e.control !== 'submit' && e.control !== 'reset')
+      .map((e) => {
+        const known = PAGE_TABLE[e.elementId];
+        if (known) {
+          const [humanLabel, question] = known.text[lang] ?? known.text['en']!;
+          return { elementId: e.elementId, humanLabel, question, answerType: known.answerType, confidence: known.confidence };
+        }
+        const label = clip(e.labelText.trim() || e.name.trim() || e.elementId, 80);
+        return {
+          elementId: e.elementId,
+          humanLabel: label,
+          question: clip(t(lang, 'mock.question', { label }), 200),
+          answerType: genericPageAnswerType(e),
+          confidence: GENERIC_CONFIDENCE,
+        };
+      });
+    return reply({ entries });
   }
 }

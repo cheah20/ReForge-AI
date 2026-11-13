@@ -10,7 +10,8 @@
  * caller must handle differently.
  */
 
-import type { AnalyzeRequest, RetranslateRequest, TranslateRequest } from '../../shared/types.js';
+import type { AnalyzeRequest, KeptLabel, RetranslateRequest, TranslateRequest } from '../../shared/types.js';
+import type { PageAnalyzeRequest } from '../../shared/page-schemas.js';
 
 /** Analyze request plus what the provider needs to word the questions. */
 export interface AnalyzeCall {
@@ -29,6 +30,28 @@ export interface TranslateCall {
   request: TranslateRequest;
   sourceLanguageName: string;
   targetLanguageName: string;
+}
+
+/**
+ * One batch of at most 30 Kept_Labels from the FormBridge Document_Path
+ * (formbridge-any-document Requirement 13). The label texts are untrusted
+ * document text: the prompt keeps them inside its data delimiters.
+ */
+export interface LabelAnalyzeCall {
+  labels: readonly KeptLabel[];
+  interfaceLanguage: string;
+  interfaceLanguageName: string;
+  formLanguage?: string;
+  formLanguageName?: string;
+  formCountry?: string;
+}
+
+/** AccessForge page analysis (accessforge-skeleton Requirement 6.2). */
+export interface PageAnalyzeCall {
+  /** Page_Model + interfaceLanguage. */
+  request: PageAnalyzeRequest;
+  /** Language name used in the prompt, e.g. "Simplified Chinese". */
+  interfaceLanguageName: string;
 }
 
 /** Operational metadata only: never prompts, replies or form content. */
@@ -53,6 +76,10 @@ export interface AiProvider {
   analyze(call: AnalyzeCall): Promise<AiReply>;
   retranslate(call: RetranslateCall): Promise<AiReply>;
   translate(call: TranslateCall): Promise<AiReply>;
+  /** Questions for Kept_Labels of a photo, scan or PDF without fields. */
+  analyzeLabels(call: LabelAnalyzeCall): Promise<AiReply>;
+  /** A Page_Plan for the AccessForge legacy page. */
+  analyzePage(call: PageAnalyzeCall): Promise<AiReply>;
 }
 
 export type AiErrorCode = 'AI_QUOTA' | 'AI_RATE_LIMITED' | 'AI_TIMEOUT' | 'AI_INVALID_OUTPUT' | 'AI_UNAVAILABLE';

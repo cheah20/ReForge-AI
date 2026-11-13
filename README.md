@@ -76,6 +76,8 @@ The project uses these open-source libraries and assets. No code was copied from
 | `@playwright/test` | 1.65.0 | Apache-2.0 | End-to-end tests |
 | `@axe-core/playwright` | 4.14.0 | MPL-2.0 | Automated accessibility checks |
 | `typescript` | 5.7.3 | Apache-2.0 | Type checking |
+| `tesseract.js` (with `tesseract.js-core` 7.0.0) | 7.0.0 | Apache-2.0 | In-browser text recognition for photos and scans, served from the app's own origin (not yet used by any screen) |
+| `@tesseract.js-data/eng`, `@tesseract.js-data/msa` | 1.0.0 | MIT (package); the models come from the Tesseract `tessdata` project, Apache-2.0 | English and Malay language data for the text recognition |
 | Noto Sans (`public/fonts/NotoSans-Regular.ttf`) | Noto project | SIL OFL 1.1 (`public/fonts/OFL.txt`) | PDF and UI text |
 
 ## Supported languages and countries

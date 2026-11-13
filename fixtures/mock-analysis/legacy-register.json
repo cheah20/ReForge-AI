@@ -1,0 +1,69 @@
+{
+  "fixture": "legacy-register",
+  "entries": {
+    "f0:text:nama": {
+      "answerType": "text",
+      "confidence": 0.9,
+      "text": {
+        "en": ["Full name", "What is your full name, as on your identity card?"],
+        "zh-Hans": ["全名", "您身份证上的全名是什么？"]
+      }
+    },
+    "f0:text:nokp": {
+      "answerType": "ic",
+      "confidence": 0.9,
+      "text": {
+        "en": ["IC number", "What is your identity card (MyKad) number?"],
+        "zh-Hans": ["身份证号码", "您的身份证（MyKad）号码是多少？"]
+      }
+    },
+    "f0:text:tlahir": {
+      "answerType": "date",
+      "confidence": 0.9,
+      "text": {
+        "en": ["Date of birth", "What is your date of birth?"],
+        "zh-Hans": ["出生日期", "您的出生日期是哪一天？"]
+      }
+    },
+    "f0:radio:jantina": {
+      "answerType": "radio",
+      "confidence": 0.9,
+      "text": {
+        "en": ["Gender", "What is your gender?"],
+        "zh-Hans": ["性别", "您的性别是什么？"]
+      }
+    },
+    "f0:text:tel": {
+      "answerType": "phone",
+      "confidence": 0.9,
+      "text": {
+        "en": ["Phone number", "Which phone number can the clinic call?"],
+        "zh-Hans": ["电话号码", "诊所可以拨打哪个电话号码联系您？"]
+      }
+    },
+    "f0:text:poskod": {
+      "answerType": "postcode",
+      "confidence": 0.9,
+      "text": {
+        "en": ["Postcode", "What is the postcode of your address?"],
+        "zh-Hans": ["邮政编码", "您地址的邮政编码是多少？"]
+      }
+    },
+    "f0:select:tujuan": {
+      "answerType": "dropdown",
+      "confidence": 0.6,
+      "text": {
+        "en": ["Reason for visit", "Why are you visiting the clinic?"],
+        "zh-Hans": ["就诊原因", "您为什么来诊所？"]
+      }
+    },
+    "f0:checkbox:akuan": {
+      "answerType": "checkbox",
+      "confidence": 0.9,
+      "text": {
+        "en": ["Consent", "Do you agree to the clinic's declaration?"],
+        "zh-Hans": ["同意声明", "您是否同意诊所的声明？"]
+      }
+    }
+  }
+}

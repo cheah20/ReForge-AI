@@ -17,6 +17,7 @@ import { resolveAiMode } from './ai-mode.js';
 import type { FixtureCacheStore } from './cache/fixture-cache.js';
 import { consoleLogger, errorResponse, HttpError, readJson, type LogEntry, type Logger } from './http.js';
 import { analyzeRoute, ANALYZE_BODY_LIMIT } from './routes/analyze.js';
+import { analyzeLabelsRoute, ANALYZE_LABELS_BODY_LIMIT } from './routes/analyze-labels.js';
 import { retranslateRoute, RETRANSLATE_BODY_LIMIT } from './routes/retranslate.js';
 import { translateRoute, TRANSLATE_BODY_LIMIT } from './routes/translate.js';
 import type { RouteContext, RouteResult } from './routes/types.js';
@@ -52,6 +53,8 @@ const ROUTES: Record<string, RouteDef> = {
   '/api/forms/analyze': { limit: ANALYZE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_ANALYZE', handle: analyzeRoute },
   '/api/forms/retranslate': { limit: RETRANSLATE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_TRANSLATE', handle: retranslateRoute },
   '/api/forms/translate': { limit: TRANSLATE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_TRANSLATE', handle: translateRoute },
+  // FormBridge Document_Path (formbridge-any-document task 2.16).
+  '/api/documents/analyze-labels': { limit: ANALYZE_LABELS_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_ANALYZE', handle: analyzeLabelsRoute },
 };
 
 export interface HandlerDeps {

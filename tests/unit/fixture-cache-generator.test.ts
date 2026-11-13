@@ -21,7 +21,14 @@ import { getCoreLanguages } from '../../src/packs/language/registry.js';
 /** A Worker that reports itself as real AI while answering with the deterministic mock tables. */
 function fakeRealProvider(): AiProvider {
   const mock = new MockAiProvider();
-  return { kind: 'real', analyze: (c) => mock.analyze(c), retranslate: (c) => mock.retranslate(c), translate: (c) => mock.translate(c) };
+  return {
+    kind: 'real',
+    analyze: (c) => mock.analyze(c),
+    retranslate: (c) => mock.retranslate(c),
+    translate: (c) => mock.translate(c),
+    analyzeLabels: (c) => mock.analyzeLabels(c),
+    analyzePage: (c) => mock.analyzePage(c),
+  };
 }
 
 function workerFetch(provider: AiProvider): typeof fetch {

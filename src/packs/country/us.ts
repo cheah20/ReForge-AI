@@ -67,6 +67,14 @@ export function validateZip(value: string): ValidationResult {
 // ---------------------------------------------------------------------------
 
 /**
+ * Unanchored SSN shape for the Document_Path value rules: 3, 2 and 4 digits,
+ * optionally separated by a hyphen or space, not inside a longer run of digits.
+ * It covers both forms `validateSsn` accepts and does not check the number
+ * ranges, so it also finds structurally impossible numbers.
+ */
+export const US_SSN_SEARCH = /(?<!\d)\d{3}[- ]?\d{2}[- ]?\d{4}(?!\d)/;
+
+/**
  * NNN-NN-NNNN, or 9 digits (written back with hyphens). Structurally impossible
  * values are rejected: area 000, 666 or 900-999, group 00, serial 0000
  * (SSA POMS RM 10201.035, https://secure.ssa.gov/poms.nsf/lnx/0110201035,

@@ -10,9 +10,25 @@
  * fixture cache fallback.
  */
 
-import { AiError, type AiProvider, type AiReply, type AnalyzeCall, type RetranslateCall, type TranslateCall } from './interface.js';
+import {
+  AiError,
+  type AiProvider,
+  type AiReply,
+  type AnalyzeCall,
+  type LabelAnalyzeCall,
+  type PageAnalyzeCall,
+  type RetranslateCall,
+  type TranslateCall,
+} from './interface.js';
 import { extractJson, replyContent, replyUsage } from './json.js';
-import { analyzeMessages, retranslateMessages, translateMessages, type ChatMessage } from './prompt.js';
+import {
+  analyzeLabelsMessages,
+  analyzeMessages,
+  pageAnalyzeMessages,
+  retranslateMessages,
+  translateMessages,
+  type ChatMessage,
+} from './prompt.js';
 
 export const GEMMA_MODEL = '@cf/google/gemma-4-26b-a4b-it';
 export const QWEN_MODEL = '@cf/qwen/qwen3.8-27b';
@@ -43,7 +59,13 @@ export interface CfWorkersAiOptions {
   now?: () => number;
 }
 
-const MAX_TOKENS = { analyze: 2000, retranslate: 4000, translate: 1500 } as const;
+const MAX_TOKENS = { analyze: 2000, retranslate: 4000, translate: 1500, analyzeLabels: 2000, analyzePage: 1500 } as const;
+
+/**
+ * AccessForge page analysis timeout (accessforge-skeleton design, AiProvider
+ * additions): two attempts of 20 s stay inside the browser's 45 s limit.
+ */
+export const PAGE_TIMEOUT_MS = 20_000;
 
 /** Map a binding error to a typed AiError. The original message is not kept (it may echo input). */
 export function classifyBindingError(err: unknown): AiError {
@@ -81,6 +103,15 @@ export class CfWorkersAiProvider implements AiProvider {
     return this.run(translateMessages(call), MAX_TOKENS.translate, 0);
   }
 
+  /** Same timeout and token budget as analyze (formbridge-any-document design Q2). */
+  analyzeLabels(call: LabelAnalyzeCall): Promise<AiReply> {
+    return this.run(analyzeLabelsMessages(call), MAX_TOKENS.analyzeLabels, 0.2);
+  }
+
+  analyzePage(call: PageAnalyzeCall): Promise<AiReply> {
+    return this.run(pageAnalyzeMessages(call), MAX_TOKENS.analyzePage, 0.2, Math.min(PAGE_TIMEOUT_MS, this.timeoutMs));
+  }
+
   /**
    * Model inputs. Exposed for tests.
    * Both candidates reason by default, and reasoning tokens count against
@@ -95,11 +126,11 @@ export class CfWorkersAiProvider implements AiProvider {
     return inputs;
   }
 
-  private async run(messages: ChatMessage[], maxTokens: number, temperature: number): Promise<AiReply> {
+  private async run(messages: ChatMessage[], maxTokens: number, temperature: number, timeoutMs = this.timeoutMs): Promise<AiReply> {
     const started = this.now();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new AiError('AI_TIMEOUT', 'Workers AI timed out')), this.timeoutMs);
+      timer = setTimeout(() => reject(new AiError('AI_TIMEOUT', 'Workers AI timed out')), timeoutMs);
     });
 
     let raw: unknown;

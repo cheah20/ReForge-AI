@@ -54,6 +54,9 @@ export function validateInternationalPhone(value: string, context?: ValidationCo
  */
 const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[^\s@.]{2,}$/;
 
+/** Unanchored search form of the email check, for the Document_Path value rules. */
+export const EMAIL_SEARCH: RegExp = new RegExp(EMAIL_RE.source.slice(1, -1));
+
 export const universalPack: CountryPack = {
   code: 'universal',
   // ISO is unambiguous everywhere; it is only pre-selected, never assumed.

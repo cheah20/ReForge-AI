@@ -1,0 +1,5 @@
+# Static asset headers (Cloudflare Workers static assets).
+# OCR engine and language files: versioned paths, so they can be cached for a year.
+/ocr/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
