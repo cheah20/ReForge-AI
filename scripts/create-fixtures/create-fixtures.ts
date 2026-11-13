@@ -617,7 +617,7 @@ class Builder {
 }
 
 /** Run `fn` with Math.random replaced by a fixed-seed generator (mulberry32). */
-async function withSeededRandom<T>(seed: number, fn: () => Promise<T>): Promise<T> {
+export async function withSeededRandom<T>(seed: number, fn: () => Promise<T>): Promise<T> {
   const original = Math.random;
   let a = seed >>> 0;
   Math.random = () => {
