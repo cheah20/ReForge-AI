@@ -45,7 +45,10 @@ describe('OCR_Validation_Bar', () => {
   it('fails at 80%, with no rounding up', () => {
     const r = validationBar(labels, labels.slice(0, 8));
     expect(r.passed).toBe(false);
-    expect(r.labels[9]).toMatchObject({ bestLine: null, passed: false });
+    // The closest line is still reported, but it is over the bar.
+    expect(r.labels[9]!.passed).toBe(false);
+    expect(r.labels[9]!.cer).toBeGreaterThan(0.1);
+    expect(r.passedCount).toBe(8);
   });
 
   it('accepts a label read at the start of a longer line, and rejects a line over 10% CER', () => {
