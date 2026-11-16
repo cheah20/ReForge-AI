@@ -210,7 +210,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
 - [x] 12. Checkpoint: pure agent logic (Slice 1)
   - Run `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. AI provider method and page-analysis route (Slice 1)
+- [x] 13. AI provider method and page-analysis route (Slice 1)
   - [x] 13.1 Add `analyzePage` to the provider interface and the mock provider (Slice 1)
     - **Shared files:** `src/lib/ai/interface.ts`, `src/lib/ai/mock.ts`. Additive change only.
     - `PageAnalyzeCall` and `analyzePage`. Mock answers from `fixtures/mock-analysis/legacy-register.json` (labels and questions in `en` and `zh-Hans`, English fallback, reason for visit at confidence 0.6, generic entry for unknown ids), deterministic.
@@ -232,11 +232,11 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 13.6 Implement `src/worker/cache/page-plan-cache.ts` (Slice 1)
     - `lookupPagePlanCache(pageVersion, language)` over `import.meta.glob('./precomputed/pages/*.json', { eager: true })`, validated with `PrecomputedPagePlanSchema`; exact version and language only, no fallback. Create the empty `precomputed/pages/` folder.
     - _Requirements: 7.2_
-  - [ ] 13.7 Implement and register `POST /api/pages/analyze` (Slice 1)
+  - [x] 13.7 Implement and register `POST /api/pages/analyze` (Slice 1)
     - **Shared file:** `src/worker/index.ts` (`ROUTES`). `LogEntry` in `src/worker/http.ts` stays unchanged.
     - `src/worker/routes/page-analyze.ts`: 48 KB limit before parsing, `PageAnalyzeRequestSchema`, `UNSUPPORTED_LANGUAGE`, the Slice 1 rows of the decision table in design Question 5 (`mock`; `live`; `cached` after a failed live call; `503 AI_UNAVAILABLE` when no cached plan matches; `500 INTERNAL_ERROR` when the mock reply is invalid twice), `validatePlan` before replying, rate limit through the existing `RATE_LIMITER_ANALYZE` binding (20 per 60 s) named in its `RouteDef.rateLimiter`, key `route:ip`, no new binding and no change to `wrangler.jsonc`, log entries with only the allowed items.
     - _Requirements: 6.2, 6.3, 6.10, 7.1, 7.2, 7.8, 7.10, 13.1, 13.2, 13.5, 13.6, 13.12_
-  - [ ] 13.8 Write example tests for the analysis route (Slice 1)
+  - [x] 13.8 Write example tests for the analysis route (Slice 1)
     - `tests/unit/accessforge-routes-examples.test.ts` with a scripted fake provider and an injected cache: one example per Slice 1 row of the decision table; retry exactly after an invalid reply or a timeout, none after quota; a cached plan for another version or language is never used; an extra property, 51 entries and a bad Page_Version give 400 with schema paths only and zero provider calls; each log entry has only the allowed items; the route is counted by `RATE_LIMITER_ANALYZE` with key `/api/pages/analyze:<ip>` and answers 429 `RATE_LIMITED` when it is full, while a full `RATE_LIMITER_TRANSLATE` does not block it; the default Vitest environment resolves the mock provider.
     - _Requirements: 6.3, 6.10, 7.1, 7.2, 7.8, 7.10, 13.5, 13.6, 13.11_
   - [x] 13.9 Write the mock determinism test (Slice 1)

@@ -20,6 +20,8 @@ import { analyzeRoute, ANALYZE_BODY_LIMIT } from './routes/analyze.js';
 import { analyzeLabelsRoute, ANALYZE_LABELS_BODY_LIMIT } from './routes/analyze-labels.js';
 import { retranslateRoute, RETRANSLATE_BODY_LIMIT } from './routes/retranslate.js';
 import { translateRoute, TRANSLATE_BODY_LIMIT } from './routes/translate.js';
+import { pageAnalyzeRoute, PAGE_ANALYZE_BODY_LIMIT } from './routes/page-analyze.js';
+import type { PagePlanStore } from './cache/page-plan-cache.js';
 import type { RouteContext, RouteResult } from './routes/types.js';
 import { handleLegacy, legacyLogRoute, type LegacyDeps } from './legacy/handler.js';
 import { cryptoDigits } from './legacy/reference.js';
@@ -55,12 +57,16 @@ const ROUTES: Record<string, RouteDef> = {
   '/api/forms/translate': { limit: TRANSLATE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_TRANSLATE', handle: translateRoute },
   // FormBridge Document_Path (formbridge-any-document task 2.16).
   '/api/documents/analyze-labels': { limit: ANALYZE_LABELS_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_ANALYZE', handle: analyzeLabelsRoute },
+  // AccessForge page analysis (accessforge-skeleton task 13.7).
+  '/api/pages/analyze': { limit: PAGE_ANALYZE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_ANALYZE', handle: pageAnalyzeRoute },
 };
 
 export interface HandlerDeps {
   /** Provider override (tests); otherwise chosen from env (mock unless AI_MODE=real). */
   provider?: AiProvider;
   cache?: FixtureCacheStore;
+  /** Precomputed page plans override (tests). */
+  pagePlans?: PagePlanStore;
   logger?: Logger;
   now?: () => number;
   requestId?: () => string;
@@ -106,7 +112,7 @@ export function createHandler(deps: HandlerDeps = {}) {
         if (!success) throw new HttpError('RATE_LIMITED');
       }
 
-      const result = await def.handle(body, { provider, requestId }, deps.cache);
+      const result = await def.handle(body, { provider, requestId, ...(deps.pagePlans ? { pagePlans: deps.pagePlans } : {}) }, deps.cache);
       response = result.response;
       for (const [k, v] of Object.entries(headers)) response.headers.set(k, v);
 
