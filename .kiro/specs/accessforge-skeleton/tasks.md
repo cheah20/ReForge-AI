@@ -281,7 +281,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 16.4 Implement `useLeaveWarning.ts` (Slice 1)
     - Registers a `beforeunload` handler that calls `preventDefault()` and sets `returnValue` while at least one answer exists and no confirmation was received; removes it otherwise; saves nothing.
     - _Requirements: 12.5, 13.4_
-  - [ ] 16.5 Implement the notice components (Slice 1)
+  - [x] 16.5 Implement the notice components (Slice 1)
     - `DataNotice.tsx` (before analysis and again on review, acknowledge control), `ModeNotice.tsx` (icon and text for `live`, `mock` with the Demo mode banner, and `cached`, above the current content), scope notice on the first screen, page-changed message, language-locked note beside the disabled picker, `MachineTranslatedLabel` on plan text in all three modes.
     - _Requirements: 3.8, 6.14, 7.5, 7.11, 13.7, 13.8, 18.6_
   - [x] 16.6 Implement `mirror-field-adapter.ts` (Slice 1)
@@ -297,14 +297,14 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 16.9 Implement `MirrorReview.tsx` and `DoItYourselfList.tsx` (Slice 1)
     - Review rows in Legacy_Form order with legacy label, question, Intended_Value and one status (icon and text); confirm button disabled with a stated reason while a read-back is pending or differs or consent is missing; required do-it-yourself notice with the confirm button still available; do-it-yourself entries with `lang="ms"` label and a plain-language reason, no value proposed. The scroll-and-highlight control is task 26.3.
     - _Requirements: 10.4, 10.13, 12.2, 12.3, 12.8, 13.7_
-  - [ ] 16.10 Implement `RevivalScreen.tsx` and its styles (Slice 1)
+  - [x] 16.10 Implement `RevivalScreen.tsx` and its styles (Slice 1)
     - Split layout of design "Design Plan: Mirror screens" (frame beside the Mirror at 1024 px and wider, show-original-page toggle below that), logical CSS properties, larger-text option at scale 1.25 in memory only, focus moved to the `h1` or step heading on each screen change, skip link, `header` and `main` landmarks, reduced-motion handling, cancel confirmation dialog with focus return, reload starts at the first step.
     - _Requirements: 9.3, 12.4, 12.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.10, 14.11, 14.12, 18.4_
-  - [ ] 16.11 Wire the AccessForge screen into the app (Slice 1)
+  - [x] 16.11 Wire the AccessForge screen into the app (Slice 1)
     - **Shared file:** the app shell or router file and the language picker entry point.
     - Route to `RevivalScreen` after the language picker; `<html lang>` follows the interface language; no sign-in or saved progress; a foreign address in a URL parameter shows the scope message and loads nothing.
     - _Requirements: 9.4, 14.6, 18.2, 18.3, 18.4_
-  - [ ] 16.12 Write component tests for the Mirror (Slice 1)
+  - [x] 16.12 Write component tests for the Mirror (Slice 1)
     - `tests/unit/accessforge-components.test.tsx`: mode notice per Slice 1 mode, the `cached` text mentions that live AI was unavailable; machine-translated label in `live`, `mock` and `cached`; `aria-invalid` set and removed; focus moves to the heading; show-original toggle keeps focus; do-it-yourself list with `lang="ms"`; scope notice; picker locked during the loop.
     - _Requirements: 6.14, 7.5, 7.11, 11.3, 12.2, 14.7, 14.10, 18.6_
   - [x] 16.13 Write the untrusted model text test (Slice 1)

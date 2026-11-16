@@ -24,10 +24,12 @@ import { ReviewScreen } from './screens/ReviewScreen.js';
 import { Upload, type ExtractedForm, type Extractor } from './screens/Upload.js';
 import { loadSampleForm, SAMPLE_FORM_NAME, type SampleLoader, type SampleSource } from './sample-form.js';
 import { createSession, createSessionStore, setStep, type SessionStore } from './state.js';
-import { SAMPLE_FORM_PATH } from '../shared/app-paths.js';
+import { ACCESSFORGE_PATH, SAMPLE_FORM_PATH } from '../shared/app-paths.js';
+import { RevivalScreen } from './accessforge/RevivalScreen.js';
+import { namesForeignAddress } from '../lib/accessforge/scope.js';
 import { useChangeLanguage } from './use-change-language.js';
 
-export type Screen = 'language' | 'upload' | 'analysis' | 'confirm' | 'questions' | 'review' | 'download';
+export type Screen = 'language' | 'upload' | 'analysis' | 'confirm' | 'questions' | 'review' | 'download' | 'accessforge';
 
 interface FlowProps {
   extractor?: Extractor | undefined;
@@ -41,7 +43,10 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
   const changeLanguage = useChangeLanguage();
   const session = useSession();
   const startsWithSample = initialPath === SAMPLE_FORM_PATH;
-  const [screen, setScreen] = useState<Screen>(startsWithSample ? 'upload' : 'language');
+  const startsWithAccessForge = initialPath === ACCESSFORGE_PATH || initialPath.startsWith(`${ACCESSFORGE_PATH}/`);
+  const [screen, setScreen] = useState<Screen>(startsWithSample ? 'upload' : startsWithAccessForge ? 'accessforge' : 'language');
+  // Read once: a foreign address in the AccessForge URL only shows the scope message (Requirement 18.2).
+  const [foreignAddress] = useState(() => startsWithAccessForge && typeof window !== 'undefined' && namesForeignAddress(new URL(window.location.href), ACCESSFORGE_PATH));
   const [form, setForm] = useState<ExtractedForm | null>(null);
   // A new object per request, so pressing "Try a sample form" again reads it again.
   const [sample, setSample] = useState<SampleSource | undefined>(() =>
@@ -76,6 +81,7 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
     [show, store],
   );
   const onWizardDone = useCallback(() => show('review'), [show]);
+  if (screen === 'accessforge') return <RevivalScreen changeLanguage={changeLanguage} foreignAddress={foreignAddress} />;
 
   return (
     <>
@@ -101,6 +107,7 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
               setSample({ name: SAMPLE_FORM_NAME, load: loadSample });
               show('upload');
             }}
+            onOpenAccessForge={() => show('accessforge')}
           />
         )}
         {screen === 'upload' && (

@@ -1,0 +1,229 @@
+/*
+ * src/frontend/accessforge/accessforge.css
+ *
+ * accessforge-skeleton task 16.10, design "Design Plan: Mirror screens".
+ * The original page beside the Mirror at 1024 px and wider, a ruled line
+ * between them; below 1024 px the Mirror first and the frame behind a toggle.
+ * Logical properties only, so a right-to-left language needs no change.
+ * Tokens come from tokens.css; the larger-text option scales the Mirror to
+ * 1.25 (20 px body text) inside this screen only.
+ */
+
+.revival {
+  min-block-size: 100dvh;
+}
+
+.revival--large {
+  --text-scale: 1.25;
+  font-size: var(--font-size-body);
+}
+
+/* The bar spans the full width like the split below it. */
+.revival .revival-header {
+  max-inline-size: none;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+}
+
+/* Label, picker and the locked note wrap instead of squeezing the label into broken words. */
+.revival .app-header__language {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.revival .app-header__language label {
+  white-space: nowrap;
+}
+
+.revival .app-header__language .hint {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.revival-header__module {
+  font-weight: 400;
+  color: var(--color-ink-secondary);
+}
+
+.revival-header__large {
+  margin-inline-start: auto;
+}
+
+.revival__layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5, 1.5rem);
+  padding-block: var(--space-5, 1.5rem);
+  padding-inline: var(--space-4, 1rem);
+  max-inline-size: 100%;
+}
+
+.revival__mirror {
+  inline-size: 100%;
+  max-inline-size: 42rem;
+  overflow-wrap: anywhere;
+}
+
+/* Below 1024 px the frame stays loaded but is hidden until the user shows it. */
+.revival__frame {
+  display: none;
+}
+
+.revival__frame--shown {
+  display: block;
+}
+
+.revival-frame {
+  margin: 0;
+}
+
+.revival-frame__caption {
+  font-size: var(--font-size-small);
+  color: var(--color-ink-secondary);
+  padding-block-end: var(--space-2, 0.5rem);
+}
+
+.revival-frame__iframe {
+  display: block;
+  inline-size: 100%;
+  block-size: 70dvh;
+  border: 1px solid var(--color-control-border);
+  background: var(--color-surface);
+}
+
+@media (min-width: 1024px) {
+  .revival__layout {
+    flex-direction: row-reverse;
+    align-items: flex-start;
+  }
+
+  .revival__mirror {
+    flex: 0 0 30rem;
+    padding-inline-start: var(--space-5, 1.5rem);
+    border-inline-start: 1px solid var(--color-border);
+  }
+
+  .revival__frame,
+  .revival__frame--shown {
+    display: block;
+    flex: 1 1 32.5rem;
+    min-inline-size: 32.5rem;
+    position: sticky;
+    inset-block-start: var(--space-4, 1rem);
+  }
+
+  .revival-frame__iframe {
+    block-size: calc(100dvh - 8rem);
+  }
+
+  /* Scoped so the generic .button display rule cannot win. */
+  .revival .revival__frame-toggle {
+    display: none;
+  }
+}
+
+.mirror-step__counter {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-secondary);
+  margin: 0;
+}
+
+.actions--split {
+  justify-content: space-between;
+}
+
+.date-group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.date-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3, 0.75rem);
+}
+
+.date-part {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+}
+
+.input--short {
+  inline-size: 6rem;
+}
+
+.mirror-evidence,
+.diy-list,
+.difference-list,
+.notice__list {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.diy-list li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+}
+
+.diy-list__label {
+  font-weight: 600;
+}
+
+.review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.review-row {
+  display: grid;
+  gap: var(--space-1, 0.25rem);
+  padding-block: var(--space-3, 0.75rem);
+  border-block-end: 1px solid var(--color-border);
+}
+
+.review-row p {
+  margin: 0;
+}
+
+.review-row__label {
+  font-weight: 600;
+}
+
+.review-row__question {
+  color: var(--color-ink-secondary);
+}
+
+.review-row__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.mirror-result__reference {
+  font-size: var(--font-size-section);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.revival-dialog {
+  max-inline-size: min(32rem, calc(100vw - 2rem));
+  border: 2px solid var(--color-ink);
+  padding: var(--space-5, 1.5rem);
+  color: var(--color-ink);
+  background: var(--color-surface);
+}
+
+.revival-dialog::backdrop {
+  background: rgb(28 28 30 / 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revival * {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}

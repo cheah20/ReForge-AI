@@ -21,6 +21,8 @@ export interface LanguagePickerProps {
   onContinue: () => void;
   /** "Try a sample form" (task 28.5): continue with the bundled clinic form. */
   onTrySample: () => void;
+  /** AccessForge (accessforge-skeleton task 16.11): revive the old registration page. */
+  onOpenAccessForge?: () => void;
   /** Initial page load: do not steal focus from the top of the page. */
   firstScreen?: boolean;
 }
@@ -34,7 +36,7 @@ export function setLargeText(on: boolean): void {
   else delete document.documentElement.dataset['textSize'];
 }
 
-export function LanguagePicker({ changeLanguage, onContinue, onTrySample, firstScreen = false }: LanguagePickerProps) {
+export function LanguagePicker({ changeLanguage, onContinue, onTrySample, onOpenAccessForge, firstScreen = false }: LanguagePickerProps) {
   const { t, language } = useTranslation();
   const [largeText, setLarge] = useState(readLargeText);
   const subtitleId = useId();
@@ -96,6 +98,11 @@ export function LanguagePicker({ changeLanguage, onContinue, onTrySample, firstS
           <button type="button" className="button button--secondary" aria-describedby={sampleHintId} onClick={onTrySample}>
             {t('language.picker.trySample')}
           </button>
+          {onOpenAccessForge && (
+            <button type="button" className="button button--secondary" onClick={onOpenAccessForge}>
+              {t('accessforge.title')}
+            </button>
+          )}
         </div>
         <p className="hint" id={sampleHintId}>
           {t('language.picker.trySampleHint')}
