@@ -258,12 +258,12 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-instructions.test.ts`: one variant of the registration template whose label, cell, next-row, option and nearby texts tell the agent to press reset or submit, change answers, follow a URL or use a selector gives the same Element_Ids, control types, option values and allowed Action kinds as the real page, and the reducer emits no Action that does not follow a user answer or a confirm press.
     - _Requirements: 4.6_
 
-- [ ] 15. AccessForge interface strings (Slice 1)
-  - [ ] 15.1 Add the `accessforge.*` keys to the locale files (Slice 1)
+- [x] 15. AccessForge interface strings (Slice 1)
+  - [x] 15.1 Add the `accessforge.*` keys to the locale files (Slice 1)
     - **Shared files:** every interface locale file.
     - Every key complete in `en` and `zh-Hans`: mode notices (the `cached` text says live AI was unavailable and the questions come from an analysis saved when the page was tested, and makes no claim that no live call was made), scope notice, page-changed message, language-locked note, steps, review, results, do-it-yourself reasons, errors of design "Error Handling", frame title, larger text. Other core languages get the keys that exist; the rest fall back to English. No Malay legacy text here.
     - _Requirements: 3.8, 7.5, 7.11, 9.4, 9.13, 11.1, 18.6_
-  - [ ] 15.2 Write the locale completeness test (Slice 1)
+  - [x] 15.2 Write the locale completeness test (Slice 1)
     - `tests/unit/accessforge-locales.test.ts`: every `accessforge.*` key exists and is non-empty in `en` and `zh-Hans`; the Slice 1 data notice keys exist in every core locale; experimental languages such as `id` fall back to English.
     - _Requirements: 9.4, 9.13, 13.9_
 
