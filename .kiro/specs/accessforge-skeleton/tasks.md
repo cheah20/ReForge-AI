@@ -271,11 +271,11 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 16.1 Add `analyzePage` to the API client (Slice 1)
     - **Shared file:** `src/frontend/api.ts`. New function only, with a 45 s abort combined with the AbortController of the current Revival_Generation.
     - _Requirements: 3.9, 6.1, 6.15_
-  - [ ] 16.2 Implement `RevivalFrame.tsx` and `src/lib/accessforge/scope.ts` (Slice 1)
+  - [x] 16.2 Implement `RevivalFrame.tsx` and `src/lib/accessforge/scope.ts` (Slice 1)
     - `sandbox="allow-same-origin allow-forms"`, constant `src="/legacy/register"`, localized title; increment the Revival_Generation before every app-initiated load and on every `load` event, and record the new document; write highlight through the CSSOM (4 px `stamp-blue`, 1 to 3 s, no smooth scroll or transition under reduced motion).
     - `scope.ts`: a pure helper that flags any URL parameter or route value naming an address other than the portal.
     - _Requirements: 3.9, 4.3, 8.5, 8.12, 18.1, 18.2_
-  - [ ] 16.3 Implement `useAgentLoop.ts` (Slice 1)
+  - [x] 16.3 Implement `useAgentLoop.ts` (Slice 1)
     - Runs reducer effects: `checkFrameDocument` on every load before anything else reads the document, version compare with `SUPPORTED_PAGE_VERSIONS`, extraction, analysis only after acknowledgement, abort of obsolete requests on a new generation, execute, read-back, frame reload, 15 s timer. State in memory only, no browser storage.
     - _Requirements: 3.2, 3.3, 3.8, 3.9, 3.10, 5.1, 6.1, 6.15, 8.4, 10.1, 10.8, 13.4, 13.8_
   - [x] 16.4 Implement `useLeaveWarning.ts` (Slice 1)
