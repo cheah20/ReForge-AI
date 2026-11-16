@@ -284,17 +284,17 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [ ] 16.5 Implement the notice components (Slice 1)
     - `DataNotice.tsx` (before analysis and again on review, acknowledge control), `ModeNotice.tsx` (icon and text for `live`, `mock` with the Demo mode banner, and `cached`, above the current content), scope notice on the first screen, page-changed message, language-locked note beside the disabled picker, `MachineTranslatedLabel` on plan text in all three modes.
     - _Requirements: 3.8, 6.14, 7.5, 7.11, 13.7, 13.8, 18.6_
-  - [ ] 16.6 Implement `mirror-field-adapter.ts` (Slice 1)
+  - [x] 16.6 Implement `mirror-field-adapter.ts` (Slice 1)
     - Converts a `MirrorField` into FormBridge's `FieldState` and `FieldQuestion` props exactly as the adapter table in design "Reuse of FormBridge components and validators" states, with no change to `FieldQuestion`.
     - _Requirements: 9.14_
-  - [ ] 16.7 Implement `MirrorStep.tsx`, `DateQuestion.tsx`, `ConsentQuestion.tsx` and `LowConfidenceEvidence.tsx` (Slice 1)
+  - [x] 16.7 Implement `MirrorStep.tsx`, `DateQuestion.tsx`, `ConsentQuestion.tsx` and `LowConfidenceEvidence.tsx` (Slice 1)
     - `FieldQuestion` through the adapter for text, IC, phone, postcode, radio and select; `DateQuestion` (three inputs in a fieldset, stated format, format choice when ambiguous) and `ConsentQuestion` (one unticked checkbox, original wording on request with `lang="ms"`) built from `ValidationMessage`, `MachineTranslatedLabel` and `StatusMessage`. Step indicator, back, next and cancel; error linked with `aria-describedby`, `aria-live="polite"`, `aria-invalid`; Page_Model options only; low-confidence evidence above the input with `lang="ms"`; plan text rendered as React text only.
     - _Requirements: 6.9, 6.11, 6.17, 9.1, 9.2, 9.5, 9.6, 9.7, 9.8, 9.14, 14.1, 14.6, 14.7_
-  - [ ] 16.8 Implement `MirrorResult.tsx` with the FormBridge link (Slice 1)
+  - [x] 16.8 Implement `MirrorResult.tsx` with the FormBridge link (Slice 1)
     - Requires task 1.6: the FormBridge "Try a sample form" route of the `formbridge-pdf` spec must be done first.
     - Verified completion from locale strings with the Reference_Number exactly as read; show-original toggle with `lang="ms"` and focus kept on the control; original-unavailable state; not verified with differences by legacy label; unknown outcome with the duplicate warning; stopped and analysis-failed views with reload or retry; skipped and do-it-yourself list or "every field was filled". The link to `SAMPLE_FORM_PATH` from `src/shared/app-paths.ts` is always shown and carries no answer value.
     - _Requirements: 3.3, 6.15, 10.8, 10.11, 10.12, 11.1, 11.2, 11.3, 11.4, 11.5, 11.7_
-  - [ ] 16.9 Implement `MirrorReview.tsx` and `DoItYourselfList.tsx` (Slice 1)
+  - [x] 16.9 Implement `MirrorReview.tsx` and `DoItYourselfList.tsx` (Slice 1)
     - Review rows in Legacy_Form order with legacy label, question, Intended_Value and one status (icon and text); confirm button disabled with a stated reason while a read-back is pending or differs or consent is missing; required do-it-yourself notice with the confirm button still available; do-it-yourself entries with `lang="ms"` label and a plain-language reason, no value proposed. The scroll-and-highlight control is task 26.3.
     - _Requirements: 10.4, 10.13, 12.2, 12.3, 12.8, 13.7_
   - [ ] 16.10 Implement `RevivalScreen.tsx` and its styles (Slice 1)
@@ -307,7 +307,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [ ] 16.12 Write component tests for the Mirror (Slice 1)
     - `tests/unit/accessforge-components.test.tsx`: mode notice per Slice 1 mode, the `cached` text mentions that live AI was unavailable; machine-translated label in `live`, `mock` and `cached`; `aria-invalid` set and removed; focus moves to the heading; show-original toggle keeps focus; do-it-yourself list with `lang="ms"`; scope notice; picker locked during the loop.
     - _Requirements: 6.14, 7.5, 7.11, 11.3, 12.2, 14.7, 14.10, 18.6_
-  - [ ] 16.13 Write the untrusted model text test (Slice 1)
+  - [x] 16.13 Write the untrusted model text test (Slice 1)
     - `tests/unit/accessforge-untrusted-text.test.tsx`: a plan whose question is `<a href="https://example.com">x</a> javascript:alert(1) #nama` renders with no `a` element and shows the string literally; no Executor call, Element_Id or navigation follows from it.
     - _Requirements: 6.17_
   - [ ] 16.14 Add the Mirror contrast pairs to the tokens test (Slice 1)
@@ -323,7 +323,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 16.17 Write example tests for the frame source (Slice 1)
     - `tests/unit/accessforge-scope.test.ts`: an absolute URL, a protocol-relative URL and an encoded variant in a parameter keep `src` at `/legacy/register` and set the scope message flag.
     - _Requirements: 18.1, 18.2_
-  - [ ] 16.18 Write the adapter test (Slice 1)
+  - [x] 16.18 Write the adapter test (Slice 1)
     - `tests/unit/accessforge-adapter.test.tsx`: for each Slice 1 answer type the adapter output renders in `FieldQuestion` with the question, the original label with `lang="ms"` and the Page_Model options.
     - _Requirements: 9.14_
 

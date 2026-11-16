@@ -179,7 +179,9 @@ export type AgentEvent =
   | { type: 'CANCEL_PRESSED' }
   | { type: 'CANCEL_CONFIRMED' }
   | { type: 'CANCEL_DECLINED' }
-  | { type: 'RELOAD_PRESSED' };
+  | { type: 'RELOAD_PRESSED' }
+  /** The interface language changed; ignored while the loop is active (Requirement 7.11). */
+  | { type: 'LANGUAGE_SET'; language: string };
 
 export type Step = { state: AgentState; effects: Effect[] };
 
@@ -664,6 +666,8 @@ function reduce(s: AgentState, e: AgentEvent): Step {
         effects: [{ type: 'ABORT_PENDING', before: s.generation + 1 }, { type: 'CLEAR_SUBMIT_TIMER' }, { type: 'RELOAD_FRAME' }],
       };
     }
+    case 'LANGUAGE_SET':
+      return isActive(s) || s.phase === 'cancelConfirm' ? same(s) : same({ ...s, interfaceLanguage: e.language });
     case 'RELOAD_PRESSED':
       if (s.phase !== 'stopped') return same(s);
       return {

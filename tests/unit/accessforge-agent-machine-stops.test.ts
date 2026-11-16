@@ -169,3 +169,14 @@ describe('language picker', () => {
     for (const [label, s, locked] of states) expect([label, languageLocked(s)]).toEqual([label, locked]);
   });
 });
+
+describe('LANGUAGE_SET', () => {
+  it('changes the analysis language while idle and is ignored during the loop', () => {
+    let r = send(fresh(), { type: 'FRAME_LOADED', generation: 1, page: 'register', versionSupported: true });
+    r = send(r, { type: 'LANGUAGE_SET', language: 'zh-Hans' });
+    r = send(send(send(r, { type: 'REVIVE_PRESSED' }), { type: 'NOTICE_ACKNOWLEDGED' }), { type: 'MODEL_READY', generation: 1, model: MODEL });
+    expect(r.effects).toEqual([{ type: 'ANALYZE', generation: 1, model: MODEL, interfaceLanguage: 'zh-Hans' }]);
+    r = send(r, { type: 'LANGUAGE_SET', language: 'ta' });
+    expect(r.state.interfaceLanguage).toBe('zh-Hans');
+  });
+});

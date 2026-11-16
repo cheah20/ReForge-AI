@@ -8,6 +8,10 @@
 
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import type { ApiClient } from '../../src/frontend/api.js';
+import { AppContext } from '../../src/frontend/app-context.js';
+import { I18nProvider } from '../../src/frontend/i18n.js';
+import { createSession, createSessionStore } from '../../src/frontend/state.js';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -48,4 +52,20 @@ export function typeInto(el: Element, value: string): void {
     setter.call(el, value);
     el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? 'change' : 'input', { bubbles: true }));
   });
+}
+
+/** An API client that fails every call: the Mirror components must not use it. */
+export const NO_API: ApiClient = {
+  analyze: () => Promise.reject(new Error('no FormBridge call expected')),
+  retranslate: () => Promise.reject(new Error('no FormBridge call expected')),
+  translate: () => Promise.reject(new Error('no FormBridge call expected')),
+};
+
+/** The app's i18n and services around a node, as the App does. */
+export function withApp(node: ReactNode, language = 'en'): ReactNode {
+  return (
+    <I18nProvider initialLanguage={language} fontLoader={async () => true}>
+      <AppContext.Provider value={{ store: createSessionStore(createSession(language)), api: NO_API }}>{node}</AppContext.Provider>
+    </I18nProvider>
+  );
 }
