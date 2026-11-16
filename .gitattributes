@@ -1,0 +1,4 @@
+# Generated document fixtures are compared byte for byte with the generator
+# output (scripts/create-fixtures/documents.ts --check), so git must never
+# change their line endings.
+fixtures/documents/** binary

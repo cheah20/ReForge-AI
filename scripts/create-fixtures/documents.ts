@@ -19,6 +19,12 @@
  * in the repository; they are read from FIXTURE_FONT_DIR (default: the OS temp
  * folder, `reforge-fonts`) and checked against the SHA-256 values below.
  *
+ * Rendering uses fixed Chromium flags (no GPU, no LCD text, no hinting). Image
+ * bytes were stable across separate runs with Chrome 157.0.8103.51; another
+ * Chrome version may anti-alias differently, in which case `--check` fails on
+ * images only and the fixtures are regenerated. The measured text and boxes in
+ * expected.json did not change between versions in that case.
+ *
  * Not written to disk: the file one byte over the 15 MB limit. Tests build it
  * in memory with `oversizeBytes()`, so the repository does not hold 15 MB of zeros.
  */
@@ -387,7 +393,9 @@ export async function buildDocumentFixtures(): Promise<Map<string, Uint8Array>> 
   const expected: FixtureExpectation[] = [];
   const text = (s: string) => new TextEncoder().encode(s);
   const channel = process.env['PW_CHANNEL'];
-  const browser = await chromium.launch(channel ? { channel } : {});
+  // Software rendering with fixed text settings, so separate runs paint the same pixels.
+  const args = ['--disable-gpu', '--disable-lcd-text', '--font-render-hinting=none', '--force-color-profile=srgb', '--disable-font-subpixel-positioning'];
+  const browser = await chromium.launch({ args, ...(channel ? { channel } : {}) });
   try {
     const mocks = new Map<string, MockPage>();
     for (const form of IMAGE_FORMS) {

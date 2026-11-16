@@ -4598,11 +4598,11 @@
                 ]
               },
               {
-                "text": "Name of the parent or guardian of the patien:",
+                "text": "Name o:",
                 "box": {
                   "left": 120,
                   "top": 937,
-                  "right": 852,
+                  "right": 254,
                   "bottom": 982
                 },
                 "confidence": 0.95,
@@ -4617,75 +4617,108 @@
                     }
                   },
                   {
-                    "text": "of",
+                    "text": "o:",
                     "box": {
                       "left": 225,
                       "top": 936,
-                      "right": 257,
+                      "right": 254,
                       "bottom": 982
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "text": " the parent :",
+                "box": {
+                  "left": 120,
+                  "top": 1026,
+                  "right": 306,
+                  "bottom": 1070
+                },
+                "confidence": 0.95,
+                "words": [
                   {
                     "text": "the",
                     "box": {
-                      "left": 266,
-                      "top": 936,
-                      "right": 318,
-                      "bottom": 982
+                      "left": 120,
+                      "top": 1025,
+                      "right": 172,
+                      "bottom": 1071
                     }
                   },
                   {
                     "text": "parent",
                     "box": {
-                      "left": 327,
-                      "top": 936,
-                      "right": 434,
-                      "bottom": 982
+                      "left": 181,
+                      "top": 1025,
+                      "right": 288,
+                      "bottom": 1071
                     }
                   },
                   {
-                    "text": "or",
+                    "text": ":",
                     "box": {
-                      "left": 442,
-                      "top": 936,
-                      "right": 477,
-                      "bottom": 982
+                      "left": 297,
+                      "top": 1025,
+                      "right": 306,
+                      "bottom": 1071
+                    }
+                  }
+                ]
+              },
+              {
+                "text": "r guardian of the patien:",
+                "box": {
+                  "left": 120,
+                  "top": 1115,
+                  "right": 509,
+                  "bottom": 1159
+                },
+                "confidence": 0.95,
+                "words": [
+                  {
+                    "text": "r",
+                    "box": {
+                      "left": 120,
+                      "top": 1114,
+                      "right": 134,
+                      "bottom": 1160
                     }
                   },
                   {
                     "text": "guardian",
                     "box": {
-                      "left": 486,
-                      "top": 936,
-                      "right": 631,
-                      "bottom": 982
+                      "left": 143,
+                      "top": 1114,
+                      "right": 288,
+                      "bottom": 1160
                     }
                   },
                   {
                     "text": "of",
                     "box": {
-                      "left": 640,
-                      "top": 936,
-                      "right": 672,
-                      "bottom": 982
+                      "left": 297,
+                      "top": 1114,
+                      "right": 329,
+                      "bottom": 1160
                     }
                   },
                   {
                     "text": "the",
                     "box": {
-                      "left": 681,
-                      "top": 936,
-                      "right": 733,
-                      "bottom": 982
+                      "left": 338,
+                      "top": 1114,
+                      "right": 390,
+                      "bottom": 1160
                     }
                   },
                   {
                     "text": "patien:",
                     "box": {
-                      "left": 742,
-                      "top": 936,
-                      "right": 852,
-                      "bottom": 982
+                      "left": 399,
+                      "top": 1114,
+                      "right": 509,
+                      "bottom": 1160
                     }
                   }
                 ]
@@ -4767,10 +4800,28 @@
               {
                 "kind": "underline",
                 "box": {
-                  "left": 876,
+                  "left": 278,
                   "top": 937,
                   "right": 1436,
                   "bottom": 982
+                }
+              },
+              {
+                "kind": "underline",
+                "box": {
+                  "left": 330,
+                  "top": 1026,
+                  "right": 1436,
+                  "bottom": 1070
+                }
+              },
+              {
+                "kind": "underline",
+                "box": {
+                  "left": 533,
+                  "top": 1114,
+                  "right": 1436,
+                  "bottom": 1159
                 }
               }
             ]
@@ -4825,7 +4876,17 @@
         },
         {
           "page": 1,
-          "text": "Name of the parent or guardian of the patien:",
+          "text": "Name o:",
+          "expect": "selected"
+        },
+        {
+          "page": 1,
+          "text": " the parent :",
+          "expect": "selected"
+        },
+        {
+          "page": 1,
+          "text": "r guardian of the patien:",
           "expect": "selected"
         }
       ],

@@ -243,7 +243,11 @@ export const PREFILLED_SPLIT: FormSpec = {
 
 /** Requirement 24.13: printed attack texts (one line each; a newline prints as two lines). */
 function injectionForm(name: string, pick: 'attack' | 'plain'): FormSpec {
-  const lines = INJECTION_CASES.flatMap((c) => c[pick].split('\n'));
+  // The plain twin breaks into lines at the same positions as the attack, so both print the same line lengths.
+  const lines = INJECTION_CASES.flatMap((c) => {
+    const text = pick === 'attack' ? c.attack : [...c.plain].map((ch, i) => (c.attack[i] === '\n' ? '\n' : ch)).join('');
+    return text.split('\n');
+  });
   return {
     name,
     lang: 'en',
