@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { HIGHLIGHT } from '../../src/frontend/accessforge/RevivalFrame.js';
 
 const css = readFileSync(path.resolve(__dirname, '../../src/frontend/tokens.css'), 'utf8');
 
@@ -68,5 +69,24 @@ describe('design tokens meet WCAG AA', () => {
   it('components use no raw hex colours outside tokens.css', () => {
     const app = readFileSync(path.resolve(__dirname, '../../src/frontend/app.css'), 'utf8');
     expect(app).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+  });
+});
+
+// accessforge-skeleton task 16.14 (Requirements 8.5, 14.3): the write highlight
+// in the legacy frame is a 4 px stamp-blue outline. It must reach 3:1 against
+// the white inputs, the #E0E0E0 label cells and the #D4D0C8 page background.
+
+describe('AccessForge write highlight', () => {
+  const colour = HIGHLIGHT.outline.match(/#[0-9a-fA-F]{6}/)![0]!;
+
+  it('uses the stamp-blue token and a width of at least 3 px', () => {
+    expect(colour.toLowerCase()).toBe(token('stamp-blue').toLowerCase());
+    expect(Number(HIGHLIGHT.outline.match(/^(\d+)px/)![1])).toBeGreaterThanOrEqual(3);
+    expect(HIGHLIGHT.ms).toBeGreaterThanOrEqual(1000);
+    expect(HIGHLIGHT.ms).toBeLessThanOrEqual(3000);
+  });
+
+  it.each(['#FFFFFF', '#E0E0E0', '#D4D0C8'])('is at least 3:1 against %s', (bg) => {
+    expect(contrast(colour, bg)).toBeGreaterThanOrEqual(3);
   });
 });

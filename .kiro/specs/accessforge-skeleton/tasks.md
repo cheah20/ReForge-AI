@@ -267,7 +267,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-locales.test.ts`: every `accessforge.*` key exists and is non-empty in `en` and `zh-Hans`; the Slice 1 data notice keys exist in every core locale; experimental languages such as `id` fall back to English.
     - _Requirements: 9.4, 9.13, 13.9_
 
-- [ ] 16. Mirror screens and frame (Slice 1)
+- [x] 16. Mirror screens and frame (Slice 1)
   - [x] 16.1 Add `analyzePage` to the API client (Slice 1)
     - **Shared file:** `src/frontend/api.ts`. New function only, with a 45 s abort combined with the AbortController of the current Revival_Generation.
     - _Requirements: 3.9, 6.1, 6.15_
@@ -310,11 +310,11 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 16.13 Write the untrusted model text test (Slice 1)
     - `tests/unit/accessforge-untrusted-text.test.tsx`: a plan whose question is `<a href="https://example.com">x</a> javascript:alert(1) #nama` renders with no `a` element and shows the string literally; no Executor call, Element_Id or navigation follows from it.
     - _Requirements: 6.17_
-  - [ ] 16.14 Add the Mirror contrast pairs to the tokens test (Slice 1)
+  - [x] 16.14 Add the Mirror contrast pairs to the tokens test (Slice 1)
     - **Shared file:** the existing tokens test.
     - The write-highlight pairs against white, `#E0E0E0` and `#D4D0C8`, each at least 3:1.
     - _Requirements: 8.5, 14.3_
-  - [ ] 16.15 Write the no-duplicate-validation static test (Slice 1)
+  - [x] 16.15 Write the no-duplicate-validation static test (Slice 1)
     - `tests/unit/accessforge-no-duplicate-validation.test.ts` with the rules of design "No duplicated validation": fails on rule-like regular expressions, validator-like function names or date arithmetic under `src/lib/accessforge/` and `src/frontend/accessforge/`; asserts the shared imports in `transformations.ts`; explicit allow-list for the Reference_Number and date-abbreviation patterns.
     - _Requirements: 9.14, 9.15_
   - [x] 16.16 Write the leave-warning handler test (Slice 1)
