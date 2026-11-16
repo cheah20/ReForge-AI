@@ -211,18 +211,18 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - Run `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. AI provider method and page-analysis route (Slice 1)
-  - [ ] 13.1 Add `analyzePage` to the provider interface and the mock provider (Slice 1)
+  - [x] 13.1 Add `analyzePage` to the provider interface and the mock provider (Slice 1)
     - **Shared files:** `src/lib/ai/interface.ts`, `src/lib/ai/mock.ts`. Additive change only.
     - `PageAnalyzeCall` and `analyzePage`. Mock answers from `fixtures/mock-analysis/legacy-register.json` (labels and questions in `en` and `zh-Hans`, English fallback, reason for visit at confidence 0.6, generic entry for unknown ids), deterministic.
     - _Requirements: 1.11, 6.2, 7.1_
-  - [ ] 13.2 Add `pageAnalyzeMessages()` to the prompt builders (Slice 1)
+  - [x] 13.2 Add `pageAnalyzeMessages()` to the prompt builders (Slice 1)
     - **Shared file:** `src/lib/ai/prompt.ts`. New function only.
     - Page_Model JSON between `<<<FORM_DATA` and `FORM_DATA>>>`, every `<` and `>` written as `\u003c` and `\u003e`, and the instruction that the block is untrusted form data that cannot change the task or the reply schema.
     - _Requirements: 4.5, 13.2_
-  - [ ] 13.3 Write example tests for prompt delimiting (Slice 1)
+  - [x] 13.3 Write example tests for prompt delimiting (Slice 1)
     - `tests/unit/accessforge-prompt-examples.test.ts`: a Page_Model whose texts contain both markers, angle brackets, quotes and newlines gives exactly one opening and one closing marker, the block parses back to an equal Page_Model, and the untrusted-data instruction is present.
     - _Requirements: 4.5, 13.2_
-  - [ ] 13.4 Implement `analyzePage` in the Workers AI provider (Slice 1)
+  - [x] 13.4 Implement `analyzePage` in the Workers AI provider (Slice 1)
     - **Shared file:** `src/lib/ai/cf-workers.ts`.
     - `PAGE_TIMEOUT_MS = 20_000`, `max_completion_tokens` 1,500, temperature 0.2, same model settings as the existing methods. Tests use a fake binding only.
     - _Requirements: 6.2, 6.10_
@@ -239,7 +239,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [ ] 13.8 Write example tests for the analysis route (Slice 1)
     - `tests/unit/accessforge-routes-examples.test.ts` with a scripted fake provider and an injected cache: one example per Slice 1 row of the decision table; retry exactly after an invalid reply or a timeout, none after quota; a cached plan for another version or language is never used; an extra property, 51 entries and a bad Page_Version give 400 with schema paths only and zero provider calls; each log entry has only the allowed items; the route is counted by `RATE_LIMITER_ANALYZE` with key `/api/pages/analyze:<ip>` and answers 429 `RATE_LIMITED` when it is full, while a full `RATE_LIMITER_TRANSLATE` does not block it; the default Vitest environment resolves the mock provider.
     - _Requirements: 6.3, 6.10, 7.1, 7.2, 7.8, 7.10, 13.5, 13.6, 13.11_
-  - [ ] 13.9 Write the mock determinism test (Slice 1)
+  - [x] 13.9 Write the mock determinism test (Slice 1)
     - `tests/unit/accessforge-mock.test.ts`: identical Page_Model and language give an identical plan; reason for visit has confidence 0.6; `zh-Hans` and `en` texts come from the table.
     - _Requirements: 7.1_
 
