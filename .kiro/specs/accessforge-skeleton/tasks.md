@@ -327,7 +327,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/unit/accessforge-adapter.test.tsx`: for each Slice 1 answer type the adapter output renders in `FieldQuestion` with the question, the original label with `lang="ms"` and the Page_Model options.
     - _Requirements: 9.14_
 
-- [ ] 17. Checkpoint: Mirror in place (Slice 1)
+- [x] 17. Checkpoint: Mirror in place (Slice 1)
   - Run `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 18. Privacy canary tests (Slice 1)
