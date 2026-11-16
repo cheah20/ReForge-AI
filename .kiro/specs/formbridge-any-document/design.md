@@ -1317,7 +1317,39 @@ At 360 px the table switches to one stacked block per row (each cell keeps its h
 
 ### OCR Spike Result
 
-To be filled in by the spike: versions, sizes, variant chosen, timings table, validation bar results for `eng` and `msa`, threshold values, browser behaviour notes. Until then every size and time in this design is an estimate.
+**Status: desktop part done; phone, throttled and deployed parts not done** (task 3.4 needs the developer's phones). Measured with `tests/ocr/ocr-spike.spec.ts` in Chrome 157 on the development desktop, from a fake origin with every request to another origin blocked. Firefox was not run (the Playwright Firefox build is not installed). Until the phone results exist, the phone timings and first-use times elsewhere in this design remain estimates.
+
+**Versions and licences.** `tesseract.js` 7.0.0 (Apache-2.0) with `tesseract.js-core` 7.0.0; `@tesseract.js-data/eng` and `@tesseract.js-data/msa` 1.0.0 (MIT packaging of Tesseract `tessdata` models, Apache-2.0). The data packages ship `4.0.0` and `4.0.0_best_int` models, not `best_int` and `fast` as this design first assumed; the spike compared those two.
+
+**Bytes a first-time user downloads** (client module, worker, the one core build Chrome picked, one language file):
+
+| Language | `best_int` | `4.0.0` |
+|---|---|---|
+| English (`eng`) | 7,033,167 (6.7 MB) | 15,003,354 (14.3 MB) |
+| Malay (`msa`) | 5,257,430 (5.0 MB) | 7,867,502 (7.5 MB) |
+
+Chrome picked `tesseract-core-relaxedsimd-lstm.wasm.js` (3.9 MB). Other browsers may pick another of the six builds (3.9 to 4.7 MB). No request left the origin in any run.
+
+**Desktop timings** (one worker, then each page; the fixtures are 1,556 x 2,200 px):
+
+| Run | Worker start | Clean PNG | Clean JPEG |
+|---|---|---|---|
+| `eng` `best_int` | 447 ms | 846 ms | 762 ms |
+| `eng` `4.0.0` | 1,000 ms | 860 ms | 743 ms |
+| `msa` `best_int` | 298 ms | 948 ms | 830 ms |
+| `msa` `4.0.0` | 528 ms | 945 ms | 826 ms |
+
+**OCR_Validation_Bar on the synthetic clean fixtures** (9 expected labels each, CER at most 10%): English 9 of 9 on PNG and JPEG with both variants; Malay 9 of 9 on PNG and JPEG with both variants. Mean line confidence 0.947 to 0.957, 34 to 38 words per page. These fixtures are rendered images, not photos of paper; the bar on real phone photos is part of task 3.4.
+
+**Low-quality thresholds.** The glary fixture gave 0 words and mean confidence 0 with both variants, far under `OCR_MIN_WORDS` 10 and `OCR_MIN_MEAN_CONFIDENCE` 0.60; the clean pages are far above. The thresholds stay as designed until the phone photos are measured.
+
+**EXIF probe.** Chrome desktop: `createImageBitmap` with `imageOrientation: 'from-image'` returned 1 x 2 for the 2 x 1 probe, so Chrome applies EXIF orientation itself. Other browsers not measured yet.
+
+**Variant (provisional).** By the rule in Q5, `best_int`: both languages are under 12 MB and give the same bar result as `4.0.0`. Final once the reference phone time per clean page is known (rule: above 30 s switches the choice).
+
+**Malay (provisional).** Malay passes the bar on the synthetic fixtures. `VALIDATED_OCR_LANGUAGES` is set in task 3.5 after the phone photos are measured; until then Malay is not offered.
+
+**Not measured yet:** phone recognition times, cancel response on a phone, the second-fetch cache hit, the Slow 3G first-use time, `_headers` on the deployed URL, Firefox and Safari EXIF behaviour, and the uncertain-cell share of open decision 26 (it needs the Label_Classifier of group 6).
 
 ---
 

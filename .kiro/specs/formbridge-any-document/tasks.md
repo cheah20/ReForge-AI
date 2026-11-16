@@ -170,7 +170,8 @@ Three files that design Q10 does not list are left alone by this spec: `src/fron
     - _Requirements: 5.2, 5.3, 24.4, 24.5_
 
 - [ ] 3. OCR spike and fixtures (Slice 1, about 1.25 days plus developer phone time)
-  - [ ] 3.1 Write the document fixture generator (Slice 1)
+  - [x] 3.1 Write the document fixture generator (Slice 1)
+    - Result: 31 fixtures and `expected.json` in `fixtures/documents/`, run with `npx tsx scripts/create-fixtures/documents.ts [--check]` (Chrome via `PW_CHANNEL=chrome`). The 15 MB + 1 file is built in memory by `oversizeBytes()` instead of being committed. `tests/unit/document-fixtures.test.ts` checks structure without a browser; the byte-for-byte comparison is the `--check` run. `.gitattributes` marks the folder binary. The `generate-fixtures:documents` script entry in `package.json` is still to be added in a coordinated change.
     - `scripts/create-fixtures/documents.ts`, run by the `generate-fixtures:documents` script of task 2.20, writes every Slice 1 fixture of Requirement 25.1 with synthetic content only:
       - clean English and Malay printed forms as JPEG and PNG; a rotated photo with EXIF orientation 6 and one without a tag; a glary or blurred photo; a mixed PDF without fields (text pages and scanned pages); a 6-page PDF without fields; a push-button-only PDF;
       - `prefilled-sensitive` with the Canary_Values of design Q1 (the name inside a ruled box, the free text inside an underline, `Nama: ZQXCOLON` after a colon);
@@ -181,13 +182,14 @@ Three files that design Q10 does not list are left alone by this spec: `src/fron
     - Next to the fixtures, write the expected labels per fixture, the expected Page_Text_Source per page of the mixed PDF, the mock OCR result per fixture, and, for each default-selection fixture, the line that holds its Canary_Value and its expected state (not listed, or listed unselected), for tests 3.3, 6.21, 7.6, 7.7, 13.3, 13.5 and 13.12.
     - `tests/unit/document-fixtures.test.ts`: two runs with no arguments write byte-identical files, and no fixture text contains a name or organisation outside the synthetic word list.
     - _Requirements: 24.12, 24.13, 25.1_
-  - [ ] 3.2 Write the character error rate helper (Slice 1)
+  - [x] 3.2 Write the character error rate helper (Slice 1)
     - `tests/ocr/cer.ts`: Levenshtein distance divided by the expected length, after NFKC and whitespace collapsing, and the OCR_Validation_Bar check (at least 90% of expected labels each match one Text_Line at a CER of 10% or less).
     - Unit tests with fixed pairs, including an exact match, one substitution and an empty result.
     - _Requirements: 9.1_
   - [ ] 3.3 Run the desktop spike measurements (Slice 1)
     - `tests/ocr/ocr-spike.spec.ts`, run by hand only. In Playwright Chromium and Firefox, load Tesseract.js from `/ocr/` with `cacheMethod: 'none'` and `workerBlobURL: false`, and record: bytes served per asset for `best_int` and `fast`; that no request goes to another origin; recognition time per clean fixture at 2,200 px; the OCR_Validation_Bar result per label for `eng` and `msa`; word count and mean line confidence for the clean and the glary fixtures; the EXIF probe result per browser; the share of clean-fixture labels that are `ambiguous` only because of an uncertain table cell (open decision 26).
     - The spec prints a summary only. No raw OCR output is committed.
+    - Result: Chromium part done (`playwright.ocr.config.ts`, results in design "OCR Spike Result"). Still open: Firefox (the Playwright Firefox build is not installed) and the uncertain-cell share (needs the Label_Classifier of group 6).
     - _Requirements: 8.1, 8.9, 9.1, 9.4_
   - [ ] 3.4 Run the phone and throttled measurements (Slice 1)
     - **Needs the developer** (real devices). On the reference mid-range Android phone with Chrome and on an iPhone with iOS 17 Safari: recognition time per clean page, the EXIF probe result, that the second Tesseract fetch is a cache hit, and that cancel responds within 1 second during recognition. On the DevTools "Slow 3G" preset: first-use time and the preset's actual values. On the deployed URL: whether `_headers` is honoured.
