@@ -25,6 +25,7 @@ import type {
   TranslateRequest,
   TranslateResponse,
 } from '../shared/types.js';
+import { PageAnalyzeResponseSchema, type PageAnalyzeRequest, type PageAnalyzeResponse } from '../shared/page-schemas.js';
 
 /** Same header name as the Worker's AI_MODE_HEADER (kept here so the browser bundle does not import Worker code). */
 export const AI_MODE_HEADER = 'x-reforge-ai-mode';
@@ -87,4 +88,45 @@ export function createApiClient(fetchFn: FetchFn = (input, init) => fetch(input,
     retranslate: (request) => post(fetchFn, '/api/forms/retranslate', request, RetranslateResponseSchema),
     translate: (request) => post(fetchFn, '/api/forms/translate', request, TranslateResponseSchema),
   };
+}
+
+// ---------------------------------------------------------------------------
+// AccessForge page analysis (accessforge-skeleton task 16.1)
+// ---------------------------------------------------------------------------
+
+/** The browser gives up on a page analysis after 45 s (Requirement 6.15). */
+export const PAGE_ANALYZE_TIMEOUT_MS = 45_000;
+
+export interface AnalyzePageOptions {
+  /** The AbortController signal of the current Revival_Generation. */
+  signal?: AbortSignal;
+  fetchFn?: FetchFn;
+  timeoutMs?: number;
+}
+
+/**
+ * POST /api/pages/analyze. Carries the Page_Model (structure and page text,
+ * never an answer) and the interface language. Aborts after 45 s or when the
+ * generation's signal aborts; a timeout throws `TIMEOUT`, an abort `ABORTED`.
+ */
+export async function analyzePage(request: PageAnalyzeRequest, options: AnalyzePageOptions = {}): Promise<ApiReply<PageAnalyzeResponse>> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, options.timeoutMs ?? PAGE_ANALYZE_TIMEOUT_MS);
+  const onAbort = () => controller.abort();
+  if (options.signal?.aborted) controller.abort();
+  options.signal?.addEventListener('abort', onAbort);
+  const base = options.fetchFn ?? ((input: string, init: RequestInit) => fetch(input, init));
+  try {
+    return await post((input, init) => base(input, { ...init, signal: controller.signal }), '/api/pages/analyze', request, PageAnalyzeResponseSchema);
+  } catch (err) {
+    if (controller.signal.aborted) throw new ApiRequestError(timedOut ? 'TIMEOUT' : 'ABORTED');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', onAbort);
+  }
 }

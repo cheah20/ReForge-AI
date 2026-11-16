@@ -268,7 +268,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - _Requirements: 9.4, 9.13, 13.9_
 
 - [ ] 16. Mirror screens and frame (Slice 1)
-  - [ ] 16.1 Add `analyzePage` to the API client (Slice 1)
+  - [x] 16.1 Add `analyzePage` to the API client (Slice 1)
     - **Shared file:** `src/frontend/api.ts`. New function only, with a 45 s abort combined with the AbortController of the current Revival_Generation.
     - _Requirements: 3.9, 6.1, 6.15_
   - [ ] 16.2 Implement `RevivalFrame.tsx` and `src/lib/accessforge/scope.ts` (Slice 1)
@@ -278,7 +278,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [ ] 16.3 Implement `useAgentLoop.ts` (Slice 1)
     - Runs reducer effects: `checkFrameDocument` on every load before anything else reads the document, version compare with `SUPPORTED_PAGE_VERSIONS`, extraction, analysis only after acknowledgement, abort of obsolete requests on a new generation, execute, read-back, frame reload, 15 s timer. State in memory only, no browser storage.
     - _Requirements: 3.2, 3.3, 3.8, 3.9, 3.10, 5.1, 6.1, 6.15, 8.4, 10.1, 10.8, 13.4, 13.8_
-  - [ ] 16.4 Implement `useLeaveWarning.ts` (Slice 1)
+  - [x] 16.4 Implement `useLeaveWarning.ts` (Slice 1)
     - Registers a `beforeunload` handler that calls `preventDefault()` and sets `returnValue` while at least one answer exists and no confirmation was received; removes it otherwise; saves nothing.
     - _Requirements: 12.5, 13.4_
   - [ ] 16.5 Implement the notice components (Slice 1)
@@ -317,10 +317,10 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [ ] 16.15 Write the no-duplicate-validation static test (Slice 1)
     - `tests/unit/accessforge-no-duplicate-validation.test.ts` with the rules of design "No duplicated validation": fails on rule-like regular expressions, validator-like function names or date arithmetic under `src/lib/accessforge/` and `src/frontend/accessforge/`; asserts the shared imports in `transformations.ts`; explicit allow-list for the Reference_Number and date-abbreviation patterns.
     - _Requirements: 9.14, 9.15_
-  - [ ] 16.16 Write the leave-warning handler test (Slice 1)
+  - [x] 16.16 Write the leave-warning handler test (Slice 1)
     - `tests/unit/accessforge-leave-warning.test.tsx`: with an answer and no confirmation, `addEventListener('beforeunload', …)` was called and the handler calls `preventDefault`; after confirmation or with no answers the handler is removed; no storage write. The test checks the handler, not a browser dialog.
     - _Requirements: 12.5, 13.4_
-  - [ ] 16.17 Write example tests for the frame source (Slice 1)
+  - [x] 16.17 Write example tests for the frame source (Slice 1)
     - `tests/unit/accessforge-scope.test.ts`: an absolute URL, a protocol-relative URL and an encoded variant in a parameter keep `src` at `/legacy/register` and set the scope message flag.
     - _Requirements: 18.1, 18.2_
   - [ ] 16.18 Write the adapter test (Slice 1)
