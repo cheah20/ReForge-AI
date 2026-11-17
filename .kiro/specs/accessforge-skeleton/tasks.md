@@ -339,7 +339,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - _Requirements: 11.5, 13.3, 13.4, 13.10, 13.12_
 
 - [ ] 19. End-to-end tests with the mock provider (Slice 1)
-  - [ ] 19.1 Write the Playwright acceptance scenario (Slice 1)
+  - [x] 19.1 Write the Playwright acceptance scenario (Slice 1)
     - **Shared file:** `playwright.config.ts` (exclude `@smoke` unless `BASE_URL` is set).
     - `tests/e2e/accessforge-acceptance.spec.ts` at 1280 × 800 in `zh-Hans`, tagged `@smoke`: frame without Mirror; revive; data notice; one question per step and step count equal to mapped fields; wrong IC `901301-10-1234` rejected with the `zh-Hans` message, frame field empty, then fixed; each frame field holds its Intended_Value within 2 s; low-confidence evidence shown; review with eight `filled`; zero POSTs before confirm and exactly one after; verified result with a matching Reference_Number; original Malay text hidden until shown and then with `lang="ms"`; link to `SAMPLE_FORM_PATH`. With `BASE_URL` set it accepts any Analysis_Mode, checks by `lang`, step count and Element_Id, and finishes within 120 s.
     - _Requirements: 6.11, 8.4, 9.6, 11.1, 11.2, 13.11, 16.1, 16.2, 16.3, 16.4, 16.5, 16.6_
