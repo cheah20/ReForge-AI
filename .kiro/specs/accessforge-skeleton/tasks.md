@@ -330,11 +330,11 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
 - [x] 17. Checkpoint: Mirror in place (Slice 1)
   - Run `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 18. Privacy canary tests (Slice 1)
+- [x] 18. Privacy canary tests (Slice 1)
   - [x] 18.1 Write the Worker-side canary test (Slice 1)
     - `tests/unit/accessforge-privacy.test.ts` with `CANARY-FRAME-5Q7Z` typed into the frame before extraction and `CANARY-ANSWER-8K2M` as a Mirror answer: both absent from the Page_Model, the analysis request body, the prompt (recording fake provider), every Worker log entry (logger spy, including the legacy POST) and every error response; the legacy handler keeps nothing between requests.
     - _Requirements: 2.5, 13.1, 13.2, 13.3, 13.5, 13.6, 13.10, 13.12_
-  - [ ] 18.2 Write the Playwright canary test (Slice 1)
+  - [x] 18.2 Write the Playwright canary test (Slice 1)
     - `tests/e2e/accessforge-privacy.spec.ts`, mock provider: both canaries absent from request bodies, request URLs, localStorage, sessionStorage, IndexedDB, cookies and the FormBridge link; `CANARY-ANSWER-8K2M` present only in the one Legacy_Form POST body.
     - _Requirements: 11.5, 13.3, 13.4, 13.10, 13.12_
 

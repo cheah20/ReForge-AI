@@ -227,7 +227,7 @@ export function MirrorStep({ state, field, dispatch }: MirrorStepProps) {
   }
 
   return (
-    <form className="mirror-step stack" onSubmit={next} noValidate>
+    <form className="mirror-step stack" data-element-id={field.elementId} onSubmit={next} noValidate>
       <p className="mirror-step__counter">{info ? t('accessforge.step', { current: info.index, total: info.total }) : null}</p>
       <ScreenHeading focusKey={field.elementId}>{field.plan!.humanLabel}</ScreenHeading>
       <LowConfidenceEvidence field={field} />
