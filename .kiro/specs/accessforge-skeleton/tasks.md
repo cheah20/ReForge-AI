@@ -346,7 +346,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 19.2 Write the direct-versus-Mirror comparison test (Slice 1)
     - `tests/e2e/accessforge-same-data.spec.ts`: two browser contexts, direct top-level submission of the Intended_Values and Mirror submission of the answers in design Question 8; identical Received_Fields_Summaries; eight entries in order with no button names; each value equal to its documented transformation; the Reference_Number in the frame equal to the one the Mirror shows.
     - _Requirements: 15.1, 15.2, 15.3, 15.5, 15.6, 15.7_
-  - [ ] 19.3 Write the navigation tests (Slice 1)
+  - [x] 19.3 Write the navigation tests (Slice 1)
     - `tests/e2e/accessforge-navigation.spec.ts`: an unlisted path, an Allow_List path with a query string and the home page during the question flow each stop the loop, run no Action, submit nothing and show "page is not supported"; an unrecorded Page_Version (route override) sends no analysis request and shows the page-changed message; a `url` parameter naming another address loads nothing and shows the scope message.
     - _Requirements: 3.3, 3.6, 3.7, 3.8, 18.2_
   - [ ] 19.4 Write the hostile page tests (Slice 1)
