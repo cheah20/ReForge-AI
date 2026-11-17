@@ -343,7 +343,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - **Shared file:** `playwright.config.ts` (exclude `@smoke` unless `BASE_URL` is set).
     - `tests/e2e/accessforge-acceptance.spec.ts` at 1280 × 800 in `zh-Hans`, tagged `@smoke`: frame without Mirror; revive; data notice; one question per step and step count equal to mapped fields; wrong IC `901301-10-1234` rejected with the `zh-Hans` message, frame field empty, then fixed; each frame field holds its Intended_Value within 2 s; low-confidence evidence shown; review with eight `filled`; zero POSTs before confirm and exactly one after; verified result with a matching Reference_Number; original Malay text hidden until shown and then with `lang="ms"`; link to `SAMPLE_FORM_PATH`. With `BASE_URL` set it accepts any Analysis_Mode, checks by `lang`, step count and Element_Id, and finishes within 120 s.
     - _Requirements: 6.11, 8.4, 9.6, 11.1, 11.2, 13.11, 16.1, 16.2, 16.3, 16.4, 16.5, 16.6_
-  - [ ] 19.2 Write the direct-versus-Mirror comparison test (Slice 1)
+  - [x] 19.2 Write the direct-versus-Mirror comparison test (Slice 1)
     - `tests/e2e/accessforge-same-data.spec.ts`: two browser contexts, direct top-level submission of the Intended_Values and Mirror submission of the answers in design Question 8; identical Received_Fields_Summaries; eight entries in order with no button names; each value equal to its documented transformation; the Reference_Number in the frame equal to the one the Mirror shows.
     - _Requirements: 15.1, 15.2, 15.3, 15.5, 15.6, 15.7_
   - [ ] 19.3 Write the navigation tests (Slice 1)
