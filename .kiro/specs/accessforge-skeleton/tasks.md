@@ -353,7 +353,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - Add the raw hostile document and the instruction-like variant to `tests/e2e/helpers/hostile-pages.ts`.
     - `tests/e2e/accessforge-hostile.spec.ts`: served with `page.route` and the real `LEGACY_CSP`; script does not run; external resources are not requested; the form-target check stops the loop before any Action; nothing is submitted; no pop-up or top navigation; the instruction-like variant gives the same Element_Ids and Actions as the real page.
     - _Requirements: 4.2, 4.3, 4.4, 4.6, 4.7, 4.9_
-  - [ ] 19.5 Write the submission flow tests (Slice 1)
+  - [x] 19.5 Write the submission flow tests (Slice 1)
     - `tests/e2e/accessforge-submit-flows.spec.ts`: legacy error page then rewrite and a new confirm press; a stalled POST gives the unknown outcome after 15 s; a frame value changed by a test hook stops the loop with a mismatch; an edit from review re-verifies before confirm.
     - _Requirements: 10.2, 10.5, 10.8, 10.9_
   - [ ] 19.6 Write the session flow tests (Slice 1)
