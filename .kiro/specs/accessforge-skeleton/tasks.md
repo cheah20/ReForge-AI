@@ -349,7 +349,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 19.3 Write the navigation tests (Slice 1)
     - `tests/e2e/accessforge-navigation.spec.ts`: an unlisted path, an Allow_List path with a query string and the home page during the question flow each stop the loop, run no Action, submit nothing and show "page is not supported"; an unrecorded Page_Version (route override) sends no analysis request and shows the page-changed message; a `url` parameter naming another address loads nothing and shows the scope message.
     - _Requirements: 3.3, 3.6, 3.7, 3.8, 18.2_
-  - [ ] 19.4 Write the hostile page tests (Slice 1)
+  - [x] 19.4 Write the hostile page tests (Slice 1)
     - Add the raw hostile document and the instruction-like variant to `tests/e2e/helpers/hostile-pages.ts`.
     - `tests/e2e/accessforge-hostile.spec.ts`: served with `page.route` and the real `LEGACY_CSP`; script does not run; external resources are not requested; the form-target check stops the loop before any Action; nothing is submitted; no pop-up or top navigation; the instruction-like variant gives the same Element_Ids and Actions as the real page.
     - _Requirements: 4.2, 4.3, 4.4, 4.6, 4.7, 4.9_
