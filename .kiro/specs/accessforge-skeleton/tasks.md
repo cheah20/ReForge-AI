@@ -363,12 +363,12 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/e2e/accessforge-a11y.spec.ts` with `@axe-core/playwright`, tags `wcag2a wcag2aa wcag21a wcag21aa wcag22aa`, iframe excluded, in `en` and `zh-Hans`, failing on any violation, for every state listed in Requirement 14.8; plus checks for 24 px and 44 px targets, 16 px body text, and no horizontal scroll at 360 px and at 200% zoom with larger text on.
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9, 14.11_
 
-- [ ] 20. Precomputed page plans (Slice 1)
+- [x] 20. Precomputed page plans (Slice 1)
   - [x] 20.1 Add the page-plan step to the fixture cache script (Slice 1)
     - **Shared files:** `scripts/generate-fixture-cache.ts`, `package.json` scripts if a flag needs one.
     - `--pages`: take the registration HTML from `generated/templates.ts`, extract the Page_Model with the same extractor in jsdom, call the provider for `en` and `zh-Hans`, validate with `PagePlanReplySchema` and `validatePlan`, write `src/worker/cache/precomputed/pages/<pageVersion>-<bcp47>.json` only for passing replies, exit non-zero on any failure. Test with a fake provider: valid replies write files; an invalid reply writes nothing for that key and exits non-zero.
     - _Requirements: 7.6_
-  - [ ] 20.2 Generate the precomputed page plans (Slice 1, **needs `AI_MODE=real`**)
+  - [x] 20.2 Generate the precomputed page plans (Slice 1, **needs `AI_MODE=real`**)
     - Reason for the real call: the saved plans that back `cached` mode when the daily AI quota runs out. Estimated cost about 80 neurons (two languages). The developer approves the run before it starts.
     - Run `npm run generate-fixture-cache -- --pages` with `AI_MODE=real`; commit only the schema-validated JSON files; record the measured neurons in design.md; confirm the stale-plan check of task 5.9 passes. No raw model output is committed.
     - _Requirements: 7.2, 7.6, 13.11_

@@ -1,0 +1,62 @@
+{
+  "pageVersion": "a3250afede9c6413c0a3a170ae4baef4aa6a34681d16ef723a0652cb1e0733d9",
+  "interfaceLanguage": "en",
+  "entries": [
+    {
+      "elementId": "f0:text:nama",
+      "humanLabel": "Full Name",
+      "question": "What is your full name?",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:text:nokp",
+      "humanLabel": "ID Number",
+      "question": "What is your ID or IC number?",
+      "answerType": "text",
+      "confidence": 0.9
+    },
+    {
+      "elementId": "f0:text:tlahir",
+      "humanLabel": "Date of Birth",
+      "question": "What is your date of birth (dd/mm/yyyy)?",
+      "answerType": "date",
+      "confidence": 0.95
+    },
+    {
+      "elementId": "f0:radio:jantina",
+      "humanLabel": "Gender",
+      "question": "What is your gender?",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:text:tel",
+      "humanLabel": "Mobile Number",
+      "question": "What is your mobile phone number?",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:text:poskod",
+      "humanLabel": "Postcode",
+      "question": "What is your postcode?",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:select:tujuan",
+      "humanLabel": "Purpose",
+      "question": "What is the purpose of your visit?",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:checkbox:akuan",
+      "humanLabel": "Declaration",
+      "question": "Do you confirm that the information provided is true and agree to its use for registration?",
+      "answerType": "checkbox",
+      "confidence": 0.9
+    }
+  ]
+}

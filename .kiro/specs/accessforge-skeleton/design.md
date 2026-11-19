@@ -931,7 +931,7 @@ The existing `x-reforge-ai-mode` header is still set; `analysisMode` in the body
 
 - Storage: `src/worker/cache/precomputed/pages/<pageVersion>-<bcp47>.json`, each a `PrecomputedPagePlanSchema` object, bundled with `import.meta.glob('./precomputed/pages/*.json', { eager: true })` in `src/worker/cache/page-plan-cache.ts`. The existing glob `./precomputed/*.json` does not descend into `pages/`, so the PDF cache and the page cache cannot mix. Lookup is by exact Page_Version and exact language tag; there is no fallback to another language or version.
 - Generation: `scripts/generate-fixture-cache.ts` gains a page-plan step, run as `npm run generate-fixture-cache -- --pages` with `AI_MODE=real`. It takes the registration HTML from `generated/templates.ts`, extracts the Page_Model with the same extractor in jsdom, calls the real provider for each listed language, validates each reply with `PagePlanReplySchema` and the Plan_Validator, and writes only passing results. Any failing key writes nothing and the script exits non-zero (Requirement 7.6). Languages: `en` and `zh-Hans` in Slice 1; `ms`, `zh-Hant`, `ta` and `es` may be added later with the same script. The plans fall under the repository's existing single exception for committed model output, which covers schema-validated labels and questions in `precomputed/`.
-- Cost: about 40 neurons per language, spent once per template version.
+- Cost: measured on 2026-11-13 with one real call per language (gemma-4-26b-a4b-it, one attempt each, 1,168 and 1,172 prompt tokens, 525 and 530 completion tokens): 24.9 neurons for `en` and 25.1 for `zh-Hans`, about 50 in total. The estimate was 40 per language. Spent once per template version.
 
 ### Disclosure
 

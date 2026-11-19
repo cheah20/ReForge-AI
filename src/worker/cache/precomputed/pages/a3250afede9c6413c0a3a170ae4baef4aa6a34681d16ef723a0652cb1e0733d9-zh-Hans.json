@@ -1,0 +1,62 @@
+{
+  "pageVersion": "a3250afede9c6413c0a3a170ae4baef4aa6a34681d16ef723a0652cb1e0733d9",
+  "interfaceLanguage": "zh-Hans",
+  "entries": [
+    {
+      "elementId": "f0:text:nama",
+      "humanLabel": "姓名",
+      "question": "请输入您的姓名",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:text:nokp",
+      "humanLabel": "身份证号码",
+      "question": "请输入您的身份证号码 (No. K/P)",
+      "answerType": "text",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:text:tlahir",
+      "humanLabel": "出生日期",
+      "question": "请输入您的出生日期 (格式：日/月/年)",
+      "answerType": "date",
+      "confidence": 0.9
+    },
+    {
+      "elementId": "f0:radio:jantina",
+      "humanLabel": "性别",
+      "question": "请选择您的性别",
+      "answerType": "radio",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:text:tel",
+      "humanLabel": "手机号码",
+      "question": "请输入您的手机联系电话",
+      "answerType": "phone",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:text:poskod",
+      "humanLabel": "邮政编码",
+      "question": "请输入您的邮政编码",
+      "answerType": "postcode",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:select:tujuan",
+      "humanLabel": "就诊目的",
+      "question": "请选择您的就诊目的",
+      "answerType": "dropdown",
+      "confidence": 1
+    },
+    {
+      "elementId": "f0:checkbox:akuan",
+      "humanLabel": "确认声明",
+      "question": "请勾选以确认您提供的资料真实准确，并同意诊所将此信息用于注册目的",
+      "answerType": "checkbox",
+      "confidence": 1
+    }
+  ]
+}

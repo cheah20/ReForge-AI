@@ -11,6 +11,7 @@ import { runPageAnalyze } from '../../src/lib/analysis/run-page.js';
 import { AiError, type AiProvider, type AiReply } from '../../src/lib/ai/interface.js';
 import { bundledPagePlanStore, lookupPagePlanCache, pagePlanKey } from '../../src/worker/cache/page-plan-cache.js';
 import type { PageAnalyzeRequest } from '../../src/shared/page-schemas.js';
+import { PAGE_VERSIONS } from '../../src/worker/legacy/generated/templates.js';
 
 const V = 'a'.repeat(64);
 const REQUEST = {
@@ -105,8 +106,10 @@ describe('lookupPagePlanCache', () => {
     expect(lookupPagePlanCache('xyz', 'en', store)).toBeNull();
   });
 
-  it('keys bundled files by file name and ships no plan yet', () => {
+  it('keys bundled files by file name and ships exactly the saved plans of the supported version', () => {
     expect(bundledPagePlanStore({ './precomputed/pages/abc-en.json': 1 })).toEqual({ 'abc-en': 1 });
-    expect(bundledPagePlanStore()).toEqual({});
+    const bundled = bundledPagePlanStore();
+    expect(Object.keys(bundled).sort()).toEqual([`${PAGE_VERSIONS.register}-en`, `${PAGE_VERSIONS.register}-zh-Hans`]);
+    for (const lang of ['en', 'zh-Hans']) expect(lookupPagePlanCache(PAGE_VERSIONS.register, lang)?.entries).toHaveLength(8);
   });
 });

@@ -245,14 +245,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else if (fixtures.length === 0) {
     console.error('Usage: npm run generate-fixture-cache -- <fixture-name>... [--base-url URL] [--languages ms,es]');
     process.exit(2);
+  } else {
+    generateFixtureCache({ baseUrl, fixtures, ...(languages ? { languages } : {}) })
+      .then((r) => {
+        console.log(`${r.written.length} written, ${r.failed.length} failed`);
+        process.exitCode = r.failed.length > 0 ? 1 : 0;
+      })
+      .catch((err) => {
+        console.error(err instanceof Error ? err.message : err);
+        process.exitCode = 1;
+      });
   }
-  generateFixtureCache({ baseUrl, fixtures, ...(languages ? { languages } : {}) })
-    .then((r) => {
-      console.log(`${r.written.length} written, ${r.failed.length} failed`);
-      process.exitCode = r.failed.length > 0 ? 1 : 0;
-    })
-    .catch((err) => {
-      console.error(err instanceof Error ? err.message : err);
-      process.exitCode = 1;
-    });
 }
