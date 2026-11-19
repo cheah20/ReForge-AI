@@ -32,6 +32,7 @@ import { combineVotes } from '../lib/analysis/detection.js';
 import type { AnalyzeResponse, AnswerType, FieldAnalysis, FieldEvidence } from '../shared/types.js';
 import type { DateFormat } from '../packs/country/dates.js';
 import type { ApiClient } from './api.js';
+import type { DocumentLabelOrigin, DocumentSession } from './document/session.js';
 
 export { batchFields, BATCH_SIZE };
 
@@ -54,6 +55,10 @@ export interface FieldState {
   normalizedOutput?: string;
   skipped: boolean;
   userOverrideAnswerType?: AnswerType;
+  /** Document_Path only: where this question came from (the Kept_Label and its page). */
+  origin?: DocumentLabelOrigin;
+  /** Document_Path only: the answer when the user arrived at the step, for undo (Requirement 15.3). */
+  arrivalAnswer?: string;
   /** Date format the user confirmed for this field (requirement 7.5). */
   dateFormat?: DateFormat;
   translation?: DescriptionTranslation;
@@ -90,6 +95,8 @@ export interface SessionState {
   needsConfirmation: boolean;
   /** True when the Worker served the precomputed analysis because the AI failed (12.7). */
   servedFromCache: boolean;
+  /** The Document_Path session for a photo, scan or PDF without fields; null on the fillable-PDF path. */
+  document: DocumentSession | null;
 }
 
 export interface SessionStore {
@@ -112,6 +119,7 @@ export function createSession(interfaceLanguage = 'en'): SessionState {
     detection: null,
     needsConfirmation: false,
     servedFromCache: false,
+    document: null,
   };
 }
 

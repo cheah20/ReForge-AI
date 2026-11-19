@@ -154,6 +154,32 @@ export function firstBlockingField(fields: readonly FieldState[]): number {
   return fields.findIndex((f) => reviewStatus(f) === 'missingRequired');
 }
 
+// ---------------------------------------------------------------------------
+// Document_Path additions (formbridge-any-document Requirements 15.1, 15.3, 15.7, 18.1)
+// ---------------------------------------------------------------------------
+
+/** Total shown in "Question 3 of 12": every Kept_Label except a signature, which is never asked (15.1). */
+export function documentWizardTotal(fields: readonly FieldState[]): number {
+  return wizardSteps(fields).length;
+}
+
+/** Exactly one status per row of the Document_Path review and the Answer_Sheet (18.1). */
+export type DocumentReviewStatus = 'filled' | 'skipped' | 'signYourself';
+
+export function documentReviewStatus(field: FieldState): DocumentReviewStatus {
+  if (field.evidence.fieldType === 'signature') return 'signYourself';
+  if (!field.skipped && hasWritableAnswer(field)) return 'filled';
+  return 'skipped';
+}
+
+/**
+ * Undo (15.3): available when the answer differs from the one the step held on
+ * arrival, and restores that one. It stays until the user leaves the step.
+ */
+export function undoRule(arrivalAnswer: string, currentAnswer: string): { available: boolean; restoreTo: string } {
+  return { available: arrivalAnswer !== currentAnswer, restoreTo: arrivalAnswer };
+}
+
 /** File name for the download: "<name>-filled.pdf" (10.4). */
 export function filledFileName(original: string): string {
   const base = original.replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'form';

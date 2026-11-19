@@ -500,7 +500,14 @@ describe('in-memory only (requirement 11.1)', () => {
     expect(files).toContain('state.ts');
     for (const file of files) {
       const source = readFileSync(path.join(dir, file), 'utf8');
-      expect(source, file).not.toMatch(/\b(localStorage|sessionStorage|indexedDB|document\.cookie|caches\.open)\b/);
+      // The one approved exception (Privacy_Steering, formbridge-any-document Requirement 8.8): the OCR service
+      // caches only the engine and language files under `reforge-ocr-<version>`. tests/unit/document-binding-static.test.ts
+      // checks that nothing else uses Cache Storage and that nothing but those files is cached.
+      const isOcrService = file.replace(/\\/g, '/').endsWith('document/ocr.ts');
+      const banned = isOcrService
+        ? /\b(localStorage|sessionStorage|indexedDB|document\.cookie)\b/
+        : /\b(localStorage|sessionStorage|indexedDB|document\.cookie|caches\.open)\b/;
+      expect(source, file).not.toMatch(banned);
     }
   });
 });

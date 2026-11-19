@@ -423,11 +423,11 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - _Requirements: 8.1, 8.2, 8.3, 8.6, 8.8, 8.10, 24.9_
 
 - [ ] 10. Session, wizard logic, re-translation builder, read-aloud and browser binding checks (Slice 1, Tier A and Tier B, about 1.25 days)
-  - [ ] 10.1 Add the document session and Kept_Label mapping (Slice 1, Tier A)
+  - [x] 10.1 Add the document session and Kept_Label mapping (Slice 1, Tier A)
     - `src/frontend/state.ts` (owned by this spec; additions only: `origin`, `arrivalAnswer`, `document`).
     - `src/frontend/document/session.ts`: Kept_Labels to `FieldState` by the mapping table in design "Data Models"; the Original_Label_Mode analysis and `originalLabelQuestion(text, lang)`; Interface_Language, Form_Language and OCR_Language kept as separate settings; discard of the model, previews and answers on a new file.
     - _Requirements: 4.4, 4.5, 4.8, 10.1, 10.2, 13.8, 13.9, 14.2, 16.2_
-  - [ ] 10.2 Extend the wizard logic (Slice 1, Tier A)
+  - [x] 10.2 Extend the wizard logic (Slice 1, Tier A)
     - `src/frontend/wizard-logic.ts` (owned by this spec). Add `documentReviewStatus`, `documentWizardTotal` and the undo rule. Existing exports keep their behaviour.
     - _Requirements: 15.1, 15.3, 15.7, 18.1_
   - [ ] 10.3 Write the property test for Kept_Label coverage (Slice 1, Tier B)
@@ -464,14 +464,14 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - **Property 27: Local voice matching**
     - **Validates: Requirements 17.1, 17.2**
     - In `tests/unit/speech.property.test.ts`.
-  - [ ] 10.13 Write the static validation-reuse test (Slice 1, Tier A)
+  - [x] 10.13 Write the static validation-reuse test (Slice 1, Tier A)
     - Fails when a module under `src/lib/document/` or `src/frontend/document/` defines an IC, phone, postcode, email or date pattern, or imports a validator other than `validateAnswer`; only `label-rules.ts` may import the pack pattern exports, and `fragments.ts` takes them from `label-rules.ts`.
     - _Requirements: 16.1, 16.5_
-  - [ ] 10.14 Implement the leave-page guard (Slice 1, Tier A)
+  - [x] 10.14 Implement the leave-page guard (Slice 1, Tier A)
     - `src/frontend/document/leave-guard.ts`: `beforeunload` registered while an answer is non-empty or a Document_Model is loaded, removed when neither holds.
     - Unit test: register and remove on the matching state changes.
     - _Requirements: 20.1, 20.3_
-  - [ ] 10.15 Write the browser binding checks for the Privacy_Steering (Slice 1, Tier A)
+  - [x] 10.15 Write the browser binding checks for the Privacy_Steering (Slice 1, Tier A)
     - `tests/unit/document-binding-static.test.ts`, a static scan of `src/lib/document/`, `src/frontend/document/` and the new screens: no use of `localStorage`, `sessionStorage`, `indexedDB`, `document.cookie`, `history.pushState` or `history.replaceState` with document data, and no Cache Storage use outside `ocr.ts` with the `reforge-ocr-` prefix; no import of `src/lib/pdf-extract/page-text.ts` or `computePageSnippets`, so the widget-snippet rules stay on the Fillable_Path.
     - Unit test: every `PageError` message and every label-client error result built from inputs holding a Canary_Value contains no Canary_Value.
     - _Requirements: 20.2, 24.10, 24.11_
