@@ -168,7 +168,7 @@ describe('LanguagePicker (task 27.1)', () => {
 describe('Upload (tasks 28.1, 28.2)', () => {
   function choose(extractor: Extractor, onContinue = () => {}) {
     render(<Upload extractor={extractor} onContinue={onContinue} />, createSessionStore(), new RecordingApi(), 'ms');
-    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
     const file = new File([new Uint8Array([37, 80, 68, 70])], 'clinic-registration.pdf', { type: 'application/pdf' });
     Object.defineProperty(input, 'files', { value: [file], configurable: true });
     act(() => {
@@ -179,7 +179,8 @@ describe('Upload (tasks 28.1, 28.2)', () => {
 
   it('shows the privacy notice in the interface language before any file is chosen', () => {
     render(<Upload extractor={async () => ({ ok: false, code: 'NO_FIELDS', messageKey: 'upload.error.noFields' })} onContinue={() => {}} />, createSessionStore(), new RecordingApi(), 'ms');
-    expect(container.textContent).toContain(translate('ms', 'upload.privacyNotice'));
+    expect(container.textContent).toContain(translate('ms', 'entry.privacyShort'));
+    expect(container.textContent).not.toContain(translate('ms', 'upload.privacyNotice'));
     expect(buttonByText(translate('ms', 'upload.acknowledge'))).toBeUndefined();
   });
 

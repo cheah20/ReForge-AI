@@ -14,6 +14,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { extractFields, type ExtractionResult } from '../../lib/pdf-extract/index.js';
 import { MAX_FILE_SIZE_BYTES } from '../../lib/pdf-extract/rejection.js';
+import { MAX_DOCUMENT_BYTES } from '../../lib/document/limits.js';
+import { sniffHead } from '../../lib/document/sniff.js';
 import type { FieldEvidence } from '../../shared/types.js';
 import type { UploadedPdf } from '../app-context.js';
 import { ScreenHeading } from '../components/ScreenHeading.js';
@@ -21,6 +23,7 @@ import { StatusMessage } from '../components/StatusMessage.js';
 import { useTranslation } from '../i18n.js';
 import { ensurePdfJsWorker } from '../pdfjs-worker.js';
 import type { SampleSource } from '../sample-form.js';
+import '../document/document.css';
 
 export type Extractor = (bytes: Uint8Array) => Promise<ExtractionResult>;
 
@@ -44,12 +47,14 @@ export interface UploadProps {
   sample?: SampleSource | undefined;
   /** First screen after page load (opened at SAMPLE_FORM_PATH): leave focus at the top so Tab reaches the skip link. */
   firstScreen?: boolean;
+  /** A photo or screenshot (JPEG or PNG) was chosen: the Document_Path takes it from here. */
+  onDocument?: (file: File) => void;
 }
 
 type UploadState =
   | { kind: 'idle' }
   | { kind: 'reading' }
-  | { kind: 'rejected'; messageKey: string }
+  | { kind: 'rejected'; messageKey: string; extension?: string | undefined }
   | { kind: 'ready'; form: ExtractedForm };
 
 /** File bytes. `Blob.arrayBuffer` is missing on older Safari, so FileReader is the fallback. */
@@ -68,11 +73,12 @@ function fieldName(f: FieldEvidence): string {
   return f.tooltip?.trim() || f.fieldId;
 }
 
-export function Upload({ onContinue, extractor = defaultExtractor, sample, firstScreen = false }: UploadProps) {
+export function Upload({ onContinue, extractor = defaultExtractor, sample, firstScreen = false, onDocument }: UploadProps) {
   const { t } = useTranslation();
   const [state, setState] = useState<UploadState>({ kind: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
+  const cameraId = useId();
   const noticeId = useId();
   const run = useRef(0);
 
@@ -85,8 +91,26 @@ export function Upload({ onContinue, extractor = defaultExtractor, sample, first
   }, [sample]);
 
   async function readFile(file: File) {
+    const thisRun = ++run.current;
+    let head: ReturnType<typeof sniffHead>;
+    try {
+      head = sniffHead(await readFileBytes(file.slice(0, 65_536)));
+    } catch {
+      head = { kind: 'unknown' };
+    }
+    if (thisRun !== run.current) return;
+    const extension = /\.([A-Za-z0-9]{1,8})$/.exec(file.name)?.[1]?.toLowerCase();
+    if (head.kind === 'jpeg' || head.kind === 'png') {
+      if (file.size > MAX_DOCUMENT_BYTES) return setState({ kind: 'rejected', messageKey: 'entry.error.tooLarge' });
+      if (onDocument) onDocument(file);
+      return;
+    }
+    const looksPdf = head.kind === 'pdf' || head.kind === 'fillable-pdf' || head.kind === 'pdf-without-fields' || extension === 'pdf' || file.type === 'application/pdf';
+    if (!looksPdf) {
+      if (head.kind === 'unknown') return setState({ kind: 'rejected', messageKey: 'entry.error.unknown' });
+      return setState({ kind: 'rejected', messageKey: extension ? 'entry.error.refused' : 'entry.error.refusedNoExtension', extension });
+    }
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      run.current++;
       setState({ kind: 'rejected', messageKey: 'upload.error.tooLarge' });
       return;
     }
@@ -107,7 +131,7 @@ export function Upload({ onContinue, extractor = defaultExtractor, sample, first
     }
     if (thisRun !== run.current) return; // a newer file was chosen meanwhile
     if (!result.ok) {
-      setState({ kind: 'rejected', messageKey: result.messageKey });
+      setState({ kind: 'rejected', messageKey: result.code === 'NO_FIELDS' ? 'entry.error.refusedNoExtension' : result.messageKey });
       return;
     }
     setState({
@@ -131,32 +155,50 @@ export function Upload({ onContinue, extractor = defaultExtractor, sample, first
 
       <div className="section stack">
         <div className="notice" id={noticeId}>
-          <p>{t('upload.privacyNotice')}</p>
+          <p>{state.kind === 'ready' ? t('upload.privacyNotice') : t('entry.privacyShort')}</p>
         </div>
 
-        <div className="file-picker">
-          <label htmlFor={inputId}>{t('upload.button')}</label>
-          <input
-            ref={inputRef}
-            id={inputId}
-            className="file-picker__input"
-            type="file"
-            accept="application/pdf,.pdf"
-            aria-describedby={noticeId}
-            disabled={state.kind === 'reading'}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void readFile(file);
-            }}
-          />
+        <div className="entry-buttons">
+          <div className="file-picker entry-button">
+            <label htmlFor={cameraId}>{t('entry.photo')}</label>
+            <input
+              id={cameraId}
+              className="file-picker__input"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              aria-describedby={noticeId}
+              disabled={state.kind === 'reading'}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void readFile(file);
+              }}
+            />
+          </div>
+          <div className="file-picker entry-button">
+            <label htmlFor={inputId}>{t('upload.button')}</label>
+            <input
+              ref={inputRef}
+              id={inputId}
+              className="file-picker__input"
+              type="file"
+              aria-describedby={noticeId}
+              disabled={state.kind === 'reading'}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void readFile(file);
+              }}
+            />
+          </div>
         </div>
+        <p className="hint">{t('entry.handwriting')}</p>
       </div>
 
       <div className="section stack">
         {/* Only the status text is a live region, so buttons are not read out. */}
         <div aria-live="polite" className={state.kind === 'rejected' ? 'error-panel' : undefined}>
           {state.kind === 'reading' && <StatusMessage tone="info">{t('upload.analyzing')}</StatusMessage>}
-          {state.kind === 'rejected' && <StatusMessage tone="error">{t(state.messageKey)}</StatusMessage>}
+          {state.kind === 'rejected' && <StatusMessage tone="error">{t(state.messageKey, { extension: state.extension ?? '' })}</StatusMessage>}
           {state.kind === 'ready' && (
             <StatusMessage tone="success">
               {t('upload.found', { count: state.form.fields.length, pages: state.form.pageCount })}

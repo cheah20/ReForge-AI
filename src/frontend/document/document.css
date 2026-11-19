@@ -1,0 +1,13 @@
+/* Document_Path screens: entry buttons, reading, label review. Colours come from the shared tokens. */
+.entry-buttons {
+  display: grid;
+  gap: 12px;
+}
+
+.entry-button label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  text-align: center;
+}

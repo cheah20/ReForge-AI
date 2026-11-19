@@ -56,7 +56,7 @@ async function startToUpload(page: Page) {
   await page.getByRole('button', { name: t('language.picker.continue') }).click();
 
   await expect(page.getByRole('heading', { level: 1, name: t('upload.title') })).toBeFocused();
-  await expect(page.getByText(t('upload.privacyNotice'))).toBeVisible();
+  await expect(page.getByText(t('entry.privacyShort'))).toBeVisible();
   await expectNoAxeViolations(page, 'upload');
   await page.getByLabel(t('upload.button')).setInputFiles(fixture('clinic-registration.pdf'));
   await expect(page.getByText(t('upload.found', { count: 22, pages: 1 }))).toBeVisible();

@@ -86,7 +86,7 @@ for (const [file, message] of [
   ['encrypted.pdf', 'This PDF is password-protected. Please remove the password before uploading.'],
   ['xfa-acroform.pdf', 'This PDF uses an older format (XFA) that is not supported. Please use a standard AcroForm PDF.'],
   ['sig-populated.pdf', 'This PDF has already been signed and cannot be edited.'],
-  ['no-fields.pdf', 'This PDF has no form fields to fill in.'],
+  ['no-fields.pdf', 'We cannot open this kind of file. You can take a photo of the paper form instead.'],
 ] as const) {
   test(`rejects ${file} with its message and offers another try`, async ({ page }) => {
     await page.getByLabel('Choose a file from this device').setInputFiles(fixture(file));
