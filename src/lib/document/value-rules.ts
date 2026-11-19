@@ -17,6 +17,7 @@ import { MY_IC_SEARCH } from '../../packs/country/my.js';
 import { US_SSN_SEARCH } from '../../packs/country/us.js';
 import { digitView, matchText } from './digit-view.js';
 import type { AnswerArea, Box, LabelClass, Page } from './types.js';
+import { nextLineValues } from './next-line-values.js';
 
 export type ValueRuleId = 'V1' | 'V2' | 'V3' | 'V4' | 'V5' | 'V6' | 'V7' | 'V8' | 'V9';
 
@@ -118,5 +119,9 @@ export function classifyLineByValueRules(text: string, box: Box, areas: readonly
  * not hold gets no entry and so counts as value-like in `buildCandidates`.
  */
 export function classifyByValueRules(page: Page): ReadonlyMap<number, LabelClass> {
-  return new Map(page.lines.map((l) => [l.index, classifyLineByValueRules(l.text, l.box, page.answerAreas)] as const));
+  // A line directly below a question is the answer someone already wrote: never offered (next-line-values.ts).
+  const nextLine = nextLineValues(page);
+  return new Map(
+    page.lines.map((l) => [l.index, nextLine.has(l.index) ? 'value-like' : classifyLineByValueRules(l.text, l.box, page.answerAreas)] as const),
+  );
 }

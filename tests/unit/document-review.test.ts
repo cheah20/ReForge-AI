@@ -166,10 +166,9 @@ describe('prefilled fixture request canary (7.6)', () => {
     }
   });
 
-  it('a name or sentence with no number is sent only after the user taps it in (Tier A, until the area detector of task 6.7)', () => {
+  it('a name or sentence with no number, directly below a question, is not offered and so cannot be sent', () => {
     const { items } = reviewOf('prefilled-sensitive');
-    const name = items.find((i) => i.text === 'ZQXNAME KAPPA')!;
-    expect(JSON.stringify(requestsFor(items))).not.toContain('ZQXNAME');
-    expect(JSON.stringify(requestsFor(reduceReview(items, { type: 'toggle', labelId: name.labelId })))).toContain('ZQXNAME KAPPA');
+    expect(items.some((i) => i.text === 'ZQXNAME KAPPA' || i.text.startsWith('ZQXFREE'))).toBe(false);
+    expect(JSON.stringify(requestsFor(selectAll(items)))).not.toContain('ZQX');
   });
 });

@@ -3,10 +3,9 @@
  *
  * Scenario 8 (formbridge-any-document task 13.7): a prefilled sensitive form.
  * The user ticks every line the review may list (the fixture's `not-listed`
- * lines excluded) and answers every question with a canary. A second test,
- * `ticks everything`, is the worst case and records a known Tier A gap: a
- * prefilled value with no digit, no email and no colon (a name in a box, a
- * free-text sentence) is offered, because the answer-area detector is Tier B.
+ * lines excluded) and answers every question with a canary. A second test
+ * ticks every line the review offers (the worst case): the next-line rule keeps
+ * a prefilled name or sentence out of the review, so nothing leaves.
  * Through the AI path and in Original_Label_Mode,
  * no canary value, no Numeric_Fragment of a split value and no typed answer
  * appears in any request URL, header or body, every request goes to the app's
@@ -144,16 +143,10 @@ for (const file of FIXTURES) {
 }
 
 /**
- * Worst case: the user ticks every line, including the ones the spec says must not be offered.
- * Known Tier A gap (answer-area detector is Tier B): a prefilled value with no digit run, no
- * email and no label colon is offered as a line, so a user who ticks it sends it. Only those
- * strings are allowed here; every number, email, phone and value after a colon must still stay.
+ * Worst case: the user ticks every line the review offers. A prefilled value with no digit, no
+ * email and no colon (a name in a box, a free-text sentence) sits directly below its question, so
+ * the next-line rule never offers it: nothing from the fixture is allowed to leave.
  */
-test('prefilled-sensitive.png: ticking every offered line still sends no number, email or colon value (ai)', async ({ page, context }) => {
-  const file = 'prefilled-sensitive.png';
-  const gap = new Set(
-    (fixtureEntry(file).lines ?? []).filter((l) => l.expect === 'not-listed' && !/\d{4,}|@/.test(l.text)).map((l) => l.text),
-  );
-  test.info().annotations.push({ type: 'known-gap', description: `Tier A offers prefilled text without digits or colon: ${gap.size} line(s) in this fixture` });
-  await runScenario(page, context, file, 'ai', 'everything', gap);
+test('prefilled-sensitive.png: ticking every offered line sends nothing from the fixture (ai)', async ({ page, context }) => {
+  await runScenario(page, context, 'prefilled-sensitive.png', 'ai', 'everything', new Set());
 });

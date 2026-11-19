@@ -208,15 +208,16 @@ describe('the synthetic prefilled fixtures', () => {
     expect(candidates).toContain('Signature:');
   });
 
-  it('a name or free text that has no number needs the answer-area rule V7: without areas it is offered, with the measured areas it is not', () => {
+  it('a name or free text with no number is not offered: the line directly below a question is a prefilled value, with or without the measured areas', () => {
     const name = 'ZQXNAME KAPPA';
     const free = 'ZQXFREE canary sentence for privacy tests.';
-    // Tier A has no area detector yet (task 6.7, Tier B): these two are offered, unselected, and the user decides.
-    expect(offered('prefilled-sensitive', false)).toEqual(expect.arrayContaining([name, free]));
-    const withAreas = offered('prefilled-sensitive', true);
-    expect(withAreas).not.toContain(name);
-    expect(withAreas).not.toContain(free);
-    expect(withAreas).toContain('Full name:');
+    for (const withAreas of [false, true]) {
+      const c = offered('prefilled-sensitive', withAreas);
+      expect(c).not.toContain(name);
+      expect(c).not.toContain(free);
+      expect(c).toContain('Full name:');
+      expect(c).toContain('Reason for visit:');
+    }
   });
 
   it('nothing is ever likely-label in Tier A, so nothing is preselected', () => {
