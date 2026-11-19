@@ -241,7 +241,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - _Requirements: 3.3, 7.1_
 
 - [ ] 5. Geometry, reading order and the Document_Model (Slice 1, Tier A and Tier B, about 1 day)
-  - [ ] 5.1 Add the document types and orientation maths (Slice 1, Tier A)
+  - [x] 5.1 Add the document types and orientation maths (Slice 1, Tier A)
     - `src/lib/document/types.ts` as in design "Data Models"; `src/lib/document/orientation.ts` with `uprightTransform(exif, decoderApplies)`, rotation by 90 degrees, box mapping to the upright frame, and the Working_Image size.
     - _Requirements: 3.4, 6.6, 7.1, 7.2_
   - [ ] 5.2 Write the property test for EXIF orientation (Slice 1, Tier B)
@@ -254,7 +254,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 5.4 Write the property test for the Working_Image scale (Slice 1, Tier B)
     - **Property 17: Working_Image scale**
     - **Validates: Requirements 3.4**
-  - [ ] 5.5 Implement line grouping and reading order (Slice 1, Tier A)
+  - [x] 5.5 Implement line grouping and reading order (Slice 1, Tier A)
     - `src/lib/document/reading-order.ts`: `groupIntoLines(fragments)` with rows from vertical centres within half the median line height, rows top to bottom, fragments left to right, indexes from 0.
     - Unit tests: two-column rows, a skewed line, equal boxes.
     - _Requirements: 4.2, 4.6_
@@ -268,11 +268,11 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 5.8 Write the property test for visible text only (Slice 1, Tier B)
     - **Property 20: Text-layer lines come only from visible page text**
     - **Validates: Requirements 6.4**
-  - [ ] 5.9 Implement OCR result mapping (Slice 1, Tier A)
+  - [x] 5.9 Implement OCR result mapping (Slice 1, Tier A)
     - `src/lib/document/ocr-map.ts`: `mapTesseractBlocks` (confidence divided by 100, empty lines dropped, word boxes kept for leader and colon placement) and `isLowQuality`.
     - Unit tests: a recorded block structure built by hand, an empty page with mean confidence 0.
     - _Requirements: 9.4, 9.5_
-  - [ ] 5.10 Implement the Document_Model builder (Slice 1, Tier A)
+  - [x] 5.10 Implement the Document_Model builder (Slice 1, Tier A)
     - `src/lib/document/model.ts`: `buildPage` (sort, index, clamp boxes), `buildCandidates` (order, `textLang`, `checkYourself`), `labelIdOf`, `checkModel`, `replacePage` for rotate and retake, and `appendPage` for "Add another page" (page number is the current count plus 1, refused at the page limit, existing pages unchanged).
     - _Requirements: 4.1, 4.2, 4.3, 4.6, 4.7, 7.3, 7.5, 7.6, 9.5, 10.3_
   - [ ] 5.11 Write the property test for model invariants (Slice 1, Tier B)
