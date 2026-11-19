@@ -16,7 +16,7 @@ import { buildCandidates, buildPage, createModel } from '../../lib/document/mode
 import { isLowQuality } from '../../lib/document/ocr-map.js';
 import type { DocumentModel, Page, Rotation } from '../../lib/document/types.js';
 import { classifyByValueRules } from '../../lib/document/value-rules.js';
-import { releaseCanvas, type DecodeOutcome } from './decode.js';
+import { releaseCanvas, type DecodedPhoto, type DecodeOutcome } from './decode.js';
 import type { OcrService } from './ocr.js';
 
 export interface PipelineDeps {
@@ -38,39 +38,58 @@ export interface ReadPhotoOptions {
   onSlow?: () => void;
 }
 
+/** Recognises a decoded photo and builds its Page; the Working_Image is always released afterwards (3.5). */
+async function recognizePhoto(deps: PipelineDeps, photo: DecodedPhoto, o: ReadPhotoOptions): Promise<Page> {
+  try {
+    const result = await deps.ocr.recognize(photo.canvas, o.ocrLanguage, o.signal);
+    return buildPage({
+      pageNumber: o.pageNumber,
+      width: photo.width,
+      height: photo.height,
+      rotation: o.rotation,
+      textSource: 'ocr',
+      lines: result.lines,
+      status: isLowQuality(result) ? 'low-quality' : 'ready',
+      preview: photo.preview,
+      exifOrientation: photo.exifOrientation,
+    });
+  } finally {
+    releaseCanvas(photo.canvas);
+  }
+}
+
+/** Runs `work` with the 60-second slow-page timer; the notice never stops the work. */
+async function withSlowNotice<T>(deps: PipelineDeps, onSlow: (() => void) | undefined, work: () => Promise<T>): Promise<T> {
+  const timer = onSlow ? deps.setTimeout(onSlow, SLOW_PAGE_NOTICE_MS) : undefined;
+  try {
+    return await work();
+  } finally {
+    if (timer !== undefined) deps.clearTimeout(timer);
+  }
+}
+
+const skippedPage = (o: ReadPhotoOptions, d: { width: number; height: number }): Page =>
+  buildPage({ pageNumber: o.pageNumber, width: d.width, height: d.height, rotation: o.rotation, textSource: 'ocr', lines: [], status: 'skipped-too-large' });
+
 /**
  * Reads one photo into a Page. A decode failure or an OCR failure is thrown as
  * its typed error (PageError, OcrError): for a single photo that is a whole-file
  * failure and the caller discards everything (Requirement 3.6).
  */
 export async function readPhotoPage(deps: PipelineDeps, o: ReadPhotoOptions): Promise<Page> {
-  const timer = o.onSlow ? deps.setTimeout(o.onSlow, SLOW_PAGE_NOTICE_MS) : undefined;
-  try {
+  return withSlowNotice(deps, o.onSlow, async () => {
     const decoded = await deps.decode(o.file, o.rotation);
-    if (decoded.kind === 'skipped-too-large') {
-      return buildPage({ pageNumber: o.pageNumber, width: decoded.width, height: decoded.height, rotation: o.rotation, textSource: 'ocr', lines: [], status: 'skipped-too-large' });
-    }
-    const { photo } = decoded;
-    try {
-      const result = await deps.ocr.recognize(photo.canvas, o.ocrLanguage, o.signal);
-      return buildPage({
-        pageNumber: o.pageNumber,
-        width: photo.width,
-        height: photo.height,
-        rotation: o.rotation,
-        textSource: 'ocr',
-        lines: result.lines,
-        status: isLowQuality(result) ? 'low-quality' : 'ready',
-        preview: photo.preview,
-        exifOrientation: photo.exifOrientation,
-      });
-    } finally {
-      // The Working_Image is no longer needed once the page is read (Requirement 3.5).
-      releaseCanvas(photo.canvas);
-    }
-  } finally {
-    if (timer !== undefined) deps.clearTimeout(timer);
-  }
+    if (decoded.kind === 'skipped-too-large') return skippedPage(o, decoded);
+    return recognizePhoto(deps, decoded.photo, o);
+  });
+}
+
+/**
+ * Reads a photo that was already decoded, for the preview step: the user sees
+ * the page and can turn it before the reading starts (Requirement 7.2).
+ */
+export async function readDecodedPhoto(deps: PipelineDeps, photo: DecodedPhoto, o: ReadPhotoOptions): Promise<Page> {
+  return withSlowNotice(deps, o.onSlow, () => recognizePhoto(deps, photo, o));
 }
 
 /** A one-page model from a photo, with the value rules applied and nothing preselected. */
@@ -78,7 +97,7 @@ export function modelFromPhoto(sourceKind: 'jpeg' | 'png', page: Page, ocrLangua
   return createModel(sourceKind, [page], buildCandidates([page], formLanguage, ocrLanguage, classifyByValueRules));
 }
 
-/** Rotate or retake: the page is read again from the file, and only the model's candidates for that page are rebuilt. */
+/** Rotate or retake: the candidates of a page, rebuilt after the page was read again. */
 export function candidatesForPage(page: Page, ocrLanguage: OcrLanguage, formLanguage: string | null) {
   return buildCandidates([page], formLanguage, ocrLanguage, classifyByValueRules);
 }

@@ -154,6 +154,7 @@
   "accessforge.notice.acknowledge": "I understand, continue",
 
   "entry.photo": "Take a photo of your form",
+  "entry.privacyShort": "Your file stays on this device. Before anything is sent, we show you what it is.",
   "entry.handwriting": "Printed forms work best. Handwriting cannot be read.",
   "entry.kinds": "You can use a photo or screenshot of a paper form, a scanned form, or a form saved on this device. Other kinds of files cannot be opened yet.",
   "entry.error.refused": "We cannot open this kind of file ({extension}). You can take a photo of the paper form instead.",
