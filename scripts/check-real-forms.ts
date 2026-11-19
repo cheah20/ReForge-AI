@@ -21,6 +21,7 @@ import path from 'node:path';
 import { OCR_MODEL_VARIANT, WORKING_LONG_EDGE, type OcrLanguage } from '../src/lib/document/limits.js';
 import { buildCandidates, buildPage } from '../src/lib/document/model.js';
 import { isLowQuality, mapTesseractBlocks } from '../src/lib/document/ocr-map.js';
+import { isPromptShaped } from '../src/lib/document/review-order.js';
 import { workingImageSize } from '../src/lib/document/orientation.js';
 import { classifyByValueRules, textRuleHits } from '../src/lib/document/value-rules.js';
 
@@ -39,6 +40,7 @@ interface Row {
   low: boolean;
   candidates: number;
   likely: number;
+  promptShaped: number;
   valueLikeHidden: number;
   candidatesWithValueHit: number;
 }
@@ -111,6 +113,7 @@ async function main() {
           low: isLowQuality(result),
           candidates: candidates.length,
           likely: candidates.filter((c) => c.labelClass === 'likely-label').length,
+          promptShaped: candidates.filter((c) => isPromptShaped(c.text)).length,
           valueLikeHidden,
           // A candidate text that still trips a value rule would be a leak into the review list.
           candidatesWithValueHit: candidates.filter((c) => textRuleHits(c.text).length > 0).length,
@@ -121,7 +124,7 @@ async function main() {
     }
   }
 
-  console.log('file lang  secs lines words conf  low  offered likely hidden(value-like) offered-with-value-hit');
+  console.log('file lang  secs lines words conf  low  offered likely prompts hidden(value-like) offered-with-value-hit');
   for (const r of rows) {
     console.log(
       [
@@ -134,6 +137,7 @@ async function main() {
         (r.low ? 'yes' : 'no').padStart(4),
         String(r.candidates).padStart(7),
         String(r.likely).padStart(6),
+        String(r.promptShaped).padStart(7),
         String(r.valueLikeHidden).padStart(16),
         String(r.candidatesWithValueHit).padStart(24),
       ].join(' '),
@@ -146,7 +150,7 @@ async function main() {
     console.log(
       `\n${lang}: ${own.length} images, ${sum('lines')} lines, mean confidence ${(sum('conf') / own.length).toFixed(2)}, low-quality ${lowCount}/${own.length}, ` +
         `offered ${sum('candidates')} (${((sum('candidates') / Math.max(1, sum('lines'))) * 100).toFixed(0)}% of lines), ` +
-        `offered with a value hit ${sum('candidatesWithValueHit')}, mean time ${(sum('ms') / own.length / 1000).toFixed(1)} s`,
+        `question-like ${sum('promptShaped')}, offered with a value hit ${sum('candidatesWithValueHit')}, mean time ${(sum('ms') / own.length / 1000).toFixed(1)} s`,
     );
   }
 }
