@@ -155,6 +155,8 @@
 
   "entry.photo": "给您的表格拍照",
   "entry.privacyShort": "您的文件只保留在这台设备上。发送任何内容之前，我们会先让您看到要发送的内容。",
+  "document.review.group.questions": "这些看起来像问题",
+  "document.review.group.others": "页面上的其他文字行",
   "entry.handwriting": "印刷的表格效果最好。无法识别手写字。",
   "entry.kinds": "您可以使用纸质表格的照片或截图、扫描的表格，或保存在此设备上的表格。其他类型的文件暂时无法打开。",
   "entry.error.refused": "我们无法打开这种文件（{extension}）。您可以改为给纸质表格拍照。",

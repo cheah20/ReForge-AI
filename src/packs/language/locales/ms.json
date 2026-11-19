@@ -155,6 +155,8 @@
 
   "entry.photo": "Ambil gambar borang anda",
   "entry.privacyShort": "Fail anda kekal pada peranti ini. Sebelum apa-apa dihantar, kami tunjukkan apa yang akan dihantar.",
+  "document.review.group.questions": "Ini kelihatan seperti soalan",
+  "document.review.group.others": "Baris lain pada halaman",
   "entry.handwriting": "Borang bercetak paling sesuai. Tulisan tangan tidak dapat dibaca.",
   "entry.kinds": "Anda boleh menggunakan gambar atau tangkapan skrin borang kertas, borang yang diimbas, atau borang yang disimpan pada peranti ini. Jenis fail lain belum boleh dibuka.",
   "entry.error.refused": "Kami tidak dapat membuka jenis fail ini ({extension}). Anda boleh mengambil gambar borang kertas itu.",

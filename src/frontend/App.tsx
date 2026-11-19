@@ -18,6 +18,10 @@ import { browserLanguages, matchLanguage } from './language-match.js';
 import { AnalysisLoading } from './screens/AnalysisLoading.js';
 import { ConfirmLanguage, isBlockedFormLanguage } from './screens/ConfirmLanguage.js';
 import { AnswerSheet } from './screens/AnswerSheet.js';
+import { DocumentReading } from './document/DocumentReading.js';
+import { LabelReview } from './document/LabelReview.js';
+import { startDocumentSession, discardDocument } from './document/session.js';
+import { ocrLanguageTag } from '../lib/document/model.js';
 import { DownloadConfirm } from './screens/DownloadConfirm.js';
 import { LanguagePicker } from './screens/LanguagePicker.js';
 import { QuestionWizard } from './screens/QuestionWizard.js';
@@ -30,7 +34,7 @@ import { RevivalScreen } from './accessforge/RevivalScreen.js';
 import { namesForeignAddress } from '../lib/accessforge/scope.js';
 import { useChangeLanguage } from './use-change-language.js';
 
-export type Screen = 'language' | 'upload' | 'analysis' | 'confirm' | 'questions' | 'review' | 'download' | 'sheet' | 'accessforge';
+export type Screen = 'language' | 'upload' | 'analysis' | 'confirm' | 'questions' | 'review' | 'download' | 'sheet' | 'reading' | 'labelReview' | 'accessforge';
 
 interface FlowProps {
   extractor?: Extractor | undefined;
@@ -49,6 +53,7 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
   // Read once: a foreign address in the AccessForge URL only shows the scope message (Requirement 18.2).
   const [foreignAddress] = useState(() => startsWithAccessForge && typeof window !== 'undefined' && namesForeignAddress(new URL(window.location.href), ACCESSFORGE_PATH));
   const [form, setForm] = useState<ExtractedForm | null>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
   // A new object per request, so pressing "Try a sample form" again reads it again.
   const [sample, setSample] = useState<SampleSource | undefined>(() =>
     startsWithSample ? { name: SAMPLE_FORM_NAME, load: loadSample } : undefined,
@@ -116,6 +121,11 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
             {...(extractor ? { extractor } : {})}
             sample={sample}
             firstScreen={firstScreen}
+            onDocument={(file) => {
+              store.set((s) => discardDocument(s, (u) => URL.revokeObjectURL(u)));
+              setPhoto(file);
+              show('reading');
+            }}
             onContinue={(f) => {
               setForm(f);
               show('analysis');
@@ -136,6 +146,22 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
             }}
           />
         )}
+        {screen === 'reading' && photo && (
+          <DocumentReading
+            file={photo}
+            interfaceLanguage={session.interfaceLanguage}
+            onBack={() => {
+              store.set((s) => discardDocument(s, (u) => URL.revokeObjectURL(u)));
+              setPhoto(null);
+              show('upload');
+            }}
+            onRead={(model, lang) => {
+              store.set((s) => ({ ...s, formLanguage: ocrLanguageTag(lang), formCountry: s.formCountry || 'MY', document: startDocumentSession(model, lang) }));
+              show('labelReview');
+            }}
+          />
+        )}
+        {screen === 'labelReview' && <LabelReview onDone={onAnalysisDone} onBack={() => show('upload')} />}
         {screen === 'sheet' && <AnswerSheet onBackToReview={() => show('review')} />}
         {screen === 'download' && form && <DownloadConfirm pdf={form.pdf} onBackToReview={() => show('review')} />}
       </main>

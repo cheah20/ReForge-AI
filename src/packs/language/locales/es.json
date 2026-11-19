@@ -155,6 +155,8 @@
 
   "entry.photo": "Tomar una foto de tu formulario",
   "entry.privacyShort": "Su archivo se queda en este dispositivo. Antes de enviar nada, le mostramos qué se enviará.",
+  "document.review.group.questions": "Estas parecen preguntas",
+  "document.review.group.others": "Otras líneas de la página",
   "entry.handwriting": "Los formularios impresos funcionan mejor. No se puede leer la letra a mano.",
   "entry.kinds": "Puedes usar una foto o captura de pantalla de un formulario en papel, un formulario escaneado o un formulario guardado en este dispositivo. Otros tipos de archivo aún no se pueden abrir.",
   "entry.error.refused": "No podemos abrir este tipo de archivo ({extension}). Puedes tomar una foto del formulario en papel.",
