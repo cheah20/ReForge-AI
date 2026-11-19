@@ -378,7 +378,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - **Shared file:** `docs/accessibility-checklist.md` (create it if absent).
     - State that the Legacy_Portal pages fail accessibility on purpose; add Mirror entries for a keyboard-only run, a screen-reader pass on the question, review and confirmation screens, 360 px, 200% zoom, reduced motion and larger text, each with a pass or fail column and a date column. The developer records the results.
     - _Requirements: 14.9_
-  - [ ] 21.2 Update the README (Slice 1)
+  - [x] 21.2 Update the README (Slice 1)
     - **Shared file:** `README.md`. Apply the project's English writing style.
     - Acceptance criteria:
       - A scope section names the Legacy_Portal as the only supported portal and the Legacy_Form as the only supported form, lists `en` and `zh-Hans` and the `MY` country pack as covered by the automated acceptance tests, marks every other interface language as experimental for AccessForge, and states that real websites, cross-origin pages, login pages, CAPTCHA pages, script-driven sites and general crawling are not supported.

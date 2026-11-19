@@ -104,6 +104,39 @@ The project uses these open-source libraries and assets. No code was copied from
 
 Every check is a format check. Passing does not verify that an identity number, phone number or postcode exists.
 
+## AccessForge (legacy portal revival)
+
+AccessForge shows an old registration page next to a plain, accessible set of questions. You answer the questions in your language. The app writes each answer into the old page, reads it back, and sends the old form only when you press the confirm button. The old page still does the work: its own handler receives the data and answers with its own confirmation.
+
+### Scope
+
+- The only supported portal is the fictional demonstration portal that this app serves under `/legacy/`. The only supported form is its one registration form.
+- English and Simplified Chinese (`zh-Hans`) are covered by the automated acceptance test, with the Malaysian (`MY`) validation rules. The Malay, Traditional Chinese, Tamil and Spanish interface strings exist but are not covered by that test. Indonesian shows the data notice and English for the rest of AccessForge. Treat every language other than English and Simplified Chinese as experimental for AccessForge.
+- Not supported: real websites, pages from another origin, login pages, CAPTCHA pages, sites that need scripts to work, and crawling.
+- The questions come from live AI, from saved plans (English and Simplified Chinese only) when live AI is unavailable, or from a simulated demonstration provider. The screen says which one.
+- The same acceptance scenario has not yet been run against the public URL.
+
+### What the tests show
+
+| Claim | Test |
+|-------|------|
+| The scenario works from the old page to a verified confirmation in Simplified Chinese, with a wrong IC number rejected and one submission only | `tests/e2e/accessforge-acceptance.spec.ts` |
+| Answering through AccessForge sends the same data as typing directly into the old form | `tests/e2e/accessforge-same-data.spec.ts` |
+| Nothing is submitted before the confirm press, and one press gives one submission | `tests/unit/accessforge-agent-machine-submit.test.ts` |
+| Values typed into the old page and your answers do not reach the AI service, the logs or browser storage. The answers go only to the old form's own submission. Labels and nearby text from the old page do go to the AI service, and the data notice says so | `tests/unit/accessforge-privacy.test.ts`, `tests/e2e/accessforge-privacy.spec.ts` |
+| The app stops on a page that is not allowed, a changed page version, or a form that posts elsewhere | `tests/e2e/accessforge-navigation.spec.ts`, `tests/e2e/accessforge-hostile.spec.ts` |
+| Text planted in the old page cannot steer the app | `tests/unit/accessforge-instructions.test.ts`, `tests/e2e/accessforge-hostile.spec.ts` |
+| Axe finds no violation in the AccessForge screens in English and Simplified Chinese | `tests/e2e/accessforge-a11y.spec.ts` |
+
+Axe cannot judge focus order, wording or screen reader use. The manual checks are listed in [`docs/accessibility-checklist.md`](docs/accessibility-checklist.md) and none has been recorded yet.
+
+### Non-English content and assets
+
+Outside the interface locale files, the only non-English content is the Malay text of the demonstration portal in `src/packs/language/locales/legacy-portal/ms.json` and the Malay and Chinese texts of the simulated provider in `fixtures/mock-analysis/legacy-register.json`. The portal uses system fonts and no images.
+
+### Libraries added for AccessForge
+
+None. AccessForge uses the libraries in the table above.
 ## Kiro usage log
 
 See [`docs/kiro-usage-log.md`](docs/kiro-usage-log.md).
