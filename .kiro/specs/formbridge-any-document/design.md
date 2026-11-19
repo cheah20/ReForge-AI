@@ -681,6 +681,8 @@ A question-mark ending is always `ambiguous` (Requirement 11.4). For example, "H
 - **Any other edit.** The selection state stays as it was (Requirement 12.16). An edit never selects an item, an unselected `ambiguous` item stays unselected after any edit, and only the user's press of its selection control selects it.
 - **Text cleared to empty.** The item leaves the send list and keeps its row (Requirement 12.12). Entering text again does not reselect it.
 
+**Display grouping.** `groupForReview` in `src/lib/document/review-order.ts` splits the candidates into prompt-shaped lines (shown first under `document.review.group.questions`) and the rest (a collapsed `details` list under `document.review.group.others`), each in page and reading order (Requirement 12.17). It is display only: selection stays in the review reducer, which never reads the group, and `keptLabels` still sorts by page and reading order, so the wizard and the Answer_Sheet are unaffected.
+
 **How this is tested with prefilled forms.**
 
 - **Property tests.** Properties 1, 2, 35 and 37 build lines from the Label_Vocabulary and from these value generators:

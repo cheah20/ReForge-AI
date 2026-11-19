@@ -359,6 +359,7 @@ Each scenario names its slice. Requirement 27 turns them into Playwright tests, 
 14. THE Label_Review SHALL show, above the list of candidates, an instruction in the Interface_Language with the meaning "Remove any names, addresses or other personal details".
 15. THE control that confirms the Label_Review (criterion 12.9) SHALL carry a visible label in the Interface_Language that names what will be sent and the current number of selected items, with the meaning "Send these 7 labels to write the questions", and SHALL update that label on every change of the send list.
 16. WHEN the Label_Classifier classifies corrected text again under criterion 12.5 and the result is not `value-like`, THE Label_Review SHALL keep the candidate's selection state unchanged, so that only the user's own press of a candidate's selection control selects an `ambiguous` candidate.
+17. THE Label_Review SHALL show the Label_Candidates in two display groups: first a group headed "These look like questions" with the candidates whose text is prompt-shaped (a short line ending in a label colon or a fill-in line, and not value-like), then the other candidates in a collapsed list, each group in page and reading order. The grouping SHALL only change where a candidate is shown: it SHALL NOT select, unselect or change any candidate, the Kept_Labels, the Question_Wizard and the Answer_Sheet SHALL keep the order of Requirement 4.6, and no candidate SHALL be selected until the user selects it.
 
 ### Requirement 13: Label analysis through the existing AI layer
 
