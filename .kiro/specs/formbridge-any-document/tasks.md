@@ -408,6 +408,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 9.2 Implement the page pipeline (Slice 1, Tier A)
     - `src/frontend/document/pipeline.ts`: pages one at a time in page order; text layer first, OCR otherwise; Answer_Areas, table cells and classification per page (no grey image for a page means its cell and Fill_In_Line conditions are undecidable); page status for skipped, failed, low-quality and classifier-failed pages; the 60-second slow-page timer that never stops processing by itself; the 5-page limit choice before any page.
     - _Requirements: 3.2, 3.5, 3.8, 6.3, 6.5, 6.7, 11.14_
+    - Progress (2026-11-19): the photo path is done and tested (`pipeline.ts`, `tests/unit/document-pipeline.test.ts`): decode, recognise, release the Working_Image, low-quality and skipped pages, the slow-page notice that never stops reading. Still open, deferred to Tier B with PDF input: text layer first, PDF page rendering, the 5-page choice, Answer_Areas, table cells and the full classification. The box stays unticked until they are done.
   - [ ] 9.3 Write the property test for one bitmap at a time (Slice 1, Tier B)
     - **Property 18: One full-size bitmap at a time**
     - **Validates: Requirements 3.5, 6.3**

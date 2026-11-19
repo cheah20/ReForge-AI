@@ -88,7 +88,7 @@ export interface DecodedPhoto {
   exifOrientation: number;
 }
 
-export type DecodeOutcome = { kind: 'ok'; photo: DecodedPhoto } | { kind: 'skipped-too-large'; pixels: number };
+export type DecodeOutcome = { kind: 'ok'; photo: DecodedPhoto } | { kind: 'skipped-too-large'; pixels: number; width: number; height: number };
 
 function toBlob(canvas: CanvasLike, quality: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -107,7 +107,7 @@ export async function decodePhoto(file: Blob, deps: DecodeDeps, decoderApplies: 
   if (!header) throw new PageError('decode-failed');
   const shown = displayedSize(header);
   const pixels = shown.width * shown.height;
-  if (pixels > MAX_DECODED_PIXELS) return { kind: 'skipped-too-large', pixels };
+  if (pixels > MAX_DECODED_PIXELS) return { kind: 'skipped-too-large', pixels, width: shown.width, height: shown.height };
 
   let bitmap: BitmapLike;
   try {

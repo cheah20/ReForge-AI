@@ -76,7 +76,7 @@ describe('pixel limit (3.3)', () => {
     new DataView(bytes.buffer).setUint32(20, 4500);
     const { deps, calls } = fake({ width: 5000, height: 4500 });
     const out = await decodePhoto(new Blob([bytes as unknown as BlobPart]), deps, true);
-    expect(out).toEqual({ kind: 'skipped-too-large', pixels: 22_500_000 });
+    expect(out).toEqual({ kind: 'skipped-too-large', pixels: 22_500_000, width: 5000, height: 4500 });
     expect(calls.bitmaps).toBe(0);
     expect(calls.canvases).toHaveLength(0);
   });
