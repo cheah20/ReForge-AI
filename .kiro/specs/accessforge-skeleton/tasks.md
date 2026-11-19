@@ -393,7 +393,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - One row per real use: this spec, each property test that found a bug (with the regression test name and seed), and any hook, steering or MCP use during these tasks. Rows are added as each use happens; this is the final sweep that nothing was missed or invented.
     - _Requirements: 17.10_
 
-- [ ] 22. Final checkpoint (Slice 1)
+- [x] 22. Final checkpoint (Slice 1)
   - Run `npx vitest --run` and `npm run test:e2e`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 23. Deployed acceptance and final review (Slice 1)
