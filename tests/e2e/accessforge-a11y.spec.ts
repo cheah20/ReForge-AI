@@ -12,7 +12,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Page } from '@playwright/test';
 import { translate } from './helpers.js';
-import { SYNTHETIC, answerAll, answerStep, currentStep, fillStep, legacyFrame, revive } from './helpers/accessforge.js';
+import { SYNTHETIC, answerAll, answerStep, currentStep, fillStep, legacyFrame, revive, useOwnClientAddress } from './helpers/accessforge.js';
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -26,6 +26,8 @@ const LANGS = [
   { tag: 'en', locale: 'en-US' },
   { tag: 'zh-Hans', locale: 'zh-CN' },
 ] as const;
+
+test.beforeEach(({ page }) => useOwnClientAddress(page));
 
 for (const { tag, locale } of LANGS) {
   test.describe(`axe in ${tag}`, () => {

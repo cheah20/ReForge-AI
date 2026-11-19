@@ -10,11 +10,13 @@
 
 import { test, expect } from '@playwright/test';
 import { translate } from './helpers.js';
-import { SYNTHETIC, answerAll, legacyFrame } from './helpers/accessforge.js';
+import { SYNTHETIC, answerAll, legacyFrame, useOwnClientAddress } from './helpers/accessforge.js';
 
 const FRAME = 'CANARY-FRAME-5Q7Z';
 const ANSWER = 'CANARY-ANSWER-8K2M';
 const t = (k: string) => translate('en', k);
+
+test.beforeEach(({ page }) => useOwnClientAddress(page));
 
 test('neither canary leaves the browser except the answer in the one legacy POST', async ({ page, context }) => {
   test.setTimeout(90_000);

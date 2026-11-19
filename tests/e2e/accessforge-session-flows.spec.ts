@@ -10,9 +10,11 @@
 
 import { test, expect } from '@playwright/test';
 import { translate } from './helpers.js';
-import { SYNTHETIC, answerStep, currentStep, frameValue, legacyFrame, revive } from './helpers/accessforge.js';
+import { SYNTHETIC, answerStep, currentStep, frameValue, legacyFrame, revive, useOwnClientAddress } from './helpers/accessforge.js';
 
 const t = (k: string) => translate('en', k);
+
+test.beforeEach(({ page }) => useOwnClientAddress(page));
 
 test('cancel declined keeps the step; cancel confirmed clears the old page and the answers', async ({ page }) => {
   await revive(page);

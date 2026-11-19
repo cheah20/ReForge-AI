@@ -40,16 +40,28 @@ export const INTENDED: Record<string, string> = {
 
 export const legacyFrame = (page: Page): FrameLocator => page.frameLocator('iframe.revival-frame__iframe');
 
+/**
+ * Gives the page its own client address. The analysis route allows 20 requests per minute per address
+ * (design Question 5), and the whole suite runs from one machine, so each test presents a different
+ * address in the header the Worker reads. Production ignores this: Cloudflare sets the header itself.
+ */
+export async function useOwnClientAddress(page: Page): Promise<void> {
+  const part = () => Math.floor(Math.random() * 250) + 1;
+  await page.setExtraHTTPHeaders({ 'cf-connecting-ip': `10.${part()}.${part()}.${part()}` });
+}
+
 /** Opens AccessForge, waits for the legacy page in the frame, revives it and acknowledges the notice. */
 export async function revive(page: Page, lang = 'en', path = '/accessforge'): Promise<void> {
   const t = (k: string) => translate(lang, k);
+  await useOwnClientAddress(page);
   await page.goto(path);
   await page.waitForLoadState('networkidle');
   // Attached, not visible: below 1024 px the frame is hidden until the user shows it.
   await expect(legacyFrame(page).locator('form input[name="nama"]')).toHaveCount(1);
   await page.getByRole('button', { name: t('accessforge.start') }).click();
   await page.getByRole('button', { name: t('accessforge.notice.acknowledge') }).click();
-  await expect(page.locator('form.mirror-step')).toBeVisible({ timeout: 15_000 });
+  // Generous: a cold dev server can be slow when many tests start together.
+  await expect(page.locator('form.mirror-step')).toBeVisible({ timeout: 30_000 });
 }
 
 /** The Element_Id of the open step, or null when no step is open. */

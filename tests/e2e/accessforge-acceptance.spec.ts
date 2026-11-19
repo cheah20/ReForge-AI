@@ -1,3 +1,4 @@
+
 /**
  * tests/e2e/accessforge-acceptance.spec.ts
  *
@@ -11,7 +12,7 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { translate } from './helpers.js';
-import { INTENDED, SYNTHETIC, answerStep, currentStep, fillStep, frameValue, legacyFrame, recordLegacyPosts } from './helpers/accessforge.js';
+import { INTENDED, SYNTHETIC, answerStep, currentStep, fillStep, frameValue, legacyFrame, recordLegacyPosts, useOwnClientAddress } from './helpers/accessforge.js';
 
 const LANG = 'zh-Hans';
 const t = (key: string, params?: Record<string, string | number>) => translate(LANG, key, params);
@@ -19,6 +20,7 @@ const NAME_OF = (id: string) => id.split(':')[2]!;
 const REFERENCE = /^SR-DEMO-\d{8}-\d{6}$/;
 
 test.use({ viewport: { width: 1280, height: 800 }, locale: 'zh-CN' });
+test.beforeEach(({ page }) => useOwnClientAddress(page));
 
 async function scenario(page: Page, deployed: boolean) {
   test.setTimeout(120_000);

@@ -11,7 +11,7 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { translate } from './helpers.js';
-import { SYNTHETIC, answerStep, legacyFrame, recordLegacyPosts, revive } from './helpers/accessforge.js';
+import { SYNTHETIC, answerStep, legacyFrame, recordLegacyPosts, revive, useOwnClientAddress } from './helpers/accessforge.js';
 
 const t = (k: string) => translate('en', k);
 
@@ -26,6 +26,8 @@ const CASES: Array<[string, (page: Page) => Promise<void>]> = [
   ['an Allow_List path with a query string', (page) => navigateFrame(page, '/legacy/register?x=1')],
   ['the home page, opened from the menu in the frame', (page) => legacyFrame(page).getByRole('link', { name: 'Laman Utama' }).click()],
 ];
+
+test.beforeEach(({ page }) => useOwnClientAddress(page));
 
 for (const [label, go] of CASES) {
   test(`${label} during the question flow stops the loop`, async ({ page }) => {
