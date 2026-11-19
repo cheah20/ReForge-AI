@@ -294,7 +294,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
 
 - [ ] 6. Answer_Areas, table cells and the four-stage Label_Classifier (Slice 1, Tier A and Tier B, about 2.5 days)
   - All sub-tasks are required Slice 1 work. Every rule id below (V1 to V10, P1 to P5, C1 to C8) has its own example unit test with the exact pattern of design Q1 (Requirement 11.8).
-  - [ ] 6.1 Implement the digit view (Slice 1, Tier A)
+  - [x] 6.1 Implement the digit view (Slice 1, Tier A)
     - `src/lib/document/digit-view.ts`: `digitView(nfkcText)` returns a string of the same length, with the three mappings of design Q1 in order: every `\p{Nd}` character to its ASCII digit through a bundled table of the zero code point of every `Nd` block (Unicode 15.1); the listed CJK numerals, formal CJK numerals and multiplier numerals (placeholder 0), and Roman numeral letters inside a token that already holds at least 2 digits (I, l and D at 1, 1 and 0; V, X, L, C and M at the placeholder 1); then the Confusable_Character map (O, o, D, Q to 0; S, s to 5; I, l, the vertical bar, ! to 1; B to 8; Z, z to 2; G to 6; T to 7; g, q to 9) only inside a digit-bearing token or in an all-confusable token of 2 or more characters next to a run of 2 or more digits, repeated until nothing changes.
     - Every code point is written as a `\u` escape in the source, so the file holds no non-Latin characters.
     - _Requirements: 11.8, 11.12, 11.13_
@@ -305,14 +305,14 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - **Property 37: The digit view counts what it must and nothing else**
     - **Validates: Requirements 11.12, 11.13**
     - In `tests/unit/document-digit-view.property.test.ts`, 100 runs, with strings mixing `Nd` digits of many scripts, CJK numerals, Roman letters, Confusable_Characters and plain words.
-  - [ ] 6.4 Implement the value rules V1 to V9 (Slice 1, Tier A)
+  - [x] 6.4 Implement the value rules V1 to V9 (Slice 1, Tier A)
     - `src/lib/document/label-rules.ts`: NFKC match text, the label-ending colon rule (`10:30` is not a label colon), text after the colon, and value rules V1 to V9 with the exact patterns of design Q1. V1, V2, V4, V5 and V6 run on the digit view of task 6.1. V2 marks text `value-like` when it has 6 or more digits anywhere (decision 17). V3 to V6 use the pack exports of task 2.7. V7 uses the Answer_Areas of task 6.7 and V8 the colon split.
     - `label-rules.ts` re-exports the pack patterns that `fragments.ts` needs, so it stays the only module that imports them (static test of task 10.13).
     - _Requirements: 11.2, 11.5, 11.8, 11.10_
-  - [ ] 6.5 Write one example test per value rule V1 to V9 (Slice 1, Tier A)
+  - [x] 6.5 Write one example test per value rule V1 to V9 (Slice 1, Tier A)
     - `tests/unit/document-label-rules.test.ts`: one test per rule V1 to V9 with its exact pattern, including `10:30` (not a label colon), full-width digits, Tamil digits, a confusable digit run (`9001O1`) and a CJK numeral run.
     - _Requirements: 11.8, 11.12, 11.13_
-  - [ ] 6.6 Write the rule V2 example test (Slice 1, Tier A)
+  - [x] 6.6 Write the rule V2 example test (Slice 1, Tier A)
     - In `tests/unit/document-label-rules.test.ts`: `9 0 0 1 0 1`, `A1-B2-C3-D4-E5-F6` and `Form KP01 (Rev. 1/2020)` are `value-like` by V2; `Item 12345` is `value-like` by V1; `Section 2, part 3` (2 digits) is not `value-like`.
     - _Requirements: 11.2, 11.8_
   - [ ] 6.7 Implement the Answer_Area detector (Slice 1, Tier B)

@@ -9,6 +9,7 @@
 
 import { MAX_DOCUMENT_PAGES, OCR_LOW_LINE_CONFIDENCE, type OcrLanguage } from './limits.js';
 import { groupIntoLines } from './reading-order.js';
+import { splitAtLabelColon } from './value-rules.js';
 import type { Box, DocumentModel, DocumentSourceKind, LabelCandidate, LabelClass, Page, PageStatus, PageTextSource, Rotation, TextLine } from './types.js';
 
 export interface PageInput {
@@ -91,7 +92,8 @@ export function buildCandidates(
         labelId: labelIdOf(page.pageNumber, line.index),
         pageNumber: page.pageNumber,
         lineIndex: line.index,
-        text: line.text,
+        // Only the label part: whatever follows a label-ending colon is a value and is not offered (11.5).
+        text: splitAtLabelColon(line.text).label,
         labelClass: cls,
         textLang: page.textSource === 'ocr' ? ocrLanguageTag(ocrLanguage) : (formLanguage ?? 'und'),
         checkYourself: page.textSource === 'ocr' && (page.status === 'low-quality' || (line.confidence ?? 1) < OCR_LOW_LINE_CONFIDENCE),
