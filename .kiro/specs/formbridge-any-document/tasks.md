@@ -572,7 +572,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - Run `npx vitest --run` and `npm run test:e2e`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. End-to-end, privacy, default-selection, export and accessibility tests (Slice 1, Tier A and Tier B, about 1.5 days)
-  - [ ] 13.1 Add the mock OCR helpers (Slice 1, Tier A)
+  - [x] 13.1 Add the mock OCR helpers (Slice 1, Tier A)
     - `tests/e2e/helpers/document.ts`: inject mock OCR results per fixture through the test hook, record every request URL, header and body, and scan browser storage. The `mobile-chromium` project already exists from task 2.21.
     - _Requirements: 25.5, 27.9_
   - [ ] 13.2 Write scenario 2: clean phone photo (Slice 1, Tier A)
@@ -590,7 +590,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 13.6 Write scenario 7: no network or no AI quota (Slice 1, Tier B)
     - `tests/e2e/document-no-ai.spec.ts`: once with every API request failing with a network error, once with a quota error; the Original_Label_Mode notice appears and the user completes an Answer_Sheet.
     - _Requirements: 14.1, 14.4, 27.6_
-  - [ ] 13.7 Write scenario 8: prefilled sensitive form (Slice 1, Tier A)
+  - [x] 13.7 Write scenario 8: prefilled sensitive form (Slice 1, Tier A)
     - `tests/e2e/document-privacy.spec.ts`: runs twice, through AI and in Original_Label_Mode, with `prefilled-sensitive` and `prefilled-split`. The AI run includes an Interface_Language switch after label analysis, so the re-translation request is recorded too. No Canary_Value and no Numeric_Fragment of a split value in any request URL, header or body, except a typed description canary in the one translate request after the press; every request goes to the app's own origin; localStorage, sessionStorage, every IndexedDB database, cookies, Cache Storage (only `reforge-ocr-*` with manifest paths), the URL and `history.state` hold no canary.
     - _Requirements: 4.4, 8.8, 10.7, 19.11, 20.2, 20.5, 20.6, 24.1, 24.2, 24.7, 24.9, 24.10, 27.7_
   - [ ] 13.8 Write scenario 9: unsupported file (Slice 1, Tier B)

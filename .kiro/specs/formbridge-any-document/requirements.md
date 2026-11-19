@@ -335,6 +335,8 @@ Each scenario names its slice. Requirement 27 turns them into Playwright tests, 
 13. THE Label_Classifier SHALL count every Non_Decimal_Numeral as a digit for every value rule of criteria 11.2 and 11.11.
 14. IF the Label_Classifier cannot decide whether a condition of criterion 11.3 holds for a Text_Line, including when a Fill_In_Line, an Answer_Area boundary or a table cell boundary is uncertain, THEN THE Label_Classifier SHALL treat that condition as not met.
 
+15. WHEN a Text_Line sits directly below a prompt-shaped Text_Line (a short line ending in a label colon or a fill-in line), has no colon, is not prompt-shaped itself, has at most 8 words and starts within 1.5 line heights of the bottom of the line above, THE Label_Classifier SHALL assign alue-like to it (rule V11), so that an answer already written below a question is never offered on the Label_Review. The rule uses position only and runs together with the value rules of criterion 11.2.
+
 ### Requirement 12: Label review with page crops
 
 **Slice:** 1
