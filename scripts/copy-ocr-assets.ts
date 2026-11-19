@@ -11,6 +11,7 @@
  *     core/tesseract-core*.wasm.js          every core build tesseract.js may pick
  *     lang/<variant>/<lang>.traineddata.gz  both variants until the OCR spike chooses
  *     manifest.json                         { version, files: [{ path, bytes, sha256 }], languages }
+ *   current.json                            { version }: which folder the browser uses
  *
  * The manifest lets the browser state the download size before downloading
  * (Requirement 8.5) and check each file after downloading it.
@@ -58,7 +59,8 @@ function readVersion(root: string): string {
 export function copyOcrAssets(options: CopyOptions = {}): OcrManifest {
   const root = options.root ?? process.cwd();
   const version = readVersion(root);
-  const outDir = path.join(options.outRoot ?? path.join(root, 'public', 'ocr'), version);
+  const outRoot = options.outRoot ?? path.join(root, 'public', 'ocr');
+  const outDir = path.join(outRoot, version);
   const files: ManifestFile[] = [];
 
   const copy = (from: string, rel: string) => {
@@ -89,6 +91,8 @@ export function copyOcrAssets(options: CopyOptions = {}): OcrManifest {
 
   const manifest: OcrManifest = { version, files, languages };
   writeFileSync(path.join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  // The browser reads this first to learn which versioned folder to use.
+  writeFileSync(path.join(outRoot, 'current.json'), `${JSON.stringify({ version })}\n`);
   return manifest;
 }
 

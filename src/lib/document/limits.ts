@@ -7,6 +7,13 @@
  * design.
  */
 
+/**
+ * The language model variant served from /ocr (provisional until the phone
+ * result of task 3.4: design "OCR Spike Result", rule in Q5). Both variants
+ * are copied by scripts/copy-ocr-assets.ts; only this one is downloaded.
+ */
+export const OCR_MODEL_VARIANT = '4.0.0_best_int';
+
 /** Tesseract language codes the app can read. */
 export type OcrLanguage = 'eng' | 'msa';
 

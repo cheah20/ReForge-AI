@@ -36,7 +36,8 @@ describe('copy-ocr-assets', () => {
   it('writes into a folder named after the pinned tesseract.js version', () => {
     const pinned = (JSON.parse(readFileSync('package.json', 'utf8')) as { dependencies: Record<string, string> }).dependencies['tesseract.js'];
     expect(manifest.version).toBe(pinned);
-    expect(readdirSync(out)).toEqual([pinned]);
+    expect(readdirSync(out).sort()).toEqual(['current.json', pinned].sort());
+    expect(JSON.parse(readFileSync(path.join(out, 'current.json'), 'utf8'))).toEqual({ version: pinned });
   });
 
   it('lists every copied file exactly once with its real size and hash', () => {

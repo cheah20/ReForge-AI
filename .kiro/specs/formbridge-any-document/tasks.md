@@ -412,11 +412,11 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - **Property 18: One full-size bitmap at a time**
     - **Validates: Requirements 3.5, 6.3**
     - In `tests/unit/document-pipeline.property.test.ts`, with a counting fake decoder.
-  - [ ] 9.4 Implement the OCR service (Slice 1, Tier A)
+  - [x] 9.4 Implement the OCR service (Slice 1, Tier A)
     - `src/frontend/document/ocr.ts`: `pendingDownloadBytes`, `download` (fetch with progress, length and SHA-256 checked against the manifest, only verified files put into the `reforge-ocr-<version>` cache, 30-second stall notice while the download continues), `recognize` (dynamic `import()`, one worker created on first use and reused, paths under `/ocr/`, only the languages in `VALIDATED_OCR_LANGUAGES`), `cancel` (terminate and abort).
     - The test-only OCR result hook (`window.__REFORGE_TEST_OCR__`) is read only in the test build and stripped from production builds.
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.8, 8.10_
-  - [ ] 9.5 Write the OCR service unit tests (Slice 1, Tier A)
+  - [x] 9.5 Write the OCR service unit tests (Slice 1, Tier A)
     - With a fake `createWorker` and fake `fetch`: lazy creation, one worker reused, cancel terminates within the test clock's 2 seconds, only the chosen language listed, an aborted or hash-mismatched download leaves no cache entry, the stall notice at 30 seconds, cache keys only manifest paths, and a production-build check that the test hook is absent.
     - Static test: every `createWorker` call passes `workerPath`, `corePath` and `langPath` starting with `/ocr/`.
     - _Requirements: 8.1, 8.2, 8.3, 8.6, 8.8, 8.10, 24.9_
