@@ -373,7 +373,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - Run `npm run generate-fixture-cache -- --pages` with `AI_MODE=real`; commit only the schema-validated JSON files; record the measured neurons in design.md; confirm the stale-plan check of task 5.9 passes. No raw model output is committed.
     - _Requirements: 7.2, 7.6, 13.11_
 
-- [ ] 21. Documentation (Slice 1)
+- [x] 21. Documentation (Slice 1)
   - [x] 21.1 Add the AccessForge section to the manual accessibility checklist (Slice 1)
     - **Shared file:** `docs/accessibility-checklist.md` (create it if absent).
     - State that the Legacy_Portal pages fail accessibility on purpose; add Mirror entries for a keyboard-only run, a screen-reader pass on the question, review and confirmation screens, 360 px, 200% zoom, reduced motion and larger text, each with a pass or fail column and a date column. The developer records the results.
@@ -388,7 +388,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
       - Every AccessForge claim names the test in tasks 18 or 19 that proves it; no sentence claims more than those tests show.
       - No wording that depends on decision C appears while C is open.
     - _Requirements: 1.3, 1.7, 1.11, 9.13, 18.5_
-  - [ ] 21.3 Add Kiro usage log rows for features actually used (Slice 1)
+  - [x] 21.3 Add Kiro usage log rows for features actually used (Slice 1)
     - **Shared file:** `docs/kiro-usage-log.md`.
     - One row per real use: this spec, each property test that found a bug (with the regression test name and seed), and any hook, steering or MCP use during these tasks. Rows are added as each use happens; this is the final sweep that nothing was missed or invented.
     - _Requirements: 17.10_
