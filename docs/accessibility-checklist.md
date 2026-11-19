@@ -46,3 +46,33 @@ Chinese-language forms are not offered in the app yet; the confirmation screen s
 
 - The checks above run in Chromium only.
 - Tamil text in PDFs: glyph coverage is checked, correct shaping is not.
+
+## AccessForge
+
+The fictional demonstration portal under `/legacy/` fails accessibility on purpose: it imitates a neglected 2005 portal (small grey text with low contrast, table layout, no labels tied to inputs) so that the revival has something to improve. Only the Mirror, which is the AccessForge screen beside the old page, is held to WCAG 2.2 AA. The automated checks leave the old page's frame out. The one part of the old page that must stay readable is the banner that says it is a fictional demonstration portal.
+
+### Automated, in the test suite
+
+| Check | Where | Status |
+| --- | --- | --- |
+| axe, zero violations, in `en` and `zh-Hans`: start screen, data notice, a step of each answer type, the low-confidence step, a validation error, review, verified result, could-not-verify report, stop message, do-it-yourself report, larger text on | `tests/e2e/accessforge-a11y.spec.ts` | passing |
+| Targets at least 24 px (primary action at least 44 px), body text at least 16 px (20 px with larger text), no horizontal scroll at 360 px, 640 px and 320 px | same file | passing |
+| Focus returns to the control that opened the cancel dialog; the leave-page warning handler is registered while answers exist | `accessforge-session-flows.spec.ts` | passing |
+| Write highlight at least 3 px and 3:1 against the old page's white, grey and cell colours; no transition under reduced motion | `tokens.test.ts`, `accessforge-session-flows.spec.ts` | passing |
+| Errors tied to inputs (`aria-describedby`, `aria-invalid`, `aria-live="polite"`); the original Malay wording carries `lang="ms"` | `tests/unit/accessforge-adapter.test.tsx`, `accessforge-components.test.tsx` | passing |
+
+Axe cannot judge focus order, wording, translations or how a screen reader reads the page. The next table covers those. The developer fills in the result and the date.
+
+### By hand (the developer records the result)
+
+| Check | Result (pass or fail) | Date checked |
+| --- | --- | --- |
+| Keyboard-only run of the whole revival: revive, notice, every question, review, confirm, result | not done | |
+| Screen reader pass (NVDA or VoiceOver) on a question step | not done | |
+| Screen reader pass on the review screen | not done | |
+| Screen reader pass on the confirmation screen, including the original Malay text read in Malay | not done | |
+| 360 px width on a real phone, with the old page shown and hidden | not done | |
+| 200% browser zoom on desktop (the frame stays beside the Mirror or moves below it, no clipped text) | not done | |
+| Reduced motion turned on in the system: highlight and focus changes without animation | not done | |
+| Larger text option: every screen readable, nothing cut off | not done | |
+| Chinese and Malay Mirror strings read by a native speaker | not done | |

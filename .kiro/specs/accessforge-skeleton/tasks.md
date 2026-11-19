@@ -374,7 +374,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - _Requirements: 7.2, 7.6, 13.11_
 
 - [ ] 21. Documentation (Slice 1)
-  - [ ] 21.1 Add the AccessForge section to the manual accessibility checklist (Slice 1)
+  - [x] 21.1 Add the AccessForge section to the manual accessibility checklist (Slice 1)
     - **Shared file:** `docs/accessibility-checklist.md` (create it if absent).
     - State that the Legacy_Portal pages fail accessibility on purpose; add Mirror entries for a keyboard-only run, a screen-reader pass on the question, review and confirmation screens, 360 px, 200% zoom, reduced motion and larger text, each with a pass or fail column and a date column. The developer records the results.
     - _Requirements: 14.9_
