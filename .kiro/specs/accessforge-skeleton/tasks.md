@@ -364,7 +364,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9, 14.11_
 
 - [ ] 20. Precomputed page plans (Slice 1)
-  - [ ] 20.1 Add the page-plan step to the fixture cache script (Slice 1)
+  - [x] 20.1 Add the page-plan step to the fixture cache script (Slice 1)
     - **Shared files:** `scripts/generate-fixture-cache.ts`, `package.json` scripts if a flag needs one.
     - `--pages`: take the registration HTML from `generated/templates.ts`, extract the Page_Model with the same extractor in jsdom, call the provider for `en` and `zh-Hans`, validate with `PagePlanReplySchema` and `validatePlan`, write `src/worker/cache/precomputed/pages/<pageVersion>-<bcp47>.json` only for passing replies, exit non-zero on any failure. Test with a fake provider: valid replies write files; an invalid reply writes nothing for that key and exits non-zero.
     - _Requirements: 7.6_
