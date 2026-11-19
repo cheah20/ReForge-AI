@@ -356,7 +356,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 19.5 Write the submission flow tests (Slice 1)
     - `tests/e2e/accessforge-submit-flows.spec.ts`: legacy error page then rewrite and a new confirm press; a stalled POST gives the unknown outcome after 15 s; a frame value changed by a test hook stops the loop with a mismatch; an edit from review re-verifies before confirm.
     - _Requirements: 10.2, 10.5, 10.8, 10.9_
-  - [ ] 19.6 Write the session flow tests (Slice 1)
+  - [x] 19.6 Write the session flow tests (Slice 1)
     - `tests/e2e/accessforge-session-flows.spec.ts`: cancel confirmed resets the frame and declined keeps the step; reload starts fresh; the `beforeunload` handler is registered with answers present; at 360 px the frame toggle keeps step and answers; highlight outline at least 3 px and without transition under reduced motion; picker locked during the loop; with scripts disabled a direct run from home to confirmation works.
     - _Requirements: 1.9, 7.11, 8.5, 8.12, 12.4, 12.5, 12.6, 14.12, 18.4_
   - [ ] 19.7 Write the axe accessibility tests (Slice 1)

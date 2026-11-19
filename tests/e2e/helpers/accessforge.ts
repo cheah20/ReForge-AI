@@ -45,7 +45,8 @@ export async function revive(page: Page, lang = 'en', path = '/accessforge'): Pr
   const t = (k: string) => translate(lang, k);
   await page.goto(path);
   await page.waitForLoadState('networkidle');
-  await expect(legacyFrame(page).locator('form input[name="nama"]')).toBeVisible();
+  // Attached, not visible: below 1024 px the frame is hidden until the user shows it.
+  await expect(legacyFrame(page).locator('form input[name="nama"]')).toHaveCount(1);
   await page.getByRole('button', { name: t('accessforge.start') }).click();
   await page.getByRole('button', { name: t('accessforge.notice.acknowledge') }).click();
   await expect(page.locator('form.mirror-step')).toBeVisible({ timeout: 15_000 });
