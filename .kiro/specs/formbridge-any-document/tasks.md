@@ -528,14 +528,14 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 11.12 Extend the Review_Screen for document fields (Slice 1, Tier A)
     - `src/frontend/screens/ReviewScreen.tsx` (owned by this spec). The Document_Path Review_Screen shows `document.review.privacyNotice` (or `review.privacyNotice.nothingSent` after "Continue without AI"); the Fillable_Path keeps `review.privacyNotice` unchanged; a component test checks that each path shows only its own notice. Rows with original text and `lang`, page number, Page_Crop, question, answer and one status; edit per row, also for skipped rows; "Make my answer sheet" disabled with a reason while an answer awaits validation; the privacy notice including the "nothing was sent" variant.
     - _Requirements: 18.1, 18.2, 18.3, 18.4_
-  - [ ] 11.13 Implement the Answer_Sheet content (Slice 1, Tier A)
+  - [x] 11.13 Implement the Answer_Sheet content (Slice 1, Tier A)
     - `src/lib/document/answer-sheet.ts`: `buildAnswerSheet` (rows, statuses, machine-translated marks, Clerk_Summary with the English fallback and `lang="en"`), `answerSheetPlainText`.
     - _Requirements: 16.4, 19.1, 19.2, 19.4_
-  - [ ] 11.14 Write the property test for Answer_Sheet coverage (Slice 1, Tier B)
+  - [x] 11.14 Write the property test for Answer_Sheet coverage (Slice 1, Tier B)
     - **Property 15: The Answer_Sheet lists every Kept_Label**
     - **Validates: Requirements 15.7, 16.4, 18.1, 19.1, 19.4, 19.10**
     - In `tests/unit/answer-sheet.property.test.ts`.
-  - [ ] 11.15 Write the property test for Clerk_Summary fallback (Slice 1, Tier B)
+  - [x] 11.15 Write the property test for Clerk_Summary fallback (Slice 1, Tier B)
     - **Property 28: Clerk_Summary strings and fallback**
     - **Validates: Requirements 19.2**
   - [ ] 11.16 Build the Answer_Sheet screen with Print (Slice 1, Tier A)
