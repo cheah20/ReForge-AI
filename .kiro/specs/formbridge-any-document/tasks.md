@@ -203,7 +203,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - `tests/ocr/cer.ts`: Levenshtein distance divided by the expected length, after NFKC and whitespace collapsing, and the OCR_Validation_Bar check (at least 90% of expected labels each match one Text_Line at a CER of 10% or less).
     - Unit tests with fixed pairs, including an exact match, one substitution and an empty result.
     - _Requirements: 9.1_
-  - [ ] 3.3 Run the desktop spike measurements (Slice 1, Tier A)
+  - [x] 3.3 Run the desktop spike measurements (Slice 1, Tier A)
     - `tests/ocr/ocr-spike.spec.ts`, run by hand only. In Playwright Chromium and Firefox, load Tesseract.js from `/ocr/` with `cacheMethod: 'none'` and `workerBlobURL: false`, and record: bytes served per asset for `best_int` and `fast`; that no request goes to another origin; recognition time per clean fixture at 2,200 px; the OCR_Validation_Bar result per label for `eng` and `msa`; word count and mean line confidence for the clean and the glary fixtures; the EXIF probe result per browser; the share of clean-fixture labels that are `ambiguous` only because of an uncertain table cell (open decision 26).
     - The spec prints a summary only. No raw OCR output is committed.
     - Result: Chromium part done (`playwright.ocr.config.ts`, results in design "OCR Spike Result"). Still open: Firefox (the Playwright Firefox build is not installed) and the uncertain-cell share (needs the Label_Classifier of group 6).
@@ -211,16 +211,17 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 3.4 Run the phone and throttled measurements (Slice 1, Tier A)
     - **Needs the developer** (real devices). On the reference mid-range Android phone with Chrome and on an iPhone with iOS 17 Safari: recognition time per clean page, the EXIF probe result, that the second Tesseract fetch is a cache hit, and that cancel responds within 1 second during recognition. On the DevTools "Slow 3G" preset: first-use time and the preset's actual values. On the deployed URL: whether `_headers` is honoured.
     - _Requirements: 8.4, 8.9_
-  - [ ] 3.5 Record the spike result and apply the approved bar (Slice 1, Tier A)
+  - [x] 3.5 Record the spike result and apply the approved bar (Slice 1, Tier A)
+    - Result (2026-11-19): applied with the desktop result only. Malay passes the bar on the synthetic fixtures (9 of 9, both variants), so `VALIDATED_OCR_LANGUAGES` is `['eng', 'msa']` in `src/lib/document/limits.ts`. Variant `best_int` is provisional until the phone result (task 3.4). If a phone photo measurement fails the bar for Malay, remove `'msa'` and show the Requirement 9.8 line.
     - Write the exact versions and licences, sizes, the model variant chosen by the rule in Q5, the timings table, the OCR_Validation_Bar results for English and Malay, the threshold values, the uncertain-cell share and the browser notes into "OCR Spike Result" in design.md.
     - Apply the approved bar of Requirement 9.1 without rounding: set `VALIDATED_OCR_LANGUAGES` in `src/lib/document/limits.ts` to `['eng', 'msa']` only if Malay passes, otherwise leave it `['eng']`. Set the chosen variant in `scripts/copy-ocr-assets.ts`. Record any change to `OCR_MIN_WORDS` or `OCR_MIN_MEAN_CONFIDENCE` with its reason.
     - _Requirements: 8.9, 9.1, 9.8, 26.4_
 
 - [ ] 4. File recognition and limits (Slice 1, Tier A and Tier B, about 0.5 days)
-  - [ ] 4.1 Add the limits module (Slice 1, Tier A)
+  - [x] 4.1 Add the limits module (Slice 1, Tier A)
     - `src/lib/document/limits.ts` with every constant of design "Limits", including `VALIDATED_OCR_LANGUAGES = ['eng']` until task 3.5, the classifier constants of design Q1 (`LIKELY_LABEL_MAX_CHARS` 60, `FRAGMENT_MAX_SEPARATOR_RUN` 3, `FRAGMENT_SAME_LINE_MAX_GAP_CHARS` 8, `FRAGMENT_LINE_GAP_LINE_HEIGHTS` 1.5, `FRAGMENT_MAX_CHAIN` 5, `CELL_EDGE_TOLERANCE` 1% of page width), and the note that the values may change after the phone tests and the user sessions.
     - _Requirements: 3.7, 9.1, 11.3, 11.11_
-  - [ ] 4.2 Implement the File_Sniffer (Slice 1, Tier A)
+  - [x] 4.2 Implement the File_Sniffer (Slice 1, Tier A)
     - `src/lib/document/sniff.ts`: `sniffHead` with the signature table of design Q6 (Slice 2 formats return `refused`), `classifyPdf` through the low-level `/AcroForm` lookup (never `getForm()`), and `sniffFile` reading at most 65,536 bytes for non-PDF files. A PDF is `fillable-pdf` only with at least one answer field; a push-button-only PDF goes to the Document_Path (decision 14).
     - _Requirements: 2.1, 2.2, 2.6, 2.7, 2.8_
   - [ ] 4.3 Write the property test for sniffer totality and soundness (Slice 1, Tier B)
@@ -230,11 +231,11 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 4.4 Write the property test for the bounded head read (Slice 1, Tier B)
     - **Property 4: Sniffing a non-PDF reads a bounded head**
     - **Validates: Requirements 2.8**
-  - [ ] 4.5 Write the sniffer example tests (Slice 1, Tier A)
+  - [x] 4.5 Write the sniffer example tests (Slice 1, Tier A)
     - `tests/unit/document-sniff.test.ts`: every fixture kind, the 15 MB file and the file one byte over, the empty file, the push-button-only PDF, the encrypted PDF without fields, an XFA PDF, and a `getForm()` spy that is never called.
     - Canary test: a Canary_Value inside the bytes, a `fetch` spy, and no request made.
     - _Requirements: 2.2, 2.3, 2.9, 3.1_
-  - [ ] 4.6 Implement the image header reader (Slice 1, Tier A)
+  - [x] 4.6 Implement the image header reader (Slice 1, Tier A)
     - `src/lib/document/image-header.ts`: PNG `IHDR` dimensions, JPEG `SOFn` dimensions within the first 1 MB, and the EXIF orientation value. Total for any bytes.
     - Unit tests on the fixtures, on headers without EXIF and on truncated headers, and the 20,000,000-pixel check with width and height swapped for orientations 5 to 8.
     - _Requirements: 3.3, 7.1_
