@@ -40,6 +40,32 @@ export function uprightTransform(exif: number, decoderApplies: boolean): Upright
   return EXIF_TRANSFORMS[exif] ?? IDENTITY;
 }
 
+/**
+ * The canvas matrix [a, b, c, d, e, f] that draws a w x h picture mirrored
+ * (when asked) and then turned clockwise: x' = a*x + c*y + e, y' = b*x + d*y + f.
+ * The picture lands exactly on the turned canvas, whose size is `rotatedSize`.
+ */
+export function drawMatrix(t: UprightTransform, w: number, h: number): [number, number, number, number, number, number] {
+  const flip = (x: number, y: number): [number, number] => (t.mirror ? [w - x, y] : [x, y]);
+  const turn = ([x, y]: [number, number]): [number, number] => {
+    switch (t.rotation) {
+      case 90:
+        return [h - y, x];
+      case 180:
+        return [w - x, h - y];
+      case 270:
+        return [y, w - x];
+      default:
+        return [x, y];
+    }
+  };
+  const p = (x: number, y: number) => turn(flip(x, y));
+  const [e, f] = p(0, 0);
+  const [x1, y1] = p(1, 0);
+  const [x2, y2] = p(0, 1);
+  return [x1 - e, y1 - f, x2 - e, y2 - f, e, f];
+}
+
 /** One press of the rotate control: 90 degrees clockwise (Requirement 7.2). */
 export function nextRotation(r: Rotation): Rotation {
   return (((r + 90) % 360) as Rotation);
