@@ -52,8 +52,10 @@ function localVersionDir(): string {
 
 async function workingPng(file: string): Promise<{ png: Buffer; width: number; height: number }> {
   const img = await loadImage(readFileSync(file));
-  const scaleDown = Math.max(img.width, img.height) > WORKING_LONG_EDGE;
-  const size = scaleDown ? workingImageSize(img.width, img.height, WORKING_LONG_EDGE) : { width: img.width, height: img.height };
+  const longEdge = Math.max(img.width, img.height);
+  // Experiment only: --upscale enlarges small images to the working size (the app itself never enlarges).
+  const resize = longEdge > WORKING_LONG_EDGE || (process.argv.includes('--upscale') && longEdge < WORKING_LONG_EDGE);
+  const size = resize ? workingImageSize(img.width, img.height, WORKING_LONG_EDGE) : { width: img.width, height: img.height };
   const canvas = createCanvas(size.width, size.height);
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#fff';
