@@ -338,7 +338,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
     - `tests/e2e/accessforge-privacy.spec.ts`, mock provider: both canaries absent from request bodies, request URLs, localStorage, sessionStorage, IndexedDB, cookies and the FormBridge link; `CANARY-ANSWER-8K2M` present only in the one Legacy_Form POST body.
     - _Requirements: 11.5, 13.3, 13.4, 13.10, 13.12_
 
-- [ ] 19. End-to-end tests with the mock provider (Slice 1)
+- [x] 19. End-to-end tests with the mock provider (Slice 1)
   - [x] 19.1 Write the Playwright acceptance scenario (Slice 1)
     - **Shared file:** `playwright.config.ts` (exclude `@smoke` unless `BASE_URL` is set).
     - `tests/e2e/accessforge-acceptance.spec.ts` at 1280 × 800 in `zh-Hans`, tagged `@smoke`: frame without Mirror; revive; data notice; one question per step and step count equal to mapped fields; wrong IC `901301-10-1234` rejected with the `zh-Hans` message, frame field empty, then fixed; each frame field holds its Intended_Value within 2 s; low-confidence evidence shown; review with eight `filled`; zero POSTs before confirm and exactly one after; verified result with a matching Reference_Number; original Malay text hidden until shown and then with `lang="ms"`; link to `SAMPLE_FORM_PATH`. With `BASE_URL` set it accepts any Analysis_Mode, checks by `lang`, step count and Element_Id, and finishes within 120 s.
@@ -359,7 +359,7 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
   - [x] 19.6 Write the session flow tests (Slice 1)
     - `tests/e2e/accessforge-session-flows.spec.ts`: cancel confirmed resets the frame and declined keeps the step; reload starts fresh; the `beforeunload` handler is registered with answers present; at 360 px the frame toggle keeps step and answers; highlight outline at least 3 px and without transition under reduced motion; picker locked during the loop; with scripts disabled a direct run from home to confirmation works.
     - _Requirements: 1.9, 7.11, 8.5, 8.12, 12.4, 12.5, 12.6, 14.12, 18.4_
-  - [ ] 19.7 Write the axe accessibility tests (Slice 1)
+  - [x] 19.7 Write the axe accessibility tests (Slice 1)
     - `tests/e2e/accessforge-a11y.spec.ts` with `@axe-core/playwright`, tags `wcag2a wcag2aa wcag21a wcag21aa wcag22aa`, iframe excluded, in `en` and `zh-Hans`, failing on any violation, for every state listed in Requirement 14.8; plus checks for 24 px and 44 px targets, 16 px body text, and no horizontal scroll at 360 px and at 200% zoom with larger text on.
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9, 14.11_
 

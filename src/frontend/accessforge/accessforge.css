@@ -13,8 +13,14 @@
   min-block-size: 100dvh;
 }
 
+/* Custom properties are computed where they are declared, so the sizes are declared again here. */
 .revival--large {
   --text-scale: 1.25;
+  --font-size-display: calc(1.5rem * var(--text-scale));
+  --font-size-section: calc(1.125rem * var(--text-scale));
+  --font-size-body: calc(1rem * var(--text-scale));
+  --font-size-small: calc(0.875rem * var(--text-scale));
+  --font-size-badge: calc(0.75rem * var(--text-scale));
   font-size: var(--font-size-body);
 }
 
