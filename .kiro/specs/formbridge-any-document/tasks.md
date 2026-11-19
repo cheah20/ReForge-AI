@@ -481,7 +481,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - `src/frontend/tokens.css` (owned by this spec): `:root[data-contrast='high']` values and `.document-flow` with `--text-scale: 1.25` under the large option, as in the design plan; the toggle in `components/AppHeader.tsx`.
     - `tests/unit/tokens-high-contrast.test.ts` (new; `tests/unit/tokens.test.ts` stays unchanged): every text pair of the high-contrast set is at least 7:1.
     - _Requirements: 23.2_
-  - [ ] 11.2 Add the label analysis client (Slice 1, Tier A)
+  - [x] 11.2 Add the label analysis client (Slice 1, Tier A)
     - `src/frontend/document/label-client.ts`: send the batches one after another with "part 2 of 3" progress; on network error, timeout, quota, rate limit or AI-unavailable, return a result that starts Original_Label_Mode with no automatic retry; `failedLabelIds` and missing ids go to Original_Label_Mode as type `text`.
     - Unit tests for each failure kind and for a partial failure.
     - _Requirements: 13.8, 14.1_
