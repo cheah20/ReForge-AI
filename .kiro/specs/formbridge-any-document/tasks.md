@@ -371,7 +371,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - _Requirements: 11.7, 11.8, 11.11, 11.12, 11.13, 25.1_
 
 - [ ] 7. Label review and the request builder (Slice 1, Tier A and Tier B, about 0.75 days)
-  - [ ] 7.1 Implement the review reducer (Slice 1, Tier A)
+  - [x] 7.1 Implement the review reducer (Slice 1, Tier A)
     - `src/lib/document/review.ts`: `initialReview` (Default_Selection: exactly the `likely-label` candidates selected), `reduceReview` and `selectedCount`. Only `toggle` can set `selected` to true. `edit` re-checks the text with `isValueLikeText`: a value-like edit clears `selected` and sets `blockedValueLike`; empty text clears `selected` and keeps the row; any other edit leaves the selection state as it was, so an unselected `ambiguous` item stays unselected (Requirement 12.16). `reset`; `keptLabels` (selected, non-empty, not value-like).
     - _Requirements: 12.3, 12.4, 12.5, 12.9, 12.12, 12.15, 12.16_
   - [ ] 7.2 Write the property test for the review reducer (Slice 1, Tier B)
@@ -382,21 +382,21 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - **Property 36: Editing never selects a candidate**
     - **Validates: Requirements 12.5, 12.12, 12.16**
     - In `tests/unit/document-review.property.test.ts`, with any sequence of `edit` actions (empty, value-like and plain label texts) and no `toggle`: the selected set never gains a member, and every `ambiguous` candidate stays unselected.
-  - [ ] 7.4 Implement the request builder (Slice 1, Tier A)
+  - [x] 7.4 Implement the request builder (Slice 1, Tier A)
     - `src/lib/document/request.ts`: `buildLabelAnalysisRequests` in batches of 30 in page and reading order, each request parsed with `LabelAnalysisRequestSchema` before it is returned; no request when nothing is kept.
     - _Requirements: 12.9, 12.11, 13.1, 13.11_
   - [ ] 7.5 Write the property test for the request content (Slice 1, Tier B)
     - **Property 9: The request carries only Kept_Labels and never a value-like string**
     - **Validates: Requirements 12.5, 12.9, 12.11, 13.1, 25.2**
     - In `tests/unit/document-review.property.test.ts`. The Document_Models mix labels with the generated values of Property 2, including the fragmented, confusable and non-decimal forms; the review actions include selects, unselects and edits to value-like and empty text. No request holds a generated value string or any Numeric_Fragment of a split value.
-  - [ ] 7.6 Write the prefilled fixture request canary test (Slice 1, Tier A)
+  - [x] 7.6 Write the prefilled fixture request canary test (Slice 1, Tier A)
     - `tests/unit/document-request-canary.test.ts`: from `prefilled-sensitive` and `prefilled-split`, build requests with the Default_Selection and with every `likely-label` selected; no Canary_Value and no Numeric_Fragment of a split value appears in any request.
     - _Requirements: 24.7, 25.1, 25.2_
   - [ ] 7.7 Write the browser-side prompt-injection test (Slice 1, Tier B)
     - `tests/unit/document-injection.test.ts`: from the `injection-labels` fixture and its plain variant, classify, apply the Default_Selection and build the requests; the injected lines are kept as Kept_Labels with their text unchanged, and the Label_Ids, their order and the request field names are identical between the two runs. The requests then go through the route with the recording provider as in task 2.23, and the prompt holds each injected text only inside the escaped data section.
     - _Requirements: 13.4, 24.13_
 
-- [ ] 8. Checkpoint: pure logic (Slice 1, Tier A)
+- [x] 8. Checkpoint: pure logic (Slice 1, Tier A)
   - Run `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Browser services (Slice 1, Tier A and Tier B, about 1 day)
