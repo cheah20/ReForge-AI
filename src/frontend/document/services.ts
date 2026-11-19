@@ -7,6 +7,7 @@
  */
 
 import { browserDecodeDeps, decodePhoto, detectDecoderOrientation } from './decode.js';
+import { type FetchFn } from './label-client.js';
 import { createOcrService, type OcrService } from './ocr.js';
 import type { PipelineDeps } from './pipeline.js';
 
@@ -31,4 +32,9 @@ export function pipelineDeps(): PipelineDeps {
     setTimeout: (fn, ms) => globalThis.setTimeout(fn, ms),
     clearTimeout: (h) => globalThis.clearTimeout(h as number),
   };
+}
+
+/** The browser's fetch, handed to the label client as a value. Screens never call it themselves. */
+export function labelRequestFetch(): FetchFn {
+  return globalThis.fetch.bind(globalThis);
 }

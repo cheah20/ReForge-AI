@@ -17,8 +17,9 @@ import { StatusMessage } from '../components/StatusMessage.js';
 import { useServices, useSession } from '../app-context.js';
 import { useTranslation } from '../i18n.js';
 import { detectionNeedsConfirmation } from '../state.js';
-import { analyzeKeptLabels } from './label-client.js';
+import { analyzeKeptLabels, type FetchFn } from './label-client.js';
 import { pluralKey } from './plural.js';
+import { labelRequestFetch } from './services.js';
 import { buildDocumentFields } from './session.js';
 import './document.css';
 
@@ -26,9 +27,11 @@ export interface LabelReviewProps {
   /** True when the form language and country must be confirmed before the questions. */
   onDone: (needsConfirmation: boolean) => void;
   onBack: () => void;
+  /** Replaces the browser's fetch (tests). */
+  fetchFn?: FetchFn;
 }
 
-export function LabelReview({ onDone, onBack }: LabelReviewProps) {
+export function LabelReview({ onDone, onBack, fetchFn }: LabelReviewProps) {
   const { t, language } = useTranslation();
   const { store } = useServices();
   const session = useSession();
@@ -80,7 +83,7 @@ export function LabelReview({ onDone, onBack }: LabelReviewProps) {
     const s = store.get();
     const requests = buildLabelAnalysisRequests(kept, { interfaceLanguage: s.interfaceLanguage, ...(s.formLanguage ? { formLanguage: s.formLanguage } : {}), ...(s.formCountry ? { formCountry: s.formCountry } : {}) });
     setBusy({ current: 0, total: requests.length });
-    const result = await analyzeKeptLabels(requests, (input, init) => fetch(input, init), (current, total) => setBusy({ current, total }));
+    const result = await analyzeKeptLabels(requests, fetchFn ?? labelRequestFetch(), (current, total) => setBusy({ current, total }));
     setBusy(null);
     if (result.mode === 'ai') finish(result.analyses, 'ai', false, result.detection, result.demoMode);
     else finish(new Map(), 'original-label', false, null, false);
