@@ -122,7 +122,7 @@ export function ReviewScreen({ onConfirm, onBack }: ReviewScreenProps) {
     <>
       <ScreenHeading>{t('review.title')}</ScreenHeading>
       <div className="notice">
-        <p>{t('review.privacyNotice')}</p>
+        <p>{session.document ? t(session.document.nothingSent ? 'review.privacyNotice.nothingSent' : 'document.review.privacyNotice') : t('review.privacyNotice')}</p>
       </div>
 
       {showSummary && missing.length > 0 && (
@@ -199,7 +199,7 @@ export function ReviewScreen({ onConfirm, onBack }: ReviewScreenProps) {
             onConfirm();
           }}
         >
-          {t('review.confirm')}
+          {t(session.document ? 'document.reviewScreen.makeSheet' : 'review.confirm')}
         </button>
       </div>
     </>

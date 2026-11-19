@@ -17,6 +17,7 @@ import { I18nProvider, useTranslation } from './i18n.js';
 import { browserLanguages, matchLanguage } from './language-match.js';
 import { AnalysisLoading } from './screens/AnalysisLoading.js';
 import { ConfirmLanguage, isBlockedFormLanguage } from './screens/ConfirmLanguage.js';
+import { AnswerSheet } from './screens/AnswerSheet.js';
 import { DownloadConfirm } from './screens/DownloadConfirm.js';
 import { LanguagePicker } from './screens/LanguagePicker.js';
 import { QuestionWizard } from './screens/QuestionWizard.js';
@@ -29,7 +30,7 @@ import { RevivalScreen } from './accessforge/RevivalScreen.js';
 import { namesForeignAddress } from '../lib/accessforge/scope.js';
 import { useChangeLanguage } from './use-change-language.js';
 
-export type Screen = 'language' | 'upload' | 'analysis' | 'confirm' | 'questions' | 'review' | 'download' | 'accessforge';
+export type Screen = 'language' | 'upload' | 'analysis' | 'confirm' | 'questions' | 'review' | 'download' | 'sheet' | 'accessforge';
 
 interface FlowProps {
   extractor?: Extractor | undefined;
@@ -128,13 +129,14 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
         {screen === 'questions' && <QuestionWizard onDone={onWizardDone} onBackToStart={() => show('upload')} />}
         {screen === 'review' && (
           <ReviewScreen
-            onConfirm={() => show('download')}
+            onConfirm={() => show(store.get().document ? 'sheet' : 'download')}
             onBack={() => {
               setStep(store, Number.MAX_SAFE_INTEGER);
               show('questions');
             }}
           />
         )}
+        {screen === 'sheet' && <AnswerSheet onBackToReview={() => show('review')} />}
         {screen === 'download' && form && <DownloadConfirm pdf={form.pdf} onBackToReview={() => show('review')} />}
       </main>
     </>

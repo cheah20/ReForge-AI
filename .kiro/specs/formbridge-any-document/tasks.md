@@ -538,7 +538,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [x] 11.15 Write the property test for Clerk_Summary fallback (Slice 1, Tier B)
     - **Property 28: Clerk_Summary strings and fallback**
     - **Validates: Requirements 19.2**
-  - [ ] 11.16 Build the Answer_Sheet screen with Print (Slice 1, Tier A)
+  - [x] 11.16 Build the Answer_Sheet screen with Print (Slice 1, Tier A)
     - `AnswerSheet.tsx`: heading, `<table>` with `<caption>` and `th scope="col"`, stacked rows below 600 px, 20 px body on screen, the print style sheet (14 pt, black on white, controls hidden, `break-inside: avoid`), the screen-only approved stamp, the Clerk_Summary section. The sheet is rebuilt on every render.
     - Print is an Export_Action: it calls `window.print()` only from the press of its own button, which hands the sheet to the browser's print dialog, with no request by the app.
     - _Requirements: 19.3, 19.5, 19.7, 19.10, 19.11, 19.12_
