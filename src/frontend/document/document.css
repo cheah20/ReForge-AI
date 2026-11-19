@@ -11,3 +11,126 @@
   min-height: 64px;
   text-align: center;
 }
+
+/* Answer_Sheet (task 11.16): 20 px body on screen, stacked rows below 600 px, 14 pt black on white in print. */
+.answer-sheet {
+  font-size: calc(1.25rem * var(--text-scale));
+  line-height: 1.5;
+}
+
+.answer-sheet__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  margin-block: var(--space-4);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.answer-sheet__table caption {
+  text-align: start;
+  font-weight: 600;
+  padding-block-end: var(--space-2);
+}
+
+.answer-sheet__table th,
+.answer-sheet__table td {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-control-border);
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.answer-sheet__table tbody th {
+  font-weight: 600;
+}
+
+.answer-sheet__status {
+  font-style: italic;
+}
+
+.answer-sheet__mark {
+  color: var(--color-ink-secondary);
+  font-size: 0.85em;
+}
+
+.answer-sheet__clerk {
+  margin-block-start: var(--space-5);
+  padding: var(--space-4);
+  border: 2px solid var(--color-ink);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.answer-sheet__clerk-list {
+  margin: 0;
+}
+
+.answer-sheet__clerk-row {
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--color-border);
+  break-inside: avoid;
+}
+
+.answer-sheet__clerk-row dt {
+  font-weight: 600;
+}
+
+.answer-sheet__clerk-row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .answer-sheet__table thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+  }
+
+  .answer-sheet__table tr,
+  .answer-sheet__table td,
+  .answer-sheet__table tbody th {
+    display: block;
+  }
+
+  .answer-sheet__table tr {
+    margin-block-end: var(--space-3);
+    border: 1px solid var(--color-control-border);
+  }
+
+  .answer-sheet__table td,
+  .answer-sheet__table tbody th {
+    border: 0;
+  }
+
+  .answer-sheet__table td[data-label]::before {
+    content: attr(data-label) ': ';
+    font-weight: 600;
+  }
+}
+
+@media print {
+  .app-header,
+  .no-print,
+  .page--banner {
+    display: none !important;
+  }
+
+  body,
+  .answer-sheet {
+    background: #fff;
+    color: #000;
+    font-size: 14pt;
+  }
+
+  .answer-sheet__table tr,
+  .answer-sheet__clerk-row {
+    break-inside: avoid;
+  }
+
+  .answer-sheet__clerk {
+    border-color: #000;
+  }
+}
