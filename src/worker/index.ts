@@ -125,6 +125,7 @@ export function createHandler(deps: HandlerDeps = {}) {
         if (usage.neurons !== undefined) entry.neurons = usage.neurons;
       }
       if (result.servedFromCache) entry.servedFromCache = true;
+      if (result.fallbackCode) entry.errorCode = result.fallbackCode;
     } catch (err) {
       const httpErr = err instanceof HttpError ? err : new HttpError('INTERNAL_ERROR');
       response = errorResponse(httpErr.code, httpErr.detail, {

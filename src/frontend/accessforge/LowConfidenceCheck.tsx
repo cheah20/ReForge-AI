@@ -31,7 +31,7 @@ export function LowConfidenceCheck({ state, field, dispatch }: LowConfidenceChec
       <LowConfidenceEvidence field={field} />
       <div className="question__text">
         <h2 className="question__title">{field.plan!.question}</h2>
-        <MachineTranslatedLabel />
+        {state.analysisMode !== 'heuristic' && <MachineTranslatedLabel />}
       </div>
       <div className="actions actions--split">
         <button type="button" className="button" onClick={() => dispatch({ type: 'LOW_CONFIDENCE_ACCEPTED' })}>

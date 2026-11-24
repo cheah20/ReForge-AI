@@ -9,18 +9,23 @@
  * - mock provider: valid reply -> `mock`; invalid twice -> 500 INTERNAL_ERROR,
  *   so no response claims a mode that did not produce the plan.
  * - real provider: valid reply -> `live`; any failure -> the precomputed plan
- *   for the exact (Page_Version, language) -> `cached`; none -> 503 AI_UNAVAILABLE.
+ *   for the exact (Page_Version, language) -> `cached`; none -> the Heuristic_Extractor
+ *   plan -> `heuristic` (Slice 2, task 24.3), logged with AI_FALLBACK_HEURISTIC.
  * Every plan passes the Plan_Validator against the submitted Page_Model
  * before it is returned. Errors name schema paths only; the router logs.
  */
 
 import { PageAnalyzeRequestSchema, PageAnalyzeResponseSchema, type AnalysisMode, type PageModel, type PageAnalyzeResponse } from '../../shared/page-schemas.js';
+import { heuristicPlan } from '../../lib/accessforge/heuristic.js';
 import { validatePlan } from '../../lib/accessforge/plan-validator.js';
 import { runPageAnalyze } from '../../lib/analysis/run-page.js';
 import { getLanguageEntry } from '../../packs/language/registry.js';
 import { lookupPagePlanCache } from '../cache/page-plan-cache.js';
 import { HttpError, json, schemaDetail } from '../http.js';
 import type { RouteContext, RouteResult } from './types.js';
+
+/** Logged as `errorCode` when the plan came from the Heuristic_Extractor; a fixed code that carries no data. */
+export const AI_FALLBACK_HEURISTIC = 'AI_FALLBACK_HEURISTIC';
 
 /** The ten-entry registration model is about 4 KB; this allows the schema maximum of 50 short entries. */
 export const PAGE_ANALYZE_BODY_LIMIT = 48 * 1024;
@@ -50,6 +55,7 @@ export async function pageAnalyzeRoute(body: unknown, ctx: RouteContext): Promis
   if (ctx.provider.kind === 'mock') throw new HttpError('INTERNAL_ERROR');
 
   const cached = lookupPagePlanCache(request.pageModel.pageVersion, request.interfaceLanguage, ...(ctx.pagePlans ? [ctx.pagePlans] : []));
-  if (!cached) throw new HttpError('AI_UNAVAILABLE');
-  return { response: json(respond(request.pageModel, cached.entries, 'cached')), meta: outcome.meta, servedFromCache: true };
+  if (cached) return { response: json(respond(request.pageModel, cached.entries, 'cached')), meta: outcome.meta, servedFromCache: true };
+  // Slice 2: no live plan and no saved plan for this exact version and language, so the questions quote the page itself.
+  return { response: json(respond(request.pageModel, heuristicPlan(request.pageModel, request.interfaceLanguage), 'heuristic')), meta: outcome.meta, fallbackCode: AI_FALLBACK_HEURISTIC };
 }

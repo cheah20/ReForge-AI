@@ -321,6 +321,8 @@
   "accessforge.mode.live": "AI menulis soalan ini daripada halaman tersebut.",
   "accessforge.mode.mock": "Ini soalan demonstrasi yang disimulasi. Tiada AI menganalisis halaman ini.",
   "accessforge.mode.cached": "AI langsung tidak tersedia, jadi soalan ini datang daripada analisis AI yang disimpan semasa halaman ini diuji.",
+  "accessforge.mode.heuristic": "AI tidak digunakan. Soalan ini mengulang perkataan halaman lama.",
+  "accessforge.heuristic.question": "Halaman lama bertanya: “{label}”. Apa yang anda ingin tulis di sini?",
   "accessforge.language.locked": "Anda boleh menukar bahasa selepas membatalkan atau selesai.",
   "accessforge.analysing": "Membaca halaman lama…",
   "accessforge.lowConfidence": "Kami tidak pasti soalan ini sepadan dengan halaman lama. Semak dengan perkataan asal di bawah.",

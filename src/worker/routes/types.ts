@@ -17,4 +17,6 @@ export interface RouteResult {
   response: Response;
   meta?: RunMeta;
   servedFromCache?: boolean;
+  /** A fixed code for a planned fallback that is not an error, logged as `errorCode` (no data). */
+  fallbackCode?: string;
 }

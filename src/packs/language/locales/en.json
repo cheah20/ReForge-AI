@@ -321,6 +321,8 @@
   "accessforge.mode.live": "AI wrote these questions from the page.",
   "accessforge.mode.mock": "These are simulated demonstration questions. No AI analysed the page.",
   "accessforge.mode.cached": "Live AI was unavailable, so these questions come from an AI analysis saved when this page was tested.",
+  "accessforge.mode.heuristic": "No AI was used. The questions repeat the wording of the old page.",
+  "accessforge.heuristic.question": "The old page asks: “{label}”. What do you want to write here?",
   "accessforge.language.locked": "You can change the language after you cancel or finish.",
   "accessforge.analysing": "Reading the old page…",
   "accessforge.lowConfidence": "We are not sure this question matches the old page. Check it against the original wording below.",

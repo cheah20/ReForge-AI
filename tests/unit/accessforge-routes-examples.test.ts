@@ -104,19 +104,30 @@ describe('decision table, Slice 1 rows', () => {
     expect(logs[0]).toMatchObject({ servedFromCache: true, status: 200 });
   });
 
-  it('real provider fails and no cached plan matches: 503 AI_UNAVAILABLE', async () => {
-    const res = await setup(scripted('real', [new AiError('AI_UNAVAILABLE', 'x')]), { pagePlans: {} }).call(body());
-    expect(res.status).toBe(503);
-    expect((await errorOf(res)).code).toBe('AI_UNAVAILABLE');
+  it('real provider fails and no cached plan matches: the heuristic plan, logged with a fixed code (Slice 2 row)', async () => {
+    const { call, logs } = setup(scripted('real', [new AiError('AI_UNAVAILABLE', 'x')]), { pagePlans: {} });
+    const res = await call(body());
+    expect(res.status).toBe(200);
+    const r = PageAnalyzeResponseSchema.parse(await res.json());
+    expect(r.analysisMode).toBe('heuristic');
+    expect(r.entries.length).toBeGreaterThan(0);
+    expect(r.entries.every((e) => e.confidence === 0)).toBe(true);
+    expect(logs[0]).toMatchObject({ status: 200, errorCode: 'AI_FALLBACK_HEURISTIC' });
+    expect(logs[0]?.servedFromCache).toBeUndefined();
+    // The log names no field, label or question.
+    expect(JSON.stringify(logs[0])).not.toMatch(/nama|nokp|Label|question/i);
   });
 
-  it('never uses a cached plan for another version or language', async () => {
+  it('never uses a cached plan for another version or language: the heuristic plan instead', async () => {
     const other: PagePlanStore = {
       [pagePlanKey('b'.repeat(64), 'en')]: cachedPlan('b'.repeat(64), 'en'),
       [pagePlanKey(MODEL.pageVersion, 'zh-Hant')]: cachedPlan(MODEL.pageVersion, 'zh-Hant'),
     };
     const res = await setup(scripted('real', [new AiError('AI_TIMEOUT', 'x')]), { pagePlans: other }).call(body({ interfaceLanguage: 'zh-Hans' }));
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(200);
+    const r = PageAnalyzeResponseSchema.parse(await res.json());
+    expect(r.analysisMode).toBe('heuristic');
+    expect(r.entries.some((e) => e.humanLabel === 'Cached name')).toBe(false);
   });
 });
 

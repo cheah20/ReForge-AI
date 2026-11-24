@@ -321,6 +321,8 @@
   "accessforge.mode.live": "這些問題由 AI 根據頁面撰寫。",
   "accessforge.mode.mock": "這些是模擬的示範問題。沒有 AI 分析這個頁面。",
   "accessforge.mode.cached": "即時 AI 無法使用，所以這些問題來自測試此頁面時儲存的 AI 分析。",
+  "accessforge.mode.heuristic": "沒有使用 AI。這些問題直接引用舊頁面上的原文。",
+  "accessforge.heuristic.question": "舊頁面的提問是：「{label}」。您想在這裡填寫什麼？",
   "accessforge.language.locked": "取消或完成後，您可以變更語言。",
   "accessforge.analysing": "正在讀取舊頁面…",
   "accessforge.lowConfidence": "我們不確定這個問題與舊頁面相符。請對照下面的原文檢查。",

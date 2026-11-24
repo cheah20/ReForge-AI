@@ -40,12 +40,12 @@ export function DataNotice({ onAcknowledge, onDismiss }: { onAcknowledge?: () =>
   );
 }
 
-const MODE_TONE: Record<Exclude<AnalysisMode, 'heuristic'>, 'info' | 'caution'> = { live: 'info', mock: 'caution', cached: 'caution' };
+const MODE_TONE: Record<AnalysisMode, 'info' | 'caution'> = { live: 'info', mock: 'caution', cached: 'caution', heuristic: 'caution' };
 
-/** Requirement 7.5: which kind of analysis produced the questions. Slice 1 modes only. */
+/** Requirement 7.5: which kind of analysis produced the questions. */
 export function ModeNotice({ mode }: { mode: AnalysisMode | null }) {
   const { t } = useTranslation();
-  if (mode === null || mode === 'heuristic') return null;
+  if (mode === null) return null;
   return (
     <div className="mode-notice">
       <StatusMessage tone={MODE_TONE[mode]}>{t(`accessforge.mode.${mode}`)}</StatusMessage>

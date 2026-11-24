@@ -66,7 +66,7 @@ export function LowConfidenceEvidence({ field }: { field: MirrorField }) {
   );
 }
 
-function QuestionTitle({ field, id }: { field: MirrorField; id?: string }) {
+function QuestionTitle({ field, id, machineTranslated = true }: { field: MirrorField; id?: string; machineTranslated?: boolean }) {
   const { t } = useTranslation();
   const original = originalLabelOf(field);
   return (
@@ -74,7 +74,7 @@ function QuestionTitle({ field, id }: { field: MirrorField; id?: string }) {
       <h2 className="question__title" id={id}>
         {field.plan!.question}
       </h2>
-      <MachineTranslatedLabel />
+      {machineTranslated && <MachineTranslatedLabel />}
       {original && (
         <p className="hint">
           {t('wizard.originalLabel', { label: '' })}
@@ -92,10 +92,12 @@ interface DateQuestionProps {
   onChange: (parts: DateParts) => void;
   chosenFormat: DateFormat | null;
   onChooseFormat: (format: DateFormat) => void;
+  /** False in `heuristic` mode: the question is the page's own wording, not a machine translation. */
+  machineTranslated?: boolean;
 }
 
 /** Requirement 9.7: three inputs, the stated format, and a format choice when the page states none or several. */
-export function DateQuestion({ field, parts, onChange, chosenFormat, onChooseFormat }: DateQuestionProps) {
+export function DateQuestion({ field, parts, onChange, chosenFormat, onChooseFormat, machineTranslated = true }: DateQuestionProps) {
   const { t } = useTranslation();
   const ids = { title: useId(), day: useId(), month: useId(), year: useId(), format: useId(), message: useId() };
   const detected = detectLegacyDateFormat(field.entry);
@@ -124,7 +126,7 @@ export function DateQuestion({ field, parts, onChange, chosenFormat, onChooseFor
     <div className="question">
       <fieldset className="date-group" aria-describedby={describedBy}>
         <legend className="question__legend">
-          <QuestionTitle field={field} id={ids.title} />
+          <QuestionTitle field={field} id={ids.title} machineTranslated={machineTranslated} />
         </legend>
         {format && (
           <p className="hint" id={ids.format}>
@@ -156,7 +158,7 @@ export function DateQuestion({ field, parts, onChange, chosenFormat, onChooseFor
 }
 
 /** Requirement 9.8: one unticked checkbox, the statement in the interface language, the original wording on request. */
-export function ConsentQuestion({ field, checked, onChange }: { field: MirrorField; checked: boolean; onChange: (checked: boolean) => void }) {
+export function ConsentQuestion({ field, checked, onChange, machineTranslated = true }: { field: MirrorField; checked: boolean; onChange: (checked: boolean) => void; machineTranslated?: boolean }) {
   const { t } = useTranslation();
   const ids = { box: useId(), message: useId(), original: useId() };
   const [showOriginal, setShowOriginal] = useState(false);
@@ -166,7 +168,7 @@ export function ConsentQuestion({ field, checked, onChange }: { field: MirrorFie
     <div className="question">
       <div className="question__text">
         <h2 className="question__title">{field.plan!.question}</h2>
-        <MachineTranslatedLabel />
+        {machineTranslated && <MachineTranslatedLabel />}
       </div>
       <label className="checkbox-row" htmlFor={ids.box}>
         <input
@@ -242,9 +244,10 @@ export function MirrorStep({ state, field, dispatch }: MirrorStepProps) {
           onChange={(parts) => setDraft((d) => ({ ...d, parts }))}
           chosenFormat={state.dateFormat}
           onChooseFormat={(format) => dispatch({ type: 'DATE_FORMAT_CHOSEN', format })}
+          machineTranslated={state.analysisMode !== 'heuristic'}
         />
       ) : isConsent ? (
-        <ConsentQuestion field={field} checked={draft.checked} onChange={(checked) => setDraft((d) => ({ ...d, checked }))} />
+        <ConsentQuestion field={field} checked={draft.checked} onChange={(checked) => setDraft((d) => ({ ...d, checked }))} machineTranslated={state.analysisMode !== 'heuristic'} />
       ) : (
         <FieldQuestion
           field={toFieldState(field)}

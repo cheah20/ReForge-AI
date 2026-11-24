@@ -323,6 +323,8 @@
   "accessforge.mode.live": "Una IA escribió estas preguntas a partir de la página.",
   "accessforge.mode.mock": "Son preguntas de demostración simuladas. Ninguna IA analizó la página.",
   "accessforge.mode.cached": "La IA en vivo no estaba disponible, así que estas preguntas vienen de un análisis de IA guardado cuando se probó esta página.",
+  "accessforge.mode.heuristic": "No se usó IA. Las preguntas repiten el texto de la página antigua.",
+  "accessforge.heuristic.question": "La página antigua pregunta: «{label}». ¿Qué quieres escribir aquí?",
   "accessforge.language.locked": "Puedes cambiar el idioma después de cancelar o terminar.",
   "accessforge.analysing": "Leyendo la página antigua…",
   "accessforge.lowConfidence": "No estamos seguros de que esta pregunta coincida con la página antigua. Compárala con el texto original de abajo.",
