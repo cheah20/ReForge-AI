@@ -76,3 +76,35 @@ Axe cannot judge focus order, wording, translations or how a screen reader reads
 | Reduced motion turned on in the system: highlight and focus changes without animation | not done | |
 | Larger text option: every screen readable, nothing cut off | not done | |
 | Chinese and Malay Mirror strings read by a native speaker | not done | |
+
+## Photos, scans and PDFs without fields
+
+The reading, line review, question and answer-sheet screens of the photo path are held to WCAG 2.2 AA. The paper form in the photo is not: it is the user's own document.
+
+### Automated, in the test suite
+
+| Check | Where | Status |
+| --- | --- | --- |
+| axe, zero violations, in `en` and `zh-Hans`: entry, language question, page preview, line review (also with two lines ticked), confirm language, a question, review, answer sheet | `tests/e2e/document-accessibility.spec.ts` | passing |
+| Focus moves to the heading of each new screen: language question, line review, confirm language, answer sheet | same file | passing |
+| axe with the larger text option on, on the line review and the answer sheet | same file | passing |
+| Keyboard: Space ticks a line, and the buttons show a focus outline | same file | passing |
+| Answer sheet: a heading, a caption, `th scope="col"` headers, a `th` and `td` pair in every row, a `lang` on every text that differs from the page, the clerk summary in the form language with per-string English fallback, stacked rows below 600 px | `tests/unit/answer-sheet-screen.test.tsx`, `tests/unit/answer-sheet.test.ts` | passing |
+| Print prints only after its own button press and makes no request; the controls and the stamp are hidden from print | `tests/unit/answer-sheet-screen.test.tsx` | passing |
+| Every screen shows the privacy notice or the "nothing was sent" notice for its own path | `tests/e2e/document-thin.spec.ts`, `tests/unit/screens.test.tsx` | passing |
+
+Axe cannot judge the printed result, the camera, wording or how a screen reader reads a table.
+
+### By hand (the developer records the result)
+
+| Check | Result (pass or fail) | Date checked |
+| --- | --- | --- |
+| Keyboard-only run of the photo path: two big buttons, language question, preview and rotate, line review, every question, review, answer sheet, Print | not done | |
+| Screen reader pass on the line review: the state of each line is read, and the notice about what will be sent | not done | |
+| Screen reader pass on the answer sheet table, including a label read in its own language | not done | |
+| Print preview of the answer sheet on A4: black on white, 14 pt, no row split across pages, controls hidden | not done | |
+| A real phone (camera button, photo from the gallery): the whole path at 360 px wide | not done | |
+| A photo taken by a person who is not the developer, with the app's retake advice read aloud to them | not done | |
+| Larger text and 200% zoom on the line review and the answer sheet | not done | |
+| Reduced motion turned on in the system | not done | |
+| Chinese, Malay and Tamil strings of the photo path read by a native speaker | not done | |
