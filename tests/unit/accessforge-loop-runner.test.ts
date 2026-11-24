@@ -12,6 +12,7 @@
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { LoopRunner } from '../../src/frontend/accessforge/loop-runner.js';
+import { fieldById, needsConfidenceCheck } from '../../src/lib/accessforge/agent-machine.js';
 import { MockAiProvider } from '../../src/lib/ai/mock.js';
 import { handleLegacy } from '../../src/worker/legacy/handler.js';
 import { TEMPLATES } from '../../src/worker/legacy/generated/templates.js';
@@ -83,6 +84,8 @@ describe('LoopRunner', () => {
     expect(runner.get().phase).toBe('asking');
     expect(runner.get().analysisMode).toBe('mock');
     for (let i = 0; i < 10 && runner.get().phase === 'asking'; i++) {
+      // A question below 0.7 confidence is accepted first (Slice 2, Requirement 6.18).
+      if (needsConfidenceCheck(fieldById(runner.get(), runner.get().current!)!)) runner.dispatch({ type: 'LOW_CONFIDENCE_ACCEPTED' });
       runner.dispatch({ type: 'NEXT_PRESSED', answer: ANSWERS[runner.get().current!]!, today: TODAY });
     }
     expect(runner.get().phase).toBe('review');

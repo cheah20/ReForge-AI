@@ -12,7 +12,7 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { translate } from './helpers.js';
-import { INTENDED, SYNTHETIC, answerStep, currentStep, fillStep, frameValue, legacyFrame, recordLegacyPosts, useOwnClientAddress } from './helpers/accessforge.js';
+import { INTENDED, SYNTHETIC, acceptLowConfidence, answerStep, currentStep, fillStep, frameValue, legacyFrame, recordLegacyPosts, useOwnClientAddress } from './helpers/accessforge.js';
 
 const LANG = 'zh-Hans';
 const t = (key: string, params?: Record<string, string | number>) => translate(LANG, key, params);
@@ -51,6 +51,7 @@ async function scenario(page: Page, deployed: boolean) {
 
     if (id === 'f0:text:nokp') {
       // A wrong IC (month 13) is rejected in Chinese and the old page stays empty.
+      await acceptLowConfidence(page, LANG);
       await fillStep(page, { kind: 'text', value: '901301-10-1234' });
       await page.locator('form.mirror-step').getByRole('button', { name: t('accessforge.step.next') }).click();
       await expect(page.locator('form.mirror-step [aria-live="polite"]')).toHaveText(t('validation.ic.invalidDate'));

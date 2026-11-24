@@ -16,7 +16,7 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { DATE_EXAMPLES, DATE_FORMATS, type DateFormat } from '../../packs/country/dates.js';
 import type { ValidationResult } from '../../packs/country/interface.js';
-import { isLowConfidence, stepInfo, type AgentEvent, type AgentState, type MirrorField } from '../../lib/accessforge/agent-machine.js';
+import { isLowConfidence, needsConfidenceCheck, stepInfo, type AgentEvent, type AgentState, type MirrorField } from '../../lib/accessforge/agent-machine.js';
 import { detectLegacyDateFormat, type DateParts, type MirrorAnswer } from '../../lib/accessforge/transformations.js';
 import { FieldQuestion } from '../components/FieldQuestion.js';
 import { MachineTranslatedLabel } from '../components/MachineTranslatedLabel.js';
@@ -24,6 +24,7 @@ import { ScreenHeading } from '../components/ScreenHeading.js';
 import { StatusMessage } from '../components/StatusMessage.js';
 import { ValidationMessage } from '../components/ValidationMessage.js';
 import { useTranslation } from '../i18n.js';
+import { LowConfidenceCheck } from './LowConfidenceCheck.js';
 import { fixedQuestionProps, MIRROR_FORM_LANGUAGE, originalLabelOf, toFieldState } from './mirror-field-adapter.js';
 
 export interface MirrorStepProps {
@@ -213,6 +214,9 @@ export function MirrorStep({ state, field, dispatch }: MirrorStepProps) {
   const isDate = type === 'date';
   const isConsent = field.entry.control === 'checkbox';
 
+  // Slice 2 (Requirement 6.18): a low-confidence question is accepted or declined before its input shows.
+  if (needsConfidenceCheck(field)) return <LowConfidenceCheck state={state} field={field} dispatch={dispatch} />;
+
   function answer(): MirrorAnswer {
     if (isDate) return { kind: 'date', parts: draft.parts };
     if (isConsent) return { kind: 'consent', checked: draft.checked };
@@ -259,6 +263,11 @@ export function MirrorStep({ state, field, dispatch }: MirrorStepProps) {
           {t('accessforge.step.next')}
         </button>
       </div>
+      {!field.entry.required && (
+        <button type="button" className="button button--quiet" disabled={busy} onClick={() => dispatch({ type: 'SKIP_PRESSED' })}>
+          {t('wizard.skip')}
+        </button>
+      )}
       <button type="button" className="button button--quiet" onClick={() => dispatch({ type: 'CANCEL_PRESSED' })}>
         {t('accessforge.step.cancel')}
       </button>

@@ -12,7 +12,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Page } from '@playwright/test';
 import { translate } from './helpers.js';
-import { SYNTHETIC, answerAll, answerStep, currentStep, fillStep, legacyFrame, revive, useOwnClientAddress } from './helpers/accessforge.js';
+import { SYNTHETIC, acceptLowConfidence, answerAll, answerStep, currentStep, fillStep, legacyFrame, revive, useOwnClientAddress } from './helpers/accessforge.js';
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -51,7 +51,8 @@ for (const { tag, locale } of LANGS) {
         if (id === null) break;
         await axe(page, `step ${id}`);
         if (id === 'f0:text:nokp') {
-          await fillStep(page, { kind: 'text', value: '901301-10-1234' });
+          await acceptLowConfidence(page);
+      await fillStep(page, { kind: 'text', value: '901301-10-1234' });
           await page.locator('form.mirror-step').getByRole('button', { name: t('accessforge.step.next') }).click();
           await expect(page.locator('form.mirror-step input[aria-invalid="true"]')).toHaveCount(1);
           await axe(page, 'a validation error');

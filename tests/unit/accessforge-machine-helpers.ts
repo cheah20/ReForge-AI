@@ -42,7 +42,8 @@ export class FakeFrame {
     }
     if (a.kind === 'check' && a.elementId.startsWith('f0:radio:')) {
       const group = a.elementId.split(':').slice(0, 3).join(':');
-      this.values.set(group, decodeURIComponent(a.elementId.split(':')[3]!));
+      if (a.checked) this.values.set(group, decodeURIComponent(a.elementId.split(':')[3]!));
+      else this.values.delete(group);
       return;
     }
     this.values.set(a.elementId, a.kind === 'check' ? a.checked : a.value);

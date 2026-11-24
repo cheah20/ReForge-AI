@@ -39,7 +39,7 @@ import { sameValue, type Difference, type FilledField, type ReadBack, type ReadB
 
 export const LOW_CONFIDENCE = 0.7;
 
-export type DiyReason = 'NO_PLAN' | 'DUPLICATE_ID' | 'UNSUPPORTED' | 'NOT_FOUND' | 'AMBIGUOUS' | 'REJECTED';
+export type DiyReason = 'NO_PLAN' | 'DUPLICATE_ID' | 'UNSUPPORTED' | 'NOT_FOUND' | 'AMBIGUOUS' | 'REJECTED' | 'DECLINED';
 
 export interface FieldError {
   messageKey: string;
@@ -59,6 +59,8 @@ export interface MirrorField {
   lastReadBack?: ReadBack | undefined;
   diyReason?: DiyReason | undefined;
   error?: FieldError | undefined;
+  /** Slice 2 (Requirement 6.18): the user accepted a low-confidence question, so its answer input may show. */
+  confidenceAccepted?: boolean | undefined;
 }
 
 export type Phase =
@@ -95,7 +97,9 @@ interface WriteItem {
   elementId: string;
   value: string | boolean;
   /** Status after an equal read-back. */
-  mark: 'filled' | 'pending';
+  mark: 'filled' | 'pending' | 'skipped';
+  /** Clears what was written earlier (skipping, Requirement 8.11); `value` names the radio option to uncheck. */
+  clear?: boolean;
 }
 
 type After = { kind: 'next'; from: string } | { kind: 'review' } | { kind: 'stay'; elementId: string } | { kind: 'step'; elementId: string };
@@ -166,6 +170,11 @@ export type AgentEvent =
   | { type: 'ANALYSIS_FAILED'; generation: number; code: string }
   | { type: 'RETRY_PRESSED' }
   | { type: 'NEXT_PRESSED'; answer: MirrorAnswer; today?: Date }
+  /** The user skips the open question (Slice 2, Requirements 8.11, 9.12). */
+  | { type: 'SKIP_PRESSED' }
+  /** Slice 2 (Requirement 6.18): accept or decline a question whose confidence is below 0.7. */
+  | { type: 'LOW_CONFIDENCE_ACCEPTED' }
+  | { type: 'LOW_CONFIDENCE_DECLINED' }
   | { type: 'BACK_PRESSED' }
   | { type: 'DATE_FORMAT_CHOSEN'; format: DateFormat }
   | { type: 'ACTION_DONE'; generation: number; elementId: string }
@@ -252,6 +261,11 @@ export function isLowConfidence(f: MirrorField): boolean {
   return f.plan !== null && f.plan.confidence < LOW_CONFIDENCE;
 }
 
+/** Requirement 6.18: a low-confidence question waits for the user's accept or decline before its input shows. */
+export function needsConfidenceCheck(f: MirrorField): boolean {
+  return isLowConfidence(f) && f.confidenceAccepted !== true && f.status !== 'do-it-yourself';
+}
+
 export function fieldById(s: AgentState, id: string): MirrorField | undefined {
   return s.fields.find((f) => f.elementId === id);
 }
@@ -316,7 +330,7 @@ function stop(s: AgentState, reason: StopReason, effects: Effect[] = []): Step {
   };
 }
 
-function actionFor(field: MirrorField, value: string | boolean): Action {
+function actionFor(field: MirrorField, value: string | boolean, clear = false): Action {
   const id = field.elementId;
   switch (field.entry.control) {
     case 'text':
@@ -326,7 +340,7 @@ function actionFor(field: MirrorField, value: string | boolean): Action {
     case 'radio': {
       const option = field.entry.options.find((o) => o.value === value);
       if (!option?.elementId) throw new Error(`no radio option for the intended value of ${id}`);
-      return { kind: 'check', elementId: option.elementId, checked: true };
+      return { kind: 'check', elementId: option.elementId, checked: !clear };
     }
     case 'checkbox':
       return { kind: 'check', elementId: id, checked: value === true };
@@ -343,7 +357,7 @@ function runQueue(s: AgentState, effects: Effect[]): Step {
     const consent = field.entry.control === 'checkbox' ? item.value === true : consentGiven(s);
     return {
       state: { ...s, phase: 'writing' },
-      effects: [...effects, { type: 'EXECUTE', generation: s.generation, action: actionFor(field, item.value), submitArmed: false, consentGiven: consent }],
+      effects: [...effects, { type: 'EXECUTE', generation: s.generation, action: actionFor(field, item.value, item.clear === true), submitArmed: false, consentGiven: consent }],
     };
   }
   return goAfter(s, effects);
@@ -370,6 +384,12 @@ function makeDiy(s: AgentState, id: string, reason: DiyReason): AgentState {
 function equalsRead(value: string | boolean, rb: ReadBack): boolean {
   if (rb.kind === 'checkbox') return typeof value === 'boolean' && rb.checked === value;
   return typeof value === 'string' && rb.value !== null && sameValue(value, rb.value);
+}
+
+/** After a clearing write: the control must read empty, unselected or unchecked (Requirement 8.11). */
+function readsCleared(rb: ReadBack): boolean {
+  if (rb.kind === 'checkbox') return !rb.checked;
+  return rb.value === null || rb.value === '';
 }
 
 function readValue(rb: ReadBack): string | boolean | null {
@@ -465,6 +485,7 @@ function nextPressed(s: AgentState, e: Extract<AgentEvent, { type: 'NEXT_PRESSED
   if ((s.phase !== 'asking' && s.phase !== 'halted') || s.current === null) return same(s);
   const field = fieldById(s, s.current);
   if (!field?.plan) return same(s);
+  if (needsConfidenceCheck(field)) return same(s);
   const res = toIntendedValue(field.entry, field.plan.answerType, e.answer, {
     ...(s.dateFormat ? { dateFormat: s.dateFormat } : {}),
     ...(e.today ? { today: e.today } : {}),
@@ -490,6 +511,41 @@ function nextPressed(s: AgentState, e: Extract<AgentEvent, { type: 'NEXT_PRESSED
     return goAfter(setField(st, field.elementId, { status: 'skipped' }), []);
   }
   return runQueue({ ...st, queue: [{ elementId: field.elementId, value: res.intended, mark: 'filled' }] }, []);
+}
+
+/**
+ * Slice 2, Requirements 8.11 and 9.12: a question the legacy form does not
+ * require can be skipped. The field stays empty; a value the Executor wrote
+ * earlier is cleared with one Action of the kind of the control (an empty
+ * `fill`, the empty option of a `select`, an unchecked `check`) and read back.
+ * A select without an empty option cannot be cleared, so it becomes do it
+ * yourself and the user is told.
+ */
+function skipPressed(s: AgentState): Step {
+  if (s.phase !== 'asking' || s.current === null) return same(s);
+  const field = fieldById(s, s.current);
+  if (!field?.plan || field.entry.required) return same(s);
+  const id = field.elementId;
+  const after: After = s.returnToReview ? { kind: 'review' } : { kind: 'next', from: id };
+  let st = setField(s, id, { error: undefined });
+  st = { ...st, mismatches: st.mismatches.filter((m) => m.elementId !== id), after };
+
+  const wrote = field.intended !== undefined && !(field.entry.control === 'radio' && field.intended === '');
+  if (!wrote) return goAfter(setField(st, id, { status: 'skipped', intended: undefined, answer: undefined }), []);
+  if (field.entry.control === 'select' && !field.entry.hasEmptyOption) return goAfter(makeDiy(st, id, 'REJECTED'), []);
+  const control = field.entry.control;
+  const value: string | boolean = control === 'checkbox' ? false : control === 'radio' ? String(field.intended) : '';
+  return runQueue({ ...st, queue: [{ elementId: id, value, mark: 'skipped', clear: true }] }, []);
+}
+
+/** Requirement 6.18: accept shows the answer input; decline marks the field do it yourself and moves on. */
+function lowConfidenceAnswered(s: AgentState, accepted: boolean): Step {
+  if (s.phase !== 'asking' || s.current === null) return same(s);
+  const field = fieldById(s, s.current);
+  if (!field?.plan || !needsConfidenceCheck(field)) return same(s);
+  if (accepted) return same(setField(s, field.elementId, { confidenceAccepted: true }));
+  const after: After = s.returnToReview ? { kind: 'review' } : { kind: 'next', from: field.elementId };
+  return goAfter(makeDiy({ ...s, after }, field.elementId, 'DECLINED'), []);
 }
 
 function doSubmit(s: AgentState): Step {
@@ -534,11 +590,12 @@ function readBackDone(s: AgentState, e: Extract<AgentEvent, { type: 'READ_BACK_D
   if (e.result === 'NOT_FOUND' || e.result === 'AMBIGUOUS') {
     return runQueue({ ...makeDiy(s, e.elementId, e.result), queue: s.queue.slice(1) }, []);
   }
-  if (!equalsRead(item.value, e.result)) {
+  const readOk = item.clear === true ? typeof e.result !== 'string' && readsCleared(e.result) : equalsRead(item.value, e.result);
+  if (!readOk) {
     const st = setField(s, e.elementId, { lastReadBack: e.result });
     return halt(st, [{ elementId: e.elementId, intended: item.value, read: readValue(e.result) }], s.after.kind === 'review' ? 'review' : 'next');
   }
-  const st = setField(s, e.elementId, { status: item.mark, lastReadBack: e.result });
+  const st = setField(s, e.elementId, { status: item.mark, lastReadBack: e.result, ...(item.mark === 'skipped' ? { intended: undefined, answer: undefined } : {}) });
   return runQueue({ ...st, queue: s.queue.slice(1) }, []);
 }
 
@@ -609,6 +666,12 @@ function reduce(s: AgentState, e: AgentEvent): Step {
 
     case 'NEXT_PRESSED':
       return nextPressed(s, e);
+    case 'SKIP_PRESSED':
+      return skipPressed(s);
+    case 'LOW_CONFIDENCE_ACCEPTED':
+      return lowConfidenceAnswered(s, true);
+    case 'LOW_CONFIDENCE_DECLINED':
+      return lowConfidenceAnswered(s, false);
     case 'BACK_PRESSED': {
       if (s.phase !== 'asking' || s.current === null) return same(s);
       const all = steps(s);

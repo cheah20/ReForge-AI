@@ -19,7 +19,7 @@ const AF_KEYS = Object.keys(en).filter((k) => k.startsWith('accessforge.'));
 const NOTICE_KEYS = ['title', 'pageText', 'answersStay', 'legacyOnly', 'acknowledge'].map((k) => `accessforge.notice.${k}`);
 
 /** Every reason the reducer can give; the type makes a new reason a compile error until it is listed. */
-const DIY_REASONS: Record<DiyReason, true> = { NO_PLAN: true, DUPLICATE_ID: true, UNSUPPORTED: true, NOT_FOUND: true, AMBIGUOUS: true, REJECTED: true };
+const DIY_REASONS: Record<DiyReason, true> = { NO_PLAN: true, DUPLICATE_ID: true, UNSUPPORTED: true, NOT_FOUND: true, AMBIGUOUS: true, REJECTED: true, DECLINED: true };
 
 describe('AccessForge locale strings', () => {
   it('has a real set of keys', () => {

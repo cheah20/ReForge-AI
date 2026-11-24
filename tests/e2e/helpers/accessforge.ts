@@ -96,8 +96,15 @@ export async function fillStep(page: Page, answer: MirrorAnswer): Promise<void> 
 }
 
 /** Fills the open step and presses next, then waits until a different step or screen shows. */
+/** A question below 0.7 confidence asks to be accepted before its input shows (Slice 2, Requirement 6.18). */
+export async function acceptLowConfidence(page: Page, lang = 'en'): Promise<void> {
+  const check = page.locator('[data-low-confidence-check]');
+  if ((await check.count()) > 0) await check.getByRole('button', { name: translate(lang, 'wizard.confirmQuestion') }).click();
+}
+
 export async function answerStep(page: Page, answer: MirrorAnswer, lang = 'en'): Promise<void> {
   const before = await currentStep(page);
+  await acceptLowConfidence(page, lang);
   await fillStep(page, answer);
   await page.locator('form.mirror-step').getByRole('button', { name: translate(lang, 'accessforge.step.next') }).click();
   await expect.poll(() => currentStep(page)).not.toBe(before);
