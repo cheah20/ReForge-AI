@@ -39,7 +39,7 @@ export function displayValue(field: MirrorField, t: TranslateFn): string {
 }
 
 /** Do-it-yourself fields with their legacy label and a plain reason; no value is proposed (Requirements 12.2, 12.3). */
-export function DoItYourselfList({ fields }: { fields: readonly MirrorField[] }) {
+export function DoItYourselfList({ fields, onShow }: { fields: readonly MirrorField[]; onShow?: ((elementId: string) => void) | undefined }) {
   const { t } = useTranslation();
   if (fields.length === 0) return null;
   return (
@@ -50,13 +50,19 @@ export function DoItYourselfList({ fields }: { fields: readonly MirrorField[] })
             {originalLabelOf(f) || f.entry.name}
           </span>
           <span>{t(`accessforge.diy.reason.${f.diyReason ?? 'NO_PLAN'}`)}</span>
+          {onShow && (
+            <button type="button" className="button button--quiet" onClick={() => onShow(f.elementId)}>
+              {t('accessforge.diy.show')}
+              <span className="visually-hidden"> {originalLabelOf(f) || f.entry.name}</span>
+            </button>
+          )}
         </li>
       ))}
     </ul>
   );
 }
 
-export function MirrorReview({ state, dispatch }: { state: AgentState; dispatch: (e: AgentEvent) => void }) {
+export function MirrorReview({ state, dispatch, onShowField }: { state: AgentState; dispatch: (e: AgentEvent) => void; onShowField?: ((elementId: string) => void) | undefined }) {
   const { t } = useTranslation();
   const reasonId = useId();
   const rows = reviewRows(state);
@@ -93,7 +99,7 @@ export function MirrorReview({ state, dispatch }: { state: AgentState; dispatch:
                 {displayValue(field, t)}
               </p>
               <StatusMessage tone={s.tone}>{t(s.key)}</StatusMessage>
-              {field.status === 'do-it-yourself' && <DoItYourselfList fields={[field]} />}
+              {field.status === 'do-it-yourself' && <DoItYourselfList fields={[field]} onShow={state.phase === 'review' ? onShowField : undefined} />}
               {field.plan && field.status !== 'do-it-yourself' && state.phase === 'review' && (
                 <button type="button" className="button button--quiet" onClick={() => dispatch({ type: 'EDIT_PRESSED', elementId: field.elementId })}>
                   {t('accessforge.review.edit')}

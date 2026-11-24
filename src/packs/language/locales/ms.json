@@ -365,6 +365,7 @@
   "accessforge.diy.reason.AMBIGUOUS": "Lebih daripada satu medan sepadan, jadi tiada apa-apa ditulis. Isi sendiri pada halaman lama.",
   "accessforge.diy.reason.REJECTED": "Aplikasi tidak dapat menulis medan ini dengan selamat, jadi tiada apa-apa ditulis. Isi sendiri pada halaman lama.",
   "accessforge.diy.reason.DECLINED": "Anda memilih untuk mengisi ruangan ini sendiri di halaman lama.",
+  "accessforge.diy.show": "Tunjukkan ruangan ini di halaman lama",
   "accessforge.error.pageNotSupported": "Halaman ini tidak disokong, jadi aplikasi berhenti. Jawapan anda disimpan dalam ingatan.",
   "accessforge.error.reload": "Muat semula halaman pendaftaran",
   "accessforge.error.pageChanged": "Halaman ini telah berubah sejak ia diuji. Anda boleh mengisinya terus pada halaman itu.",

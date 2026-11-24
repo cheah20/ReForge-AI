@@ -35,5 +35,5 @@ export function useAgentLoop(language: string, deps: Partial<LoopDeps> = {}) {
   useEffect(() => () => runner.dispose(), [runner]);
   // The analysis language follows the interface language while the loop is not running.
   useEffect(() => runner.dispatch({ type: 'LANGUAGE_SET', language }), [runner, language]);
-  return { state, dispatch: runner.dispatch, frameRef, onFrameLoad: runner.onFrameLoad, runner };
+  return { state, dispatch: runner.dispatch, frameRef, onFrameLoad: runner.onFrameLoad, showField: (elementId: string) => runner.showField(elementId), runner };
 }

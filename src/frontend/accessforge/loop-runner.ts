@@ -217,6 +217,24 @@ export class LoopRunner {
     }
   }
 
+  /**
+   * Slice 2 (Requirement 12.2): scrolls the frame to a do-it-yourself field on the
+   * review screen and outlines it. It reads the frame and changes no value, so it
+   * never counts as an Action. Returns false when the field cannot be shown now.
+   */
+  showField(elementId: string): boolean {
+    if (this.state.phase !== 'review') return false;
+    const doc = this.handle.document;
+    if (!doc || doc !== this.live()) return false;
+    const entry = this.state.model?.entries.find((e) => e.elementId === elementId);
+    const key = entry ? parseElementId(entry.elementId) : null;
+    if (!key) return false;
+    const found = locate(doc, key);
+    if (found.length !== 1) return false;
+    this.deps.highlight?.(found[0]!);
+    return true;
+  }
+
   /** Stops timers and pending requests when the screen goes away. */
   dispose(): void {
     if (this.timer !== null) this.clearTimer(this.timer);

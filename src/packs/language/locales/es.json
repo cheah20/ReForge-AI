@@ -367,6 +367,7 @@
   "accessforge.diy.reason.AMBIGUOUS": "Coincidió más de un campo, así que no se escribió nada. Rellénalo tú en la página antigua.",
   "accessforge.diy.reason.REJECTED": "La aplicación no pudo escribir este campo con seguridad, así que no escribió nada. Rellénalo tú en la página antigua.",
   "accessforge.diy.reason.DECLINED": "Elegiste rellenar este campo tú mismo en la página antigua.",
+  "accessforge.diy.show": "Mostrar este campo en la página antigua",
   "accessforge.error.pageNotSupported": "Esta página no es compatible, así que la aplicación se detuvo. Tus respuestas se conservan.",
   "accessforge.error.reload": "Recargar la página de registro",
   "accessforge.error.pageChanged": "Esta página ha cambiado desde que se probó. Puedes rellenarla directamente en la página.",

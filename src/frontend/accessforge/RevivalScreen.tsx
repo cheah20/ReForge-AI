@@ -141,7 +141,7 @@ function CancelDialog({ open, dispatch }: { open: boolean; dispatch: (e: AgentEv
   );
 }
 
-function MirrorContent({ state, dispatch, foreignAddress }: { state: AgentState; dispatch: (e: AgentEvent) => void; foreignAddress: boolean }) {
+function MirrorContent({ state, dispatch, foreignAddress, onShowField }: { state: AgentState; dispatch: (e: AgentEvent) => void; foreignAddress: boolean; onShowField?: ((elementId: string) => void) | undefined }) {
   const { t } = useTranslation();
   const phase = state.phase === 'cancelConfirm' ? state.resumePhase ?? 'idle' : state.phase;
   const field = state.current ? fieldById(state, state.current) : undefined;
@@ -198,13 +198,13 @@ function MirrorContent({ state, dispatch, foreignAddress }: { state: AgentState;
       </div>
     );
   }
-  if (phase === 'review' || phase === 'rereading' || phase === 'submitting') return <MirrorReview state={state} dispatch={dispatch} />;
+  if (phase === 'review' || phase === 'rereading' || phase === 'submitting') return <MirrorReview state={state} dispatch={dispatch} onShowField={onShowField} />;
   return <MirrorResult state={state} dispatch={dispatch} />;
 }
 
 export function RevivalScreen({ changeLanguage, foreignAddress = false, loopDeps }: RevivalScreenProps) {
   const { t, language } = useTranslation();
-  const { state, dispatch, frameRef, onFrameLoad } = useAgentLoop(language, loopDeps);
+  const { state, dispatch, frameRef, onFrameLoad, showField } = useAgentLoop(language, loopDeps);
   const [largeText, setLargeText] = useState(false);
   const [frameShown, setFrameShown] = useState(false);
   const frameId = useId();
@@ -218,7 +218,16 @@ export function RevivalScreen({ changeLanguage, foreignAddress = false, loopDeps
       <main id="main" className="revival__layout">
         <section className="revival__mirror stack" aria-label="AccessForge">
           <ModeNotice mode={state.analysisMode} />
-          <MirrorContent state={state} dispatch={dispatch} foreignAddress={foreignAddress} />
+          <MirrorContent
+            state={state}
+            dispatch={dispatch}
+            foreignAddress={foreignAddress}
+            onShowField={(elementId) => {
+              // On a narrow screen the frame is hidden: show it, then outline the field.
+              setFrameShown(true);
+              showField(elementId);
+            }}
+          />
           <button type="button" className="button button--secondary revival__frame-toggle" aria-expanded={frameShown} aria-controls={frameId} onClick={() => setFrameShown((v) => !v)}>
             {frameShown ? t('accessforge.frame.hide') : t('accessforge.frame.show')}
           </button>

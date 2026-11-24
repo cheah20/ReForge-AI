@@ -365,6 +365,7 @@
   "accessforge.diy.reason.AMBIGUOUS": "有多个栏位符合，所以没有写入任何内容。请自己在旧页面上填写。",
   "accessforge.diy.reason.REJECTED": "应用无法安全地写入此栏位，所以没有写入任何内容。请自己在旧页面上填写。",
   "accessforge.diy.reason.DECLINED": "您选择自己在旧页面上填写此字段。",
+  "accessforge.diy.show": "在旧页面上显示此字段",
   "accessforge.error.pageNotSupported": "不支持这个页面，所以应用已停止。您的答案仍然保留。",
   "accessforge.error.reload": "重新加载登记页面",
   "accessforge.error.pageChanged": "这个页面在测试后已经改变。您可以直接在页面上填写。",

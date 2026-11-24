@@ -365,6 +365,7 @@
   "accessforge.diy.reason.AMBIGUOUS": "有多個欄位符合，所以沒有寫入任何內容。請自行在舊頁面上填寫。",
   "accessforge.diy.reason.REJECTED": "應用程式無法安全地寫入此欄位，所以沒有寫入任何內容。請自行在舊頁面上填寫。",
   "accessforge.diy.reason.DECLINED": "您選擇自己在舊頁面上填寫此欄位。",
+  "accessforge.diy.show": "在舊頁面上顯示此欄位",
   "accessforge.error.pageNotSupported": "不支援這個頁面，所以應用程式已停止。您的答案仍然保留。",
   "accessforge.error.reload": "重新載入登記頁面",
   "accessforge.error.pageChanged": "這個頁面在測試後已經改變。您可以直接在頁面上填寫。",

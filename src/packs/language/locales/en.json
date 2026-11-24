@@ -365,6 +365,7 @@
   "accessforge.diy.reason.AMBIGUOUS": "More than one field matched, so nothing was written. Fill it in yourself on the old page.",
   "accessforge.diy.reason.REJECTED": "The app could not write this field safely, so it wrote nothing. Fill it in yourself on the old page.",
   "accessforge.diy.reason.DECLINED": "You chose to fill this field in yourself on the old page.",
+  "accessforge.diy.show": "Show this field on the old page",
   "accessforge.error.pageNotSupported": "This page is not supported, so the app stopped. Your answers are kept.",
   "accessforge.error.reload": "Reload the registration page",
   "accessforge.error.pageChanged": "This page has changed since it was tested. You can complete it directly on the page.",
