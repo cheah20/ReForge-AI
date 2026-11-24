@@ -90,11 +90,15 @@ export function normalizeText(s: string): string {
   return s.replace(/\s+/g, ' ').trim();
 }
 
-/** First `limit` UTF-16 units, never ending on half of a surrogate pair. */
+/**
+ * First `limit` UTF-16 units, never ending on half of a surrogate pair and
+ * never ending on a space the cut itself exposed (Property 8: evidence text
+ * stays whitespace-normalised).
+ */
 function cut(s: string, limit = TEXT_LIMIT): string {
   if (s.length <= limit) return s;
   const code = s.charCodeAt(limit - 1);
-  return s.slice(0, code >= 0xd800 && code <= 0xdbff ? limit - 1 : limit);
+  return s.slice(0, code >= 0xd800 && code <= 0xdbff ? limit - 1 : limit).replace(/\s+$/u, '');
 }
 
 /**
@@ -346,7 +350,12 @@ export function extractPageModel(doc: Document | null, pageVersion: string): Ext
 
   const controls = all.filter((el) => !isHiddenInput(el));
   try {
-    const entries = groupControls(controls).map((g, i) => buildEntry(g, i, doc));
+    const built = groupControls(controls).map((g, i) => buildEntry(g, i, doc));
+    // Slice 2 (Requirement 5.8): two controls with the same Element_Id cannot be told apart. Both stay in
+    // the model, both are marked, and both are left to the user (the Plan_Validator maps neither).
+    const seen = new Map<string, number>();
+    for (const e of built) seen.set(e.elementId, (seen.get(e.elementId) ?? 0) + 1);
+    const entries = built.map((e) => ((seen.get(e.elementId) ?? 0) > 1 ? { ...e, duplicateId: true } : e));
     return { ok: true, model: { path: FORM_PATH, pageVersion, entries } };
   } catch (e) {
     if (e instanceof Unrepresentable) return { ok: false, code: 'UNREADABLE' };
