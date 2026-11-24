@@ -127,6 +127,7 @@ describe('labels and questions', () => {
   });
 });
 
+// Feature: accessforge-skeleton, Property 18: The heuristic plan is deterministic and rule-bound
 describe('Property 18: the heuristic plan is deterministic and rule-bound (100 runs)', () => {
   const CONTROLS = ['text', 'select', 'radio', 'checkbox', 'submit', 'reset', 'unsupported'] as const;
   const entryArb = fc.record({
