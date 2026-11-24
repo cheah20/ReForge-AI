@@ -276,7 +276,7 @@ describe('rate limits (task 16.4 a; design: Common Worker behaviours)', () => {
   /** wrangler.jsonc with comments removed. */
   const wrangler = JSON.parse(
     readFileSync('wrangler.jsonc', 'utf8')
-      .split('\n')
+      .split(/\r?\n/)
       .map((l) => l.replace(/^\s*\/\/.*$/, ''))
       .join('\n'),
   ) as { ratelimits: Array<{ name: string; namespace_id: string; simple: { limit: number; period: number } }> };

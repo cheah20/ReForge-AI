@@ -34,7 +34,7 @@ describe('wrangler.jsonc', () => {
   // Strip // comments, then parse as JSON.
   const config = JSON.parse(
     readFileSync('wrangler.jsonc', 'utf8')
-      .split('\n')
+      .split(/\r?\n/)
       .map((line) => line.replace(/^\s*\/\/.*$/, ''))
       .join('\n'),
   );
