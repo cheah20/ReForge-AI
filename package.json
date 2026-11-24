@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "test:cpu": "vitest run --config vitest.cpu.config.ts",
     "test:e2e": "playwright test",
+    "test:ocr": "playwright test -c playwright.ocr.config.ts --project=chromium real-ocr",
     "typecheck": "tsc --noEmit",
     "generate-fixtures": "tsx scripts/create-fixtures/create-fixtures.ts",
     "generate-encrypted-fixture": "tsx scripts/create-fixtures/encrypted.ts",
