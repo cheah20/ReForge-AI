@@ -16,13 +16,12 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/shared/*"],
-      "@packs/*": ["src/packs/*"],
-      "@lib/*": ["src/lib/*"],
-      "@worker/*": ["src/worker/*"],
-      "@frontend/*": ["src/frontend/*"]
+      "@shared/*": ["./src/shared/*"],
+      "@packs/*": ["./src/packs/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@worker/*": ["./src/worker/*"],
+      "@frontend/*": ["./src/frontend/*"]
     },
     "types": ["vitest/globals", "@cloudflare/workers-types", "node", "vite/client"]
   },
