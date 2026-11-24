@@ -257,6 +257,24 @@ export function stepInfo(s: AgentState): { index: number; total: number } | null
   return i < 0 ? null : { index: i + 1, total: all.length };
 }
 
+/**
+ * Whether the skip control is offered: the field is not required, and clearing it is possible. A select
+ * the Mirror already wrote that has no empty option cannot be cleared, so it cannot be skipped.
+ */
+export function canSkip(f: MirrorField): boolean {
+  if (f.plan === null || f.entry.required) return false;
+  const written = f.intended !== undefined;
+  return !(f.entry.control === 'select' && written && !f.entry.hasEmptyOption);
+}
+
+/** The value of a field the user skipped: empty, unselected or unchecked. */
+function emptyOf(f: MirrorField): string | boolean {
+  return f.entry.control === 'checkbox' ? false : '';
+}
+
+/** Fields whose frame value is read again at the confirm press: those written, and those skipped (still empty). */
+const isChecked = (f: MirrorField): boolean => f.status === 'filled' || f.status === 'skipped';
+
 export function isLowConfidence(f: MirrorField): boolean {
   return f.plan !== null && f.plan.confidence < LOW_CONFIDENCE;
 }
@@ -524,7 +542,7 @@ function nextPressed(s: AgentState, e: Extract<AgentEvent, { type: 'NEXT_PRESSED
 function skipPressed(s: AgentState): Step {
   if (s.phase !== 'asking' || s.current === null) return same(s);
   const field = fieldById(s, s.current);
-  if (!field?.plan || field.entry.required) return same(s);
+  if (!field?.plan || !canSkip(field)) return same(s);
   const id = field.elementId;
   const after: After = s.returnToReview ? { kind: 'review' } : { kind: 'next', from: id };
   let st = setField(s, id, { error: undefined });
@@ -532,7 +550,6 @@ function skipPressed(s: AgentState): Step {
 
   const wrote = field.intended !== undefined && !(field.entry.control === 'radio' && field.intended === '');
   if (!wrote) return goAfter(setField(st, id, { status: 'skipped', intended: undefined, answer: undefined }), []);
-  if (field.entry.control === 'select' && !field.entry.hasEmptyOption) return goAfter(makeDiy(st, id, 'REJECTED'), []);
   const control = field.entry.control;
   const value: string | boolean = control === 'checkbox' ? false : control === 'radio' ? String(field.intended) : '';
   return runQueue({ ...st, queue: [{ elementId: id, value, mark: 'skipped', clear: true }] }, []);
@@ -572,15 +589,17 @@ function readBackDone(s: AgentState, e: Extract<AgentEvent, { type: 'READ_BACK_D
   if (!field) return same(s);
 
   if (s.phase === 'rereading') {
-    if (!(e.elementId in s.reread) && field.status === 'filled') {
+    if (!(e.elementId in s.reread) && isChecked(field)) {
       const ok = typeof e.result !== 'string';
-      const entry = { equal: ok && equalsRead(field.intended!, e.result as ReadBack), read: ok ? readValue(e.result as ReadBack) : null };
+      // A written field must read as written; a skipped field must still read empty (the user may have typed in the frame since).
+      const equal = ok && (field.status === 'skipped' ? readsCleared(e.result as ReadBack) : equalsRead(field.intended!, e.result as ReadBack));
+      const entry = { equal, read: ok ? readValue(e.result as ReadBack) : null };
       const reread = { ...s.reread, [e.elementId]: entry };
-      const filled = s.fields.filter((f) => f.status === 'filled');
-      if (filled.some((f) => !(f.elementId in reread))) return same({ ...s, reread });
-      const different = filled.filter((f) => !reread[f.elementId]!.equal);
+      const checked = s.fields.filter(isChecked);
+      if (checked.some((f) => !(f.elementId in reread))) return same({ ...s, reread });
+      const different = checked.filter((f) => !reread[f.elementId]!.equal);
       if (different.length === 0) return doSubmit({ ...s, reread });
-      return halt(s, different.map((f) => ({ elementId: f.elementId, intended: f.intended!, read: reread[f.elementId]!.read })), 'review');
+      return halt(s, different.map((f) => ({ elementId: f.elementId, intended: f.intended ?? emptyOf(f), read: reread[f.elementId]!.read })), 'review');
     }
     return same(s);
   }
@@ -691,11 +710,11 @@ function reduce(s: AgentState, e: AgentEvent): Step {
       return same({ ...s, phase: 'asking', current: e.elementId, returnToReview: true });
     case 'CONFIRM_PRESSED': {
       if (!canConfirm(s).ok) return same(s);
-      const filled = s.fields.filter((f) => f.status === 'filled');
-      if (filled.length === 0) return doSubmit(s);
+      const checked = s.fields.filter(isChecked);
+      if (checked.length === 0) return doSubmit(s);
       return {
         state: { ...s, phase: 'rereading', reread: {} },
-        effects: filled.map((f): Effect => ({ type: 'READ_BACK', generation: s.generation, elementId: f.elementId })),
+        effects: checked.map((f): Effect => ({ type: 'READ_BACK', generation: s.generation, elementId: f.elementId })),
       };
     }
     case 'SUBMIT_TIMEOUT':

@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { reviewRows } from '../../src/lib/accessforge/agent-machine.js';
+import { canSkip, reviewRows } from '../../src/lib/accessforge/agent-machine.js';
 import { validatePlan } from '../../src/lib/accessforge/plan-validator.js';
 import type { PageModel } from '../../src/shared/page-schemas.js';
 import { MODEL } from './accessforge-helpers.js';
@@ -120,13 +120,23 @@ describe('SKIP_PRESSED (8.11, 9.12)', () => {
     expect(fieldOf(r, 'f0:select:tujuan').status).toBe('skipped');
   });
 
-  it('a select with no empty option cannot be cleared: it becomes do it yourself', () => {
+  it('a select already written that has no empty option cannot be skipped: nothing changes and no skip control is offered', () => {
     let r = toReview(toFirstQuestion(modelWith(['f0:select:tujuan'], () => ({ hasEmptyOption: false }))));
     r = send(r, { type: 'EDIT_PRESSED', elementId: 'f0:select:tujuan' });
+    expect(canSkip(fieldOf(r, 'f0:select:tujuan'))).toBe(false);
     const before = r.frame.actions.length;
+    const state = r.state;
     r = send(r, { type: 'SKIP_PRESSED' });
     expect(r.frame.actions.length).toBe(before);
-    expect(fieldOf(r, 'f0:select:tujuan').status).toBe('do-it-yourself');
+    expect(r.state).toBe(state);
+    expect(fieldOf(r, 'f0:select:tujuan').status).toBe('filled');
+  });
+
+  it('the skip control is offered only for a field that is not required', () => {
+    const r = toFirstQuestion(modelWith(OPTIONAL));
+    expect(canSkip(fieldOf(r, 'f0:text:nama'))).toBe(false);
+    expect(canSkip(fieldOf(r, 'f0:text:tel'))).toBe(true);
+    expect(canSkip(fieldOf(r, 'f0:select:tujuan'))).toBe(true);
   });
 
   it('returns to the review screen when the question was opened from it', () => {
@@ -138,7 +148,7 @@ describe('SKIP_PRESSED (8.11, 9.12)', () => {
     expect(reviewRows(r.state).find((row) => row.field.elementId === 'f0:text:tel')?.status).toBe('skipped');
   });
 
-  it('a skipped field is not read back at confirm, and submit still needs one confirm press', () => {
+  it('a skipped field is read back at confirm and must still be empty; then submit needs one confirm press', () => {
     let r = openStep(toFirstQuestion(modelWith(OPTIONAL)), 'f0:text:tel');
     r = send(r, { type: 'SKIP_PRESSED' });
     r = toReview(r);
@@ -146,7 +156,37 @@ describe('SKIP_PRESSED (8.11, 9.12)', () => {
     expect(r.frame.clicks).toBe(0);
     r = send(r, { type: 'CONFIRM_PRESSED' });
     const read = r.effects.filter((e) => e.type === 'READ_BACK').map((e) => (e.type === 'READ_BACK' ? e.elementId : ''));
-    expect(read).not.toContain('f0:text:tel');
+    expect(read).toContain('f0:text:tel');
+    expect(r.frame.clicks).toBe(1);
+  });
+
+  it('a value typed into the old page after a skip stops the confirm: nothing is submitted', () => {
+    // Written, then skipped (cleared), then changed by hand in the old page before the confirm press.
+    let r = toReview(toFirstQuestion(modelWith(OPTIONAL)));
+    r = send(r, { type: 'EDIT_PRESSED', elementId: 'f0:text:tel' });
+    r = send(r, { type: 'SKIP_PRESSED' });
+    expect(r.state.phase).toBe('review');
+    r.frame.tamper = (id, v) => (id === 'f0:text:tel' ? 'typed by hand' : v);
+    r = send(r, { type: 'CONFIRM_PRESSED' });
+    expect(r.frame.clicks).toBe(0);
+    expect(r.state.phase).toBe('halted');
+    expect(r.state.mismatches).toEqual([{ elementId: 'f0:text:tel', intended: '', read: 'typed by hand' }]);
+  });
+
+  it('the same holds for a field that was skipped before anything was written to it', () => {
+    let r = openStep(toFirstQuestion(modelWith(OPTIONAL)), 'f0:select:tujuan');
+    r = send(r, { type: 'SKIP_PRESSED' });
+    r = toReview(r);
+    expect(r.state.phase).toBe('review');
+    r.frame.tamper = (id, v) => (id === 'f0:select:tujuan' ? 'VAKSIN' : v);
+    r = send(r, { type: 'CONFIRM_PRESSED' });
+    expect(r.frame.clicks).toBe(0);
+    expect(r.state.phase).toBe('halted');
+    // With the frame back to empty the same confirm press submits once.
+    r.frame.tamper = null;
+    r = send(r, { type: 'NEXT_PRESSED', answer: { kind: 'option', value: '' }, today: TODAY });
+    expect(r.state.phase).toBe('review');
+    r = send(r, { type: 'CONFIRM_PRESSED' });
     expect(r.frame.clicks).toBe(1);
   });
 });

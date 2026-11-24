@@ -9,7 +9,7 @@ ReForge AI helps people who are stuck with a form they cannot read or a website 
 | Part | What you give it | What you get |
 |------|------------------|--------------|
 | **FormBridge, fillable PDF** | A PDF form with fields | One question per field in your language, checks on each answer, and the filled PDF, written in your browser |
-| **FormBridge, photo or scan** | A photo of a paper form, or a PDF without fields | The app reads the page in your browser and shows you the lines it found. You choose which lines the AI may see. Then it asks the questions and gives you a large-print answer sheet to copy onto the form or show at the desk |
+| **FormBridge, photo or scan** | A photo or scan of a paper form (JPEG or PNG) | The app reads the page in your browser and shows you the lines it found. You choose which lines the AI may see. Then it asks the questions and gives you a large-print answer sheet to copy onto the form or show at the desk |
 | **AccessForge** | A legacy web page (the demonstration portal served under `/legacy/`) | A plain, accessible set of questions beside the old page. Each answer is written into the old page and read back, and the old form is sent only when you press confirm |
 
 Privacy by design: your files, photos and answers stay in your browser. Only the text of form labels (and, on request, one answer you ask to translate) can go to the AI service. Nothing is stored or logged.
@@ -100,13 +100,13 @@ The project uses these open-source libraries and assets. No code was copied from
 | `@tesseract.js-data/eng`, `@tesseract.js-data/msa` | 1.0.0 | MIT (package); the models come from the Tesseract `tessdata` project, Apache-2.0 | English and Malay language data for the text recognition |
 | Noto Sans (`public/fonts/NotoSans-Regular.ttf`) | Noto project | SIL OFL 1.1 (`public/fonts/OFL.txt`) | PDF and UI text |
 
-## FormBridge: photos, scans and PDFs without fields
+## FormBridge: photos and scans
 
 ### Scope
 
-- Input: JPEG and PNG photos and scans, and PDFs without fillable fields. A fillable PDF keeps the original path. Other file types are recognised and refused with a plain message that suggests taking a photo.
+- Input: JPEG and PNG photos and scans. A fillable PDF keeps the original path. A PDF without fillable fields, and every other file type, is recognised and refused with a plain message that suggests taking a photo. Reading scanned PDF pages is not built yet.
 - The photo is decoded and read in this browser with an open-source text reader (Tesseract.js). The reader and its English and Malay language data are served from the app's own origin and are downloaded once, with the size shown first.
-- **You choose what the AI sees.** The page shows the lines it found, with nothing ticked. Only the lines you tick are sent, as label text, and the page shows exactly what will be sent. A line that looks like an answer already written on the form (a number, an email, text after a colon, the line directly below a question) is never offered.
+- **You choose what the AI sees.** The page shows the lines it found, with nothing ticked. Only the lines you tick are sent, as label text, and the page shows exactly what will be sent. A line that looks like an answer already written on the form (a number, an email, text after a colon, or a short line directly below a question) is not offered. The check is a set of fixed rules, not a promise: a long sentence already written under a question can still be offered, so read what the page says will be sent before you send it.
 - The result is a large-print answer sheet in page order, with a short summary in the form's language for the person at the desk. Print is the main output.
 - If the AI or the network is unavailable, the original labels are still asked, and the answer sheet still works.
 
@@ -123,7 +123,7 @@ The project uses these open-source libraries and assets. No code was copied from
 |-------|------|
 | A clean photo goes from the line review through every question to an answer sheet that lists every kept label | `tests/e2e/document-photo.spec.ts` |
 | With a prefilled sensitive form, no answer, ID number or free text leaves the browser or is kept in it, even when every offered line is ticked | `tests/e2e/document-privacy.spec.ts` |
-| Axe finds no violation on any screen of the photo path in English and Simplified Chinese, with focus on each new heading and with larger text | `tests/e2e/document-accessibility.spec.ts` |
+| Axe finds no violation on any screen of the photo path in English and Simplified Chinese, with focus on the heading of the language question, line review, confirm and answer sheet screens, and with larger text | `tests/e2e/document-accessibility.spec.ts` |
 | Real text recognition passes the validation bar on the clean English and Malay photos and on both rotated photos, and the glary photo is reported as a low-quality page | `tests/ocr/real-ocr.spec.ts` |
 | The answer sheet lists every kept label, falls back to English per string, and prints only on the button press with no request | `tests/unit/answer-sheet.test.ts`, `tests/unit/answer-sheet-screen.test.tsx` |
 

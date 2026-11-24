@@ -77,7 +77,7 @@ Axe cannot judge focus order, wording, translations or how a screen reader reads
 | Larger text option: every screen readable, nothing cut off | not done | |
 | Chinese and Malay Mirror strings read by a native speaker | not done | |
 
-## Photos, scans and PDFs without fields
+## Photos and scans
 
 The reading, line review, question and answer-sheet screens of the photo path are held to WCAG 2.2 AA. The paper form in the photo is not: it is the user's own document.
 

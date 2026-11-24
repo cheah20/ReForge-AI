@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useId, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { fieldById, languageLocked, type AgentEvent, type AgentState } from '../../lib/accessforge/agent-machine.js';
 import { LANGUAGE_REGISTRY } from '../../packs/language/registry.js';
 import { ScreenHeading } from '../components/ScreenHeading.js';
@@ -223,8 +224,8 @@ export function RevivalScreen({ changeLanguage, foreignAddress = false, loopDeps
             dispatch={dispatch}
             foreignAddress={foreignAddress}
             onShowField={(elementId) => {
-              // On a narrow screen the frame is hidden: show it, then outline the field.
-              setFrameShown(true);
+              // On a narrow screen the frame is hidden: show it now (not on the next render), then outline the field.
+              flushSync(() => setFrameShown(true));
               showField(elementId);
             }}
           />

@@ -16,7 +16,7 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { DATE_EXAMPLES, DATE_FORMATS, type DateFormat } from '../../packs/country/dates.js';
 import type { ValidationResult } from '../../packs/country/interface.js';
-import { isLowConfidence, needsConfidenceCheck, stepInfo, type AgentEvent, type AgentState, type MirrorField } from '../../lib/accessforge/agent-machine.js';
+import { canSkip, isLowConfidence, needsConfidenceCheck, stepInfo, type AgentEvent, type AgentState, type MirrorField } from '../../lib/accessforge/agent-machine.js';
 import { detectLegacyDateFormat, type DateParts, type MirrorAnswer } from '../../lib/accessforge/transformations.js';
 import { FieldQuestion } from '../components/FieldQuestion.js';
 import { MachineTranslatedLabel } from '../components/MachineTranslatedLabel.js';
@@ -266,7 +266,7 @@ export function MirrorStep({ state, field, dispatch }: MirrorStepProps) {
           {t('accessforge.step.next')}
         </button>
       </div>
-      {!field.entry.required && (
+      {canSkip(field) && (
         <button type="button" className="button button--quiet" disabled={busy} onClick={() => dispatch({ type: 'SKIP_PRESSED' })}>
           {t('wizard.skip')}
         </button>
