@@ -247,6 +247,7 @@
   "document.crop.zoomOut": "Zum keluar",
   "document.crop.zoomLevel": "Zum: {percent}%",
   "document.crop.close": "Tutup",
+  "document.crop.enlarge": "Tekan untuk melihat bahagian halaman ini dengan lebih besar.",
 
   "document.analysis.batch": "Menulis soalan, bahagian {current} daripada {total}",
   "document.originalMode.status": "Soalan akan menggunakan perkataan borang itu sendiri.",

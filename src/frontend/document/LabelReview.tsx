@@ -12,6 +12,7 @@ import { buildLabelAnalysisRequests } from '../../lib/document/request.js';
 import { groupForReview } from '../../lib/document/review-order.js';
 import { keptLabels, reduceReview, selectedCount, type ReviewAction } from '../../lib/document/review.js';
 import { isValueLikeText } from '../../lib/document/value-rules.js';
+import { PageCropButton } from '../components/PageCropButton.js';
 import { ScreenHeading } from '../components/ScreenHeading.js';
 import { StatusMessage } from '../components/StatusMessage.js';
 import { useServices, useSession } from '../app-context.js';
@@ -104,8 +105,17 @@ export function LabelReview({ onDone, onBack, fetchFn }: LabelReviewProps) {
     const textId = `lr-text-${item.labelId}`;
     const stateId = `lr-state-${item.labelId}`;
     const blocked = item.blockedValueLike || isValueLikeText(item.text);
+    // The crop shows the line as it was read from the page, whatever the user has typed since (Requirement 12.2).
+    const candidate = doc.model.candidates.find((c) => c.labelId === item.labelId);
+    const page = candidate ? doc.model.pages.find((p) => p.pageNumber === candidate.pageNumber) : undefined;
+    const line = candidate ? page?.lines.find((l) => l.index === candidate.lineIndex) : undefined;
     return (
       <li key={item.labelId} className="review-item label-review__row">
+        {candidate && page?.preview && line && (
+          <div className="label-review__crop">
+            <PageCropButton text={candidate.text} textLang={candidate.textLang || undefined} pageNumber={candidate.pageNumber} page={page} preview={page.preview} box={line.box} />
+          </div>
+        )}
         <label htmlFor={textId}>{t('document.review.textLabel', { page: item.pageNumber })}</label>
         <input
           id={textId}

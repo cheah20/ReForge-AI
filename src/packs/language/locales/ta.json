@@ -247,6 +247,7 @@
   "document.crop.zoomOut": "சிறிதாக்கு",
   "document.crop.zoomLevel": "அளவு: {percent}%",
   "document.crop.close": "மூடு",
+  "document.crop.enlarge": "பக்கத்தின் இந்தப் பகுதியைப் பெரிதாகப் பார்க்க அழுத்தவும்.",
 
   "document.analysis.batch": "கேள்விகளை எழுதுகிறது, {total} பகுதிகளில் பகுதி {current}",
   "document.originalMode.status": "கேள்விகள் படிவத்தின் சொந்தச் சொற்களைப் பயன்படுத்தும்.",

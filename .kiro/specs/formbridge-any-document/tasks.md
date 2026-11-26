@@ -505,7 +505,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - `RotateControl.tsx` (44 px, 90 degrees per press, page rebuilt through `replacePage`), the preview step for photos, `RetakeAdvice.tsx` (one sentence, retake that replaces only that page, rotate, "Continue with what was read"), and the "We found no labels" screen.
     - "Add another page" while a photo model has fewer than 5 pages, through `appendPage`; a file that is too large, does not decode or is not a photo is refused with the matching message, and existing pages stay unchanged. Component tests for each refusal.
     - _Requirements: 7.2, 7.3, 7.5, 7.6, 9.4, 12.10_
-  - [ ] 11.7 Build Page_Crops and the crop dialog (Slice 1, Tier A)
+  - [x] 11.7 Build Page_Crops and the crop dialog (Slice 1, Tier A)
     - `src/frontend/document/crops.ts` draws a crop from the page preview around a line box. `PageCropButton.tsx` has alt text with the candidate text and page number. `CropDialog.tsx` is a native `<dialog>` with zoom from 100% to 400% in 50% steps, focus kept inside, and Escape or Close returning focus to the crop button.
     - _Requirements: 12.7, 23.6, 23.12_
   - [ ] 11.8 Build the Label_Review screen (Slice 1, Tier A)
@@ -575,10 +575,9 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [x] 13.1 Add the mock OCR helpers (Slice 1, Tier A)
     - `tests/e2e/helpers/document.ts`: inject mock OCR results per fixture through the test hook, record every request URL, header and body, and scan browser storage. The `mobile-chromium` project already exists from task 2.21.
     - _Requirements: 25.5, 27.9_
-  - [ ] 13.2 Write scenario 2: clean phone photo (Slice 1, Tier A)
+  - [x] 13.2 Write scenario 2: clean phone photo (Slice 1, Tier A)
     - `tests/e2e/document-photo.spec.ts`: Entry_Screen, language question, Label_Review with a Page_Crop beside every candidate, every question, Review_Screen, Answer_Sheet listing every Kept_Label with its answer.
     - _Requirements: 27.2_
-    - Checked 2026-11-26, left unticked: `tests/e2e/document-photo.spec.ts` has the flow, but its Page_Crop test is `test.fixme` until task 11.7.
   - [ ] 13.3 Write scenario 3: rotated photo (Slice 1, Tier B)
     - `tests/e2e/document-rotated.spec.ts`: the EXIF-tagged fixture with zero rotate presses and the untagged fixture after one press both show the expected labels.
     - _Requirements: 7.1, 7.2, 27.3_

@@ -249,6 +249,7 @@
   "document.crop.zoomOut": "Alejar",
   "document.crop.zoomLevel": "Zoom: {percent} %",
   "document.crop.close": "Cerrar",
+  "document.crop.enlarge": "Pulsa para ver esta parte de la página más grande.",
 
   "document.analysis.batch": "Escribiendo preguntas, parte {current} de {total}",
   "document.originalMode.status": "Las preguntas usarán las palabras del propio formulario.",

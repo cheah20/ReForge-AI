@@ -247,6 +247,7 @@
   "document.crop.zoomOut": "縮小",
   "document.crop.zoomLevel": "縮放：{percent}%",
   "document.crop.close": "關閉",
+  "document.crop.enlarge": "按下可放大檢視頁面的這一部分。",
 
   "document.analysis.batch": "正在撰寫問題，第 {current} 部分，共 {total} 部分",
   "document.originalMode.status": "問題將使用表格上的原文。",

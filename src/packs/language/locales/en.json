@@ -247,6 +247,7 @@
   "document.crop.zoomOut": "Zoom out",
   "document.crop.zoomLevel": "Zoom: {percent}%",
   "document.crop.close": "Close",
+  "document.crop.enlarge": "Press to see this part of the page larger.",
 
   "document.analysis.batch": "Writing questions, part {current} of {total}",
   "document.originalMode.status": "The questions will use the form's own words.",

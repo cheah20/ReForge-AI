@@ -90,8 +90,9 @@ test('a clean photo goes from the label review through every question to an answ
 });
 
 test('every candidate on the label review has the crop of the page beside it', async ({ page }) => {
-  test.fixme(true, 'Page_Crop (task 11.7) is not built yet; remove this line when it is.');
   await toLabelReview(page);
+  // The lines that look less like questions sit in a collapsed group; open it so every candidate can be seen.
+  await page.locator('details.label-review__others > summary').click();
   const items = page.locator('ol.label-review > li');
   const count = await items.count();
   expect(count).toBeGreaterThan(0);
