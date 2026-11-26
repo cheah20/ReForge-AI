@@ -33,6 +33,7 @@ function scripted(kind: 'real' | 'mock', script: Array<unknown | AiError>): AiPr
       if (next instanceof AiError) throw next;
       return { value: next, usage: { model: 'test-model', promptTokens: 10, completionTokens: 5, durationMs: 1 } };
     },
+    retranslatePage: () => Promise.reject(new Error('unused')),
     analyze: () => Promise.reject(new Error('unused')),
     retranslate: () => Promise.reject(new Error('unused')),
     translate: () => Promise.reject(new Error('unused')),

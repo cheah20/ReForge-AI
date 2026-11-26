@@ -17,6 +17,7 @@ import {
   type AnalyzeCall,
   type LabelAnalyzeCall,
   type PageAnalyzeCall,
+  type PageRetranslateCall,
   type RetranslateCall,
   type TranslateCall,
 } from './interface.js';
@@ -25,6 +26,7 @@ import {
   analyzeLabelsMessages,
   analyzeMessages,
   pageAnalyzeMessages,
+  pageRetranslateMessages,
   retranslateMessages,
   translateMessages,
   type ChatMessage,
@@ -59,7 +61,7 @@ export interface CfWorkersAiOptions {
   now?: () => number;
 }
 
-const MAX_TOKENS = { analyze: 2000, retranslate: 4000, translate: 1500, analyzeLabels: 2000, analyzePage: 1500 } as const;
+const MAX_TOKENS = { analyze: 2000, retranslate: 4000, translate: 1500, analyzeLabels: 2000, analyzePage: 1500, retranslatePage: 2000 } as const;
 
 /**
  * AccessForge page analysis timeout (accessforge-skeleton design, AiProvider
@@ -110,6 +112,10 @@ export class CfWorkersAiProvider implements AiProvider {
 
   analyzePage(call: PageAnalyzeCall): Promise<AiReply> {
     return this.run(pageAnalyzeMessages(call), MAX_TOKENS.analyzePage, 0.2, Math.min(PAGE_TIMEOUT_MS, this.timeoutMs));
+  }
+
+  retranslatePage(call: PageRetranslateCall): Promise<AiReply> {
+    return this.run(pageRetranslateMessages(call), MAX_TOKENS.retranslatePage, 0.2, Math.min(PAGE_TIMEOUT_MS, this.timeoutMs));
   }
 
   /**

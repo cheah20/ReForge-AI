@@ -32,6 +32,7 @@ function scripted(script: Array<unknown | AiError>): AiProvider & { calls: numbe
     },
     analyze: () => Promise.reject(new Error('unused')),
     retranslate: () => Promise.reject(new Error('unused')),
+    retranslatePage: () => Promise.reject(new Error('unused')),
     translate: () => Promise.reject(new Error('unused')),
     analyzeLabels: () => Promise.reject(new Error('unused')),
   };

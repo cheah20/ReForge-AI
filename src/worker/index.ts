@@ -21,6 +21,8 @@ import { analyzeLabelsRoute, ANALYZE_LABELS_BODY_LIMIT } from './routes/analyze-
 import { retranslateRoute, RETRANSLATE_BODY_LIMIT } from './routes/retranslate.js';
 import { translateRoute, TRANSLATE_BODY_LIMIT } from './routes/translate.js';
 import { pageAnalyzeRoute, PAGE_ANALYZE_BODY_LIMIT } from './routes/page-analyze.js';
+import { pageRetranslateRoute, PAGE_RETRANSLATE_BODY_LIMIT } from './routes/page-retranslate.js';
+import { pageCachedPlanRoute, PAGE_CACHED_PLAN_BODY_LIMIT } from './routes/page-cached-plan.js';
 import type { PagePlanStore } from './cache/page-plan-cache.js';
 import type { RouteContext, RouteResult } from './routes/types.js';
 import { handleLegacy, legacyLogRoute, type LegacyDeps } from './legacy/handler.js';
@@ -45,6 +47,8 @@ export interface Env {
 export const AI_MODE_HEADER = 'x-reforge-ai-mode';
 
 interface RouteDef {
+  /** HTTP method; POST when absent. A GET route receives its query string as an object. */
+  method?: 'GET';
   limit: number;
   /** Which rate-limiting binding counts this route. */
   rateLimiter: 'RATE_LIMITER_ANALYZE' | 'RATE_LIMITER_TRANSLATE';
@@ -59,6 +63,9 @@ const ROUTES: Record<string, RouteDef> = {
   '/api/documents/analyze-labels': { limit: ANALYZE_LABELS_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_ANALYZE', handle: analyzeLabelsRoute },
   // AccessForge page analysis (accessforge-skeleton task 13.7).
   '/api/pages/analyze': { limit: PAGE_ANALYZE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_ANALYZE', handle: pageAnalyzeRoute },
+  // AccessForge Slice 2: language switching after analysis (tasks 25.3 and 25.4).
+  '/api/pages/retranslate': { limit: PAGE_RETRANSLATE_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_TRANSLATE', handle: pageRetranslateRoute },
+  '/api/pages/cached-plan': { method: 'GET', limit: PAGE_CACHED_PLAN_BODY_LIMIT, rateLimiter: 'RATE_LIMITER_TRANSLATE', handle: pageCachedPlanRoute },
 };
 
 export interface HandlerDeps {
@@ -102,9 +109,10 @@ export function createHandler(deps: HandlerDeps = {}) {
     try {
       const def = ROUTES[route];
       if (!def) throw new HttpError('NOT_FOUND');
-      if (request.method !== 'POST') throw new HttpError('METHOD_NOT_ALLOWED');
+      const method = def.method ?? 'POST';
+      if (request.method !== method) throw new HttpError('METHOD_NOT_ALLOWED');
 
-      const body = await readJson(request, def.limit);
+      const body = method === 'GET' ? Object.fromEntries(new URL(request.url).searchParams) : await readJson(request, def.limit);
 
       const limiter = env[def.rateLimiter];
       if (limiter) {
@@ -130,7 +138,7 @@ export function createHandler(deps: HandlerDeps = {}) {
       const httpErr = err instanceof HttpError ? err : new HttpError('INTERNAL_ERROR');
       response = errorResponse(httpErr.code, httpErr.detail, {
         ...headers,
-        ...(httpErr.code === 'METHOD_NOT_ALLOWED' ? { allow: 'POST' } : {}),
+        ...(httpErr.code === 'METHOD_NOT_ALLOWED' ? { allow: ROUTES[route]?.method ?? 'POST' } : {}),
       });
       entry.errorCode = httpErr.code;
     }

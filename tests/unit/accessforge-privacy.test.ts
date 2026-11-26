@@ -45,6 +45,7 @@ function recordingProvider(prompts: string[]): AiProvider {
     retranslate: (c) => mock.retranslate(c),
     translate: (c) => mock.translate(c),
     analyzeLabels: (c) => mock.analyzeLabels(c),
+    retranslatePage: (c) => mock.retranslatePage(c),
     analyzePage: (c: PageAnalyzeCall) => {
       prompts.push(JSON.stringify(pageAnalyzeMessages(c)));
       return mock.analyzePage(c);

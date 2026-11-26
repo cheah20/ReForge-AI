@@ -253,6 +253,7 @@ function scripted(kind: 'real' | 'mock', script: Outcome[]): AiProvider & { call
       if (next instanceof AiError) throw next;
       return { value: next, usage: { model: 'test-model', promptTokens: 1, completionTokens: 1, durationMs: 1 } };
     },
+    retranslatePage: () => Promise.reject(new Error('unused')),
     analyze: () => Promise.reject(new Error('unused')),
     retranslate: () => Promise.reject(new Error('unused')),
     translate: () => Promise.reject(new Error('unused')),

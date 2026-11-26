@@ -29,6 +29,7 @@ import type {
   AnalyzeCall,
   LabelAnalyzeCall,
   PageAnalyzeCall,
+  PageRetranslateCall,
   RetranslateCall,
   TranslateCall,
 } from './interface.js';
@@ -254,5 +255,25 @@ export class MockAiProvider implements AiProvider {
         };
       });
     return reply({ entries });
+  }
+
+  /**
+   * Deterministic, by label match: a pair whose label equals a table label in any
+   * language gets that entry's text in the target language. Other wording is marked
+   * with the generic `[demo]` question built from the label, never passed off as a translation.
+   */
+  async retranslatePage({ request }: PageRetranslateCall): Promise<AiReply> {
+    const lang = request.targetLanguage;
+    const known = Object.values(PAGE_TABLE);
+    const items = request.items.map((item) => {
+      const match = known.find((k) => Object.values(k.text).some(([label]) => label === item.humanLabel));
+      if (match) {
+        const [humanLabel, question] = match.text[lang] ?? match.text['en']!;
+        return { humanLabel, question };
+      }
+      const label = clip(item.humanLabel, 80);
+      return { humanLabel: label, question: clip(t(lang, 'mock.question', { label }), 200) };
+    });
+    return reply({ items });
   }
 }

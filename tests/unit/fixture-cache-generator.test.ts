@@ -28,6 +28,7 @@ function fakeRealProvider(): AiProvider {
     translate: (c) => mock.translate(c),
     analyzeLabels: (c) => mock.analyzeLabels(c),
     analyzePage: (c) => mock.analyzePage(c),
+    retranslatePage: (c) => mock.retranslatePage(c),
   };
 }
 

@@ -25,7 +25,14 @@ import type {
   TranslateRequest,
   TranslateResponse,
 } from '../shared/types.js';
-import { PageAnalyzeResponseSchema, type PageAnalyzeRequest, type PageAnalyzeResponse } from '../shared/page-schemas.js';
+import {
+  PageAnalyzeResponseSchema,
+  PageRetranslateResponseSchema,
+  type PageAnalyzeRequest,
+  type PageAnalyzeResponse,
+  type PageRetranslateRequest,
+  type PageRetranslateResponse,
+} from '../shared/page-schemas.js';
 
 /** Same header name as the Worker's AI_MODE_HEADER (kept here so the browser bundle does not import Worker code). */
 export const AI_MODE_HEADER = 'x-reforge-ai-mode';
@@ -55,13 +62,12 @@ export interface ApiClient {
 type FetchFn = (input: string, init: RequestInit) => Promise<Response>;
 
 async function post<S extends z.ZodType>(fetchFn: FetchFn, path: string, body: unknown, schema: S): Promise<ApiReply<z.infer<S>>> {
+  return send(fetchFn, path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }, schema);
+}
+async function send<S extends z.ZodType>(fetchFn: FetchFn, path: string, init: RequestInit, schema: S): Promise<ApiReply<z.infer<S>>> {
   let response: Response;
   try {
-    response = await fetchFn(path, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    response = await fetchFn(path, init);
   } catch {
     throw new ApiRequestError('NETWORK_ERROR');
   }
@@ -129,4 +135,43 @@ export async function analyzePage(request: PageAnalyzeRequest, options: AnalyzeP
     clearTimeout(timer);
     options.signal?.removeEventListener('abort', onAbort);
   }
+}
+
+// ---------------------------------------------------------------------------
+// AccessForge language switching (accessforge-skeleton task 25.5)
+// ---------------------------------------------------------------------------
+/** The browser gives up on a re-translation after 45 s; the previous wording stays (Requirement 7.9). */
+export const PAGE_RETRANSLATE_TIMEOUT_MS = 45_000;
+
+async function withTimeout<T>(options: AnalyzePageOptions, run: (fetchFn: FetchFn) => Promise<T>): Promise<T> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, options.timeoutMs ?? PAGE_RETRANSLATE_TIMEOUT_MS);
+  const onAbort = () => controller.abort();
+  if (options.signal?.aborted) controller.abort();
+  options.signal?.addEventListener('abort', onAbort);
+  const base = options.fetchFn ?? ((input: string, init: RequestInit) => fetch(input, init));
+  try {
+    return await run((input, init) => base(input, { ...init, signal: controller.signal }));
+  } catch (err) {
+    if (controller.signal.aborted) throw new ApiRequestError(timedOut ? 'TIMEOUT' : 'ABORTED');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', onAbort);
+  }
+}
+
+/** POST /api/pages/retranslate. The body holds the existing wording and the new language only. */
+export function retranslatePage(request: PageRetranslateRequest, options: AnalyzePageOptions = {}): Promise<ApiReply<PageRetranslateResponse>> {
+  return withTimeout(options, (fetchFn) => post(fetchFn, '/api/pages/retranslate', request, PageRetranslateResponseSchema));
+}
+
+/** GET /api/pages/cached-plan: the saved plan for this Page_Version and language, or a `NOT_FOUND` error. */
+export function fetchCachedPlan(version: string, lang: string, options: AnalyzePageOptions = {}): Promise<ApiReply<PageAnalyzeResponse>> {
+  const query = new URLSearchParams({ version, lang }).toString();
+  return withTimeout(options, (fetchFn) => send(fetchFn, `/api/pages/cached-plan?${query}`, { method: 'GET' }, PageAnalyzeResponseSchema));
 }

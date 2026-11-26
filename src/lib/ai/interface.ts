@@ -11,7 +11,7 @@
  */
 
 import type { AnalyzeRequest, KeptLabel, RetranslateRequest, TranslateRequest } from '../../shared/types.js';
-import type { PageAnalyzeRequest } from '../../shared/page-schemas.js';
+import type { PageAnalyzeRequest, PageRetranslateRequest } from '../../shared/page-schemas.js';
 
 /** Analyze request plus what the provider needs to word the questions. */
 export interface AnalyzeCall {
@@ -54,6 +54,13 @@ export interface PageAnalyzeCall {
   interfaceLanguageName: string;
 }
 
+/** AccessForge re-translation of labels and questions (Slice 2, Requirement 7.7). */
+export interface PageRetranslateCall {
+  /** Existing wording in plan order and the target language tag. */
+  request: PageRetranslateRequest;
+  /** Language name used in the prompt, e.g. "Simplified Chinese". */
+  targetLanguageName: string;
+}
 /** Operational metadata only: never prompts, replies or form content. */
 export interface AiUsage {
   model: string;
@@ -80,6 +87,8 @@ export interface AiProvider {
   analyzeLabels(call: LabelAnalyzeCall): Promise<AiReply>;
   /** A Page_Plan for the AccessForge legacy page. */
   analyzePage(call: PageAnalyzeCall): Promise<AiReply>;
+  /** New wording for the labels and questions of a Page_Plan. */
+  retranslatePage(call: PageRetranslateCall): Promise<AiReply>;
 }
 
 export type AiErrorCode = 'AI_QUOTA' | 'AI_RATE_LIMITED' | 'AI_TIMEOUT' | 'AI_INVALID_OUTPUT' | 'AI_UNAVAILABLE';

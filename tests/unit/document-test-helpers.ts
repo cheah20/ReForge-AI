@@ -41,6 +41,7 @@ export function recording(inner: AiProvider = new MockAiProvider()): RecordingPr
     retranslate: (c) => inner.retranslate(c),
     translate: (c) => inner.translate(c),
     analyzePage: (c) => inner.analyzePage(c),
+    retranslatePage: (c) => inner.retranslatePage(c),
     analyzeLabels: (c) => {
       calls.push(c);
       prompts.push(analyzeLabelsMessages(c));
@@ -69,6 +70,7 @@ export function scriptedLabels(steps: ScriptStep[]): AiProvider & { calls: Label
     retranslate: (c) => mock.retranslate(c),
     translate: (c) => mock.translate(c),
     analyzePage: (c) => mock.analyzePage(c),
+    retranslatePage: (c) => mock.retranslatePage(c),
     analyzeLabels: next,
   };
 }

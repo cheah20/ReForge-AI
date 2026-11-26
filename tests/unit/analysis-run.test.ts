@@ -78,6 +78,9 @@ function scripted(steps: Array<unknown | Error>): AiProvider & { calls: number }
     analyzePage() {
       return p.next();
     },
+    retranslatePage() {
+      return p.next();
+    },
   };
   return p;
 }

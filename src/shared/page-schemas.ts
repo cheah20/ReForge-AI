@@ -10,7 +10,8 @@
  * claim about its content. Safety comes from how it is used (rendered as text
  * only, never as a URL, selector or action).
  *
- * The re-translation schemas belong to Slice 2 (task 25.1) and are not here.
+ * The re-translation schemas (Slice 2, task 25.1) carry labels and questions only,
+ * in plan order, with no Element_Id.
  */
 
 import { z } from 'zod';
@@ -112,6 +113,21 @@ export const PrecomputedPagePlanSchema = z
   })
   .strict();
 
+/** One wording pair: the label and question of a plan entry. Matched by position, never by id. */
+export const PageWordingSchema = z.object({ humanLabel: ModelText(80), question: ModelText(200) }).strict();
+
+/** Slice 2 (Requirement 7.7): only the existing wording and the new language; no Page_Model, no answer. */
+export const PageRetranslateRequestSchema = z
+  .object({
+    targetLanguage: Lang,
+    items: z.array(PageWordingSchema).min(1).max(50),
+  })
+  .strict();
+export const PageRetranslateResponseSchema = z.object({ items: z.array(PageWordingSchema).max(50) }).strict();
+
+/** Query of GET /api/pages/cached-plan (Requirement 7.7). */
+export const CachedPlanQuerySchema = z.object({ version: Hex64, lang: Lang }).strict();
+
 /** The only actions the Executor knows. There is no "submit" kind: confirming is the user's own press. */
 export const ActionSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('fill'), elementId: ElementIdSchema, value: z.string() }).strict(),
@@ -131,4 +147,7 @@ export type AnalysisMode = z.infer<typeof AnalysisModeSchema>;
 export type PageAnalyzeRequest = z.infer<typeof PageAnalyzeRequestSchema>;
 export type PageAnalyzeResponse = z.infer<typeof PageAnalyzeResponseSchema>;
 export type PrecomputedPagePlan = z.infer<typeof PrecomputedPagePlanSchema>;
+export type PageWording = z.infer<typeof PageWordingSchema>;
+export type PageRetranslateRequest = z.infer<typeof PageRetranslateRequestSchema>;
+export type PageRetranslateResponse = z.infer<typeof PageRetranslateResponseSchema>;
 export type Action = z.infer<typeof ActionSchema>;
