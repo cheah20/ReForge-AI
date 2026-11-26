@@ -111,6 +111,7 @@
   "error.retry": "Cuba lagi",
 
   "app.skipToContent": "Langkau ke kandungan utama",
+  "app.loadingScreen": "Memuatkan skrin…",
   "upload.found": "Medan ditemui: {count}. Halaman: {pages}.",
   "upload.fieldListTitle": "Tunjukkan medan yang ditemui",
   "analysis.slowNote": "Ini boleh mengambil masa sehingga satu minit. Biarkan halaman ini terbuka.",

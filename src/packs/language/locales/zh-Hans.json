@@ -111,6 +111,7 @@
   "error.retry": "重试",
 
   "app.skipToContent": "跳到主要内容",
+  "app.loadingScreen": "正在加载页面…",
   "upload.found": "找到的栏位：{count}。页数：{pages}。",
   "upload.fieldListTitle": "显示找到的栏位",
   "analysis.slowNote": "这可能需要最多一分钟。请保持此页面打开。",

@@ -8,7 +8,7 @@
  * page with answers asks the browser to warn first (privacy: never saved).
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { createApiClient, type ApiClient } from './api.js';
 import { AppContext, useServices, useSession } from './app-context.js';
 import { AppHeader } from './components/AppHeader.js';
@@ -17,11 +17,6 @@ import { I18nProvider, useTranslation } from './i18n.js';
 import { browserLanguages, matchLanguage } from './language-match.js';
 import { AnalysisLoading } from './screens/AnalysisLoading.js';
 import { ConfirmLanguage, isBlockedFormLanguage } from './screens/ConfirmLanguage.js';
-import { AnswerSheet } from './screens/AnswerSheet.js';
-import { DocumentReading } from './document/DocumentReading.js';
-import { LabelReview } from './document/LabelReview.js';
-import { startDocumentSession, discardDocument } from './document/session.js';
-import { ocrLanguageTag } from '../lib/document/model.js';
 import { DownloadConfirm } from './screens/DownloadConfirm.js';
 import { LanguagePicker } from './screens/LanguagePicker.js';
 import { QuestionWizard } from './screens/QuestionWizard.js';
@@ -30,9 +25,29 @@ import { Upload, type ExtractedForm, type Extractor } from './screens/Upload.js'
 import { loadSampleForm, SAMPLE_FORM_NAME, type SampleLoader, type SampleSource } from './sample-form.js';
 import { createSession, createSessionStore, setStep, type SessionStore } from './state.js';
 import { ACCESSFORGE_PATH, SAMPLE_FORM_PATH } from '../shared/app-paths.js';
-import { RevivalScreen } from './accessforge/RevivalScreen.js';
 import { namesForeignAddress } from '../lib/accessforge/scope.js';
 import { useChangeLanguage } from './use-change-language.js';
+
+// The photo path and AccessForge are loaded when the user first opens them, so the first screen of the
+// fillable-PDF path does not download them (they hold the OCR client, the document pipeline and the Mirror).
+const RevivalScreen = lazy(() => import('./accessforge/RevivalScreen.js').then((m) => ({ default: m.RevivalScreen })));
+const DocumentReading = lazy(() => import('./document/DocumentReading.js').then((m) => ({ default: m.DocumentReading })));
+const LabelReview = lazy(() => import('./document/LabelReview.js').then((m) => ({ default: m.LabelReview })));
+const AnswerSheet = lazy(() => import('./screens/AnswerSheet.js').then((m) => ({ default: m.AnswerSheet })));
+
+/** The photo path's session helpers load with the photo path, not with the first screen. */
+const loadDocumentSession = () => import('./document/session.js');
+const loadDocumentModel = () => import('../lib/document/model.js');
+
+/** Shown while a lazy screen downloads; announced politely and replaced by the screen's own heading. */
+function ScreenLoading() {
+  const { t } = useTranslation();
+  return (
+    <div className="page" aria-live="polite" aria-busy="true">
+      <StatusMessage tone="info">{t('app.loadingScreen')}</StatusMessage>
+    </div>
+  );
+}
 
 export type Screen = 'language' | 'upload' | 'analysis' | 'confirm' | 'questions' | 'review' | 'download' | 'sheet' | 'reading' | 'labelReview' | 'accessforge';
 
@@ -87,7 +102,13 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
     [show, store],
   );
   const onWizardDone = useCallback(() => show('review'), [show]);
-  if (screen === 'accessforge') return <RevivalScreen changeLanguage={changeLanguage} foreignAddress={foreignAddress} />;
+  if (screen === 'accessforge') {
+    return (
+      <Suspense fallback={<ScreenLoading />}>
+        <RevivalScreen changeLanguage={changeLanguage} foreignAddress={foreignAddress} />
+      </Suspense>
+    );
+  }
 
   return (
     <>
@@ -101,6 +122,7 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
         </div>
       )}
       <main id="main" className="page">
+        <Suspense fallback={<ScreenLoading />}>
         {screen === 'language' && (
           <LanguagePicker
             changeLanguage={changeLanguage}
@@ -122,9 +144,11 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
             sample={sample}
             firstScreen={firstScreen}
             onDocument={(file) => {
-              store.set((s) => discardDocument(s, (u) => URL.revokeObjectURL(u)));
-              setPhoto(file);
-              show('reading');
+              void loadDocumentSession().then(({ discardDocument }) => {
+                store.set((s) => discardDocument(s, (u) => URL.revokeObjectURL(u)));
+                setPhoto(file);
+                show('reading');
+              });
             }}
             onContinue={(f) => {
               setForm(f);
@@ -151,19 +175,24 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
             file={photo}
             interfaceLanguage={session.interfaceLanguage}
             onBack={() => {
-              store.set((s) => discardDocument(s, (u) => URL.revokeObjectURL(u)));
-              setPhoto(null);
-              show('upload');
+              void loadDocumentSession().then(({ discardDocument }) => {
+                store.set((s) => discardDocument(s, (u) => URL.revokeObjectURL(u)));
+                setPhoto(null);
+                show('upload');
+              });
             }}
             onRead={(model, lang) => {
-              store.set((s) => ({ ...s, formLanguage: ocrLanguageTag(lang), formCountry: s.formCountry || 'MY', document: startDocumentSession(model, lang) }));
-              show('labelReview');
+              void Promise.all([loadDocumentSession(), loadDocumentModel()]).then(([{ startDocumentSession }, { ocrLanguageTag }]) => {
+                store.set((s) => ({ ...s, formLanguage: ocrLanguageTag(lang), formCountry: s.formCountry || 'MY', document: startDocumentSession(model, lang) }));
+                show('labelReview');
+              });
             }}
           />
         )}
         {screen === 'labelReview' && <LabelReview onDone={onAnalysisDone} onBack={() => show('upload')} />}
         {screen === 'sheet' && <AnswerSheet onBackToReview={() => show('review')} />}
         {screen === 'download' && form && <DownloadConfirm pdf={form.pdf} onBackToReview={() => show('review')} />}
+        </Suspense>
       </main>
     </>
   );

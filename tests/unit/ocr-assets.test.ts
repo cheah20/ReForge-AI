@@ -9,10 +9,11 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { copyOcrAssets, OCR_LANGUAGES, OCR_VARIANTS, type OcrManifest } from '../../scripts/copy-ocr-assets.js';
+import { OCR_MODEL_VARIANT } from '../../src/lib/document/limits.js';
 
 let out: string;
 let manifest: OcrManifest;
@@ -52,11 +53,24 @@ describe('copy-ocr-assets', () => {
     expect(JSON.parse(readFileSync(path.join(dir, 'manifest.json'), 'utf8'))).toEqual(manifest);
   });
 
-  it('copies the worker, every core build and both variants of each language', () => {
+  it('copies the worker, every core build and the one model variant the app reads, for each language', () => {
     const paths = manifest.files.map((f) => f.path);
     expect(paths).toContain('worker.min.js');
     expect(paths.filter((p) => p.startsWith('core/')).length).toBeGreaterThanOrEqual(4);
-    for (const lang of OCR_LANGUAGES) for (const v of OCR_VARIANTS) expect(paths).toContain(`lang/${v}/${lang}.traineddata.gz`);
+    expect(OCR_VARIANTS).toEqual([OCR_MODEL_VARIANT]);
+    for (const lang of OCR_LANGUAGES) expect(paths).toContain(`lang/${OCR_MODEL_VARIANT}/${lang}.traineddata.gz`);
+    // Nothing from another variant ships: the app never asks for it.
+    expect(paths.filter((p) => p.startsWith('lang/') && !p.startsWith(`lang/${OCR_MODEL_VARIANT}/`))).toEqual([]);
+    expect(paths.filter((p) => p.startsWith('lang/'))).toHaveLength(OCR_LANGUAGES.length);
+  });
+
+  it('removes files an earlier run left in the versioned folder', () => {
+    const dir = path.join(out, manifest.version);
+    mkdirSync(path.join(dir, 'lang', '4.0.0'), { recursive: true });
+    writeFileSync(path.join(dir, 'lang', '4.0.0', 'eng.traineddata.gz'), 'stale');
+    const again = copyOcrAssets({ outRoot: out });
+    expect(listFiles(dir).filter((f) => f !== 'manifest.json').sort()).toEqual(again.files.map((f) => f.path).sort());
+    expect(listFiles(dir).some((f) => f.startsWith('lang/4.0.0/'))).toBe(false);
   });
 
   it('each language and variant needs only its own data file plus the shared engine files', () => {

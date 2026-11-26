@@ -111,6 +111,7 @@
   "error.retry": "Try again",
 
   "app.skipToContent": "Skip to main content",
+  "app.loadingScreen": "Loading the screen…",
   "upload.found": "Fields found: {count}. Pages: {pages}.",
   "upload.fieldListTitle": "Show the fields we found",
   "analysis.slowNote": "This can take up to a minute. Keep this page open.",

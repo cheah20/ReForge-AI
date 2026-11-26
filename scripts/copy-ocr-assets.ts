@@ -9,7 +9,7 @@
  *   public/ocr/<version>/
  *     worker.min.js
  *     core/tesseract-core*.wasm.js          every core build tesseract.js may pick
- *     lang/<variant>/<lang>.traineddata.gz  both variants until the OCR spike chooses
+ *     lang/<variant>/<lang>.traineddata.gz  the one variant the app uses (OCR_MODEL_VARIANT)
  *     manifest.json                         { version, files: [{ path, bytes, sha256 }], languages }
  *   current.json                            { version }: which folder the browser uses
  *
@@ -18,14 +18,18 @@
  */
 
 import { createHash } from 'node:crypto';
-import { copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { OCR_MODEL_VARIANT } from '../src/lib/document/limits.js';
 
 /** Language data packages copied, by Tesseract language code. */
 export const OCR_LANGUAGES = ['eng', 'msa'] as const;
-/** Model variants shipped in the `@tesseract.js-data/*` packages. */
-export const OCR_VARIANTS = ['4.0.0', '4.0.0_best_int'] as const;
+/**
+ * Model variants copied. The `@tesseract.js-data/*` packages also hold `4.0.0`, but the app reads only
+ * OCR_MODEL_VARIANT, so the other one would add about 15 MB to every deployment that no one downloads.
+ */
+export const OCR_VARIANTS = [OCR_MODEL_VARIANT] as const;
 
 export interface ManifestFile {
   path: string;
@@ -61,6 +65,8 @@ export function copyOcrAssets(options: CopyOptions = {}): OcrManifest {
   const version = readVersion(root);
   const outRoot = options.outRoot ?? path.join(root, 'public', 'ocr');
   const outDir = path.join(outRoot, version);
+  // A folder left by an earlier run may hold files that are no longer copied (a variant that was dropped).
+  rmSync(outDir, { recursive: true, force: true });
   const files: ManifestFile[] = [];
 
   const copy = (from: string, rel: string) => {

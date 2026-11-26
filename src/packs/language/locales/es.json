@@ -111,6 +111,7 @@
   "error.retry": "Intentar de nuevo",
 
   "app.skipToContent": "Saltar al contenido principal",
+  "app.loadingScreen": "Cargando la pantalla…",
   "upload.found": "Campos encontrados: {count}. Páginas: {pages}.",
   "upload.fieldListTitle": "Mostrar los campos encontrados",
   "analysis.slowNote": "Esto puede tardar hasta un minuto. Mantén esta página abierta.",
