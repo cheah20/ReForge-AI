@@ -198,28 +198,33 @@ describe('extractPageModel refusals', () => {
     expect(extractPageModel(doc, VERSION)).toEqual({ ok: false, code: 'MULTIPLE_FORMS' });
   });
 
-  it('refuses zero and two submit buttons with SUBMIT_COUNT', () => {
+  const submitIds = (doc: Document) => {
+    const r = extractPageModel(doc, VERSION);
+    if (!r.ok) throw new Error('expected a model');
+    return r.model.entries.filter((e) => e.control === 'submit').map((e) => e.elementId);
+  };
+  it('keeps the model when there is no submit button (Requirement 6.16)', () => {
     const none = registerDoc();
     none.querySelector('input[type="submit"]')!.remove();
-    expect(extractPageModel(none, VERSION)).toEqual({ ok: false, code: 'SUBMIT_COUNT' });
+    expect(submitIds(none)).toEqual([]);
+  });
+  it('keeps both submit entries when there are two', () => {
     const two = registerDoc();
     const submit = two.querySelector('input[type="submit"]')!;
     submit.parentNode!.insertBefore(submit.cloneNode(), submit.nextSibling);
-    expect(extractPageModel(two, VERSION)).toEqual({ ok: false, code: 'SUBMIT_COUNT' });
+    expect(submitIds(two)).toHaveLength(2);
   });
-
   it('counts a button element and an image input as submit buttons', () => {
     const btn = registerDoc();
     btn.querySelector('form')!.appendChild(btn.createElement('button'));
-    expect(extractPageModel(btn, VERSION)).toEqual({ ok: false, code: 'SUBMIT_COUNT' });
+    expect(submitIds(btn)).toHaveLength(2);
     const img = registerDoc();
     const image = img.createElement('input');
     image.setAttribute('type', 'image');
+    image.setAttribute('name', 'go');
     img.querySelector('form')!.appendChild(image);
-    expect(extractPageModel(img, VERSION)).toEqual({ ok: false, code: 'SUBMIT_COUNT' });
-  });
-
-  it('refuses a document it cannot read', () => {
+    expect(submitIds(img)).toHaveLength(2);
+  });  it('refuses a document it cannot read', () => {
     expect(extractPageModel(null, VERSION)).toEqual({ ok: false, code: 'UNREADABLE' });
     const crossOrigin = {
       getElementsByTagName(): never {

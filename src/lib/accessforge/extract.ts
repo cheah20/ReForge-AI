@@ -23,7 +23,7 @@
 import type { ControlType, PageEntry, PageModel, PageOption } from '../../shared/page-schemas.js';
 import { ElementIdEncodingError, elementIdFor, radioOptionIdFor } from './element-id.js';
 
-export type ExtractRefusal = 'UNREADABLE' | 'NO_FORM' | 'MULTIPLE_FORMS' | 'TOO_MANY_CONTROLS' | 'SUBMIT_COUNT';
+export type ExtractRefusal = 'UNREADABLE' | 'NO_FORM' | 'MULTIPLE_FORMS' | 'TOO_MANY_CONTROLS';
 export type ExtractResult = { ok: true; model: PageModel } | { ok: false; code: ExtractRefusal };
 
 export const MAX_CONTROLS = 50;
@@ -74,17 +74,13 @@ export function controlTypeOf(el: Element): ControlType {
   if (tag === 'input') {
     const t = inputType(el);
     if (t === 'text' || t === 'radio' || t === 'checkbox' || t === 'submit' || t === 'reset') return t;
+    // An image input submits the form, so it counts with the other submit buttons.
+    if (t === 'image') return 'submit';
     return 'unsupported';
   }
   return 'unsupported';
 }
 
-/** Controls that submit the form: counted for Requirement 6.19 whatever their entry type. */
-function isSubmitter(el: Element): boolean {
-  const tag = tagOf(el);
-  if (tag === 'button') return controlTypeOf(el) === 'submit';
-  return tag === 'input' && (inputType(el) === 'submit' || inputType(el) === 'image');
-}
 
 export function normalizeText(s: string): string {
   return s.replace(/\s+/g, ' ').trim();
@@ -346,7 +342,8 @@ export function extractPageModel(doc: Document | null, pageVersion: string): Ext
   // Every form control counts toward the limit, hidden inputs included.
   const all = Array.from(form.querySelectorAll('input, select, textarea, button'));
   if (all.length > MAX_CONTROLS) return { ok: false, code: 'TOO_MANY_CONTROLS' };
-  if (all.filter(isSubmitter).length !== 1) return { ok: false, code: 'SUBMIT_COUNT' };
+  // Slice 2 (Requirement 6.16): zero or several submit buttons no longer refuse the page. The model keeps them,
+  // the Plan_Validator finds no single submit button, and the Mirror leaves the submission to the user.
 
   const controls = all.filter((el) => !isHiddenInput(el));
   try {
