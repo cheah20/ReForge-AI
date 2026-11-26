@@ -25,13 +25,15 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 1. Kiro hooks setup
   - [ ] 1.1 Create a PostFileSave hook that runs `vitest run --reporter=verbose` scoped to the changed file's test counterpart when any `src/**/*.ts` or `src/**/*.tsx` file is saved; surface failures in the Kiro panel
     - _Requirements: tech.md (Vitest)_
+    - Checked 2026-11-26, left unticked: `.kiro/hooks/test-on-save.json` exists and `node scripts/hooks/test-on-save.cjs <file>` runs the related tests (27 passed for `heuristic.ts`), but the hook has `enabled: false`, so nothing runs on save. The panel behaviour could not be checked outside the IDE.
   - [ ] 1.2 Create a PostFileSave hook that, when `src/packs/language/locales/en.json` is saved, diffs its keys against every other core locale file, lists missing or changed keys, and auto-updates core locale files with machine-translated placeholder values (labelled `[MT]` so translators can find them)
     - _Requirements: 2-L.1, 2-L.6_
+    - Checked 2026-11-26, left unticked: `.kiro/hooks/locale-sync.json` is enabled and `node scripts/hooks/locale-sync.cjs` lists the missing key in all five core locales (probe key, exit 1; `en.json` restored after). The hook asks for real translations and forbids `[MT]` placeholders, which differs from this task's wording. The developer decides whether the task text or the hook changes.
   - [x] 1.3 Create a PreToolUse (or manual trigger) hook that checks staged files for: secrets or API key patterns, the developer's private planning files (which stay out of git), and non-English text in source code, comments, or docs (locale files and `fixtures/` are exempt); block commit and report violations
     - _Requirements: project contest rules (private steering)_
 
 - [ ] 2. MCP configuration
-  - [ ] 2.1 Add Context7 MCP server to `.kiro/settings/mcp.json` for up-to-date documentation for pdf-lib, pdf.js, Cloudflare Workers, and Workers AI; record the first real usage (e.g. "looked up pdf-lib AcroForm API") as a row in `docs/kiro-usage-log.md`
+  - [x] 2.1 Add Context7 MCP server to `.kiro/settings/mcp.json` for up-to-date documentation for pdf-lib, pdf.js, Cloudflare Workers, and Workers AI; record the first real usage (e.g. "looked up pdf-lib AcroForm API") as a row in `docs/kiro-usage-log.md`
     - _Requirements: tech.md_
 
 - [x] 3. Repository scaffold
