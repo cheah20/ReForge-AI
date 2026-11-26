@@ -558,10 +558,10 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - Check and, where needed, change the session and screen code so that in Original_Label_Mode, from the first question step to the Answer_Sheet, the app makes no request with document-derived or answer data. Only GET requests for the app's own static assets are allowed (decision 15), and a failed static asset request leaves every step, the Review_Screen, the Answer_Sheet and Print working.
     - `tests/unit/document-offline.test.ts`: with a `fetch` spy that rejects every call, a session in Original_Label_Mode goes through every question, the Review_Screen and the Answer_Sheet; the spy records no call other than a GET for an own static asset with no document data.
     - _Requirements: 14.3_
-  - [ ] 11.21 Write the component tests for the new screens (Slice 1, Tier A)
+  - [x] 11.21 Write the component tests for the new screens (Slice 1, Tier A)
     - Answer_Sheet: every row has a `th` and `td` pair, every foreign-language element has `lang`, nothing is truncated. Question_Wizard and Review_Screen: no document-only element renders for a Fillable_Path field. Status elements carry text and an icon.
     - _Requirements: 5.1, 19.7, 23.5_
-  - [ ] 11.22 Write the Label_Review component tests (Slice 1, Tier A)
+  - [x] 11.22 Write the Label_Review component tests (Slice 1, Tier A)
     - `tests/unit/label-review.test.tsx`: the instruction of Requirement 12.14 appears above the list; the send button label shows the selected count and changes on every toggle, including the one-item form; with 0 selected, pressing it shows the "select at least one item" message and sends nothing; editing an unselected `ambiguous` item to plain label text leaves it unselected; a value-like edit removes it and shows the value-not-sent notice; clearing text keeps the row.
     - _Requirements: 12.5, 12.11, 12.12, 12.14, 12.15, 12.16_
   - [ ] 11.23 Write the Answer_Sheet export component tests (Slice 1, Tier B)
@@ -578,6 +578,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 13.2 Write scenario 2: clean phone photo (Slice 1, Tier A)
     - `tests/e2e/document-photo.spec.ts`: Entry_Screen, language question, Label_Review with a Page_Crop beside every candidate, every question, Review_Screen, Answer_Sheet listing every Kept_Label with its answer.
     - _Requirements: 27.2_
+    - Checked 2026-11-26, left unticked: `tests/e2e/document-photo.spec.ts` has the flow, but its Page_Crop test is `test.fixme` until task 11.7.
   - [ ] 13.3 Write scenario 3: rotated photo (Slice 1, Tier B)
     - `tests/e2e/document-rotated.spec.ts`: the EXIF-tagged fixture with zero rotate presses and the untagged fixture after one press both show the expected labels.
     - _Requirements: 7.1, 7.2, 27.3_
@@ -596,7 +597,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 13.8 Write scenario 9: unsupported file (Slice 1, Tier B)
     - `tests/e2e/document-refused.spec.ts`: the RTF and `.doc` fixtures show the refusal message and the photo suggestion.
     - _Requirements: 2.5, 27.8_
-  - [ ] 13.9 Write scenario 10, automated part: first-time user on a phone (Slice 1, Tier B)
+  - [x] 13.9 Write scenario 10, automated part: first-time user on a phone (Slice 1, Tier B)
     - `tests/e2e/document-mobile.spec.ts` on `mobile-chromium` in `zh-Hans`: scenario 2 using only the entry buttons and wizard controls; every primary control measures at least 44 by 44 px and the entry buttons at least 64 px tall; the Back control is visible without scrolling; no horizontal scrolling.
     - _Requirements: 1.1, 15.2, 23.1, 23.7, 27.9_
   - [ ] 13.10 Write the offline and throttled-download tests (Slice 1, Tier B)
@@ -605,6 +606,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
   - [ ] 13.11 Write the axe checks for every new screen (Slice 1, Tier A)
     - `tests/e2e/document-accessibility.spec.ts`: tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`, in `en` and `zh-Hans`, failing on any violation, on every screen of Requirement 23.8 (the Answer_Sheet with its PDF and Share controls and the Share hint), plus a keyboard-only pass through scenario 2 with focus moving to each new heading, and the high-contrast and larger-text options on.
     - _Requirements: 23.2, 23.3, 23.4, 23.7, 23.8_
+    - Checked 2026-11-26, left unticked: `tests/e2e/document-accessibility.spec.ts` covers axe in `en` and `zh-Hans`, the focus on each heading, the larger-text option and a keyboard tick on the line review. It does not turn the high-contrast option on, and its keyboard pass is not scenario 2 end to end.
   - [ ] 13.12 Write the default-selection network tests (Slice 1, Tier B)
     - `tests/e2e/default-selection.spec.ts`: one test per fixture (a) `default-name-alone`, (b) `default-name-after-label` (with and without a colon), (c) `default-address`, (d) `default-prefilled-next` and (e) `default-mixed-cell`. Each test loads its fixture with the mock OCR result, accepts the Label_Review with the Default_Selection unchanged (no toggle, no edit), and completes the flow to the Answer_Sheet with the mock AiProvider.
     - Assert that the fixture's Canary_Value appears in no request body, URL or header and in no prompt passed to the AiProvider, read through the prompt record of task 2.9. A second assertion checks that the Label_Review showed the canary's line not at all or unselected, as the fixture's expected state says, so a pass cannot come from a broken fixture.
@@ -614,11 +616,11 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - `tests/e2e/document-export.spec.ts`: on the Answer_Sheet, with `window.print` and `navigator.share` stubbed, record every request while Print, Download and Share are each pressed; there is none. Each stub is called only after its own button press, and the download event fires only after the Download press.
     - _Requirements: 19.11, 19.12, 20.5_
 
-- [ ] 14. Real-OCR tests (Slice 1, Tier A, about 0.25 days)
-  - [ ] 14.1 Write the real-OCR tests (Slice 1, Tier A)
+- [x] 14. Real-OCR tests (Slice 1, Tier A, about 0.25 days)
+  - [x] 14.1 Write the real-OCR tests (Slice 1, Tier A)
     - `tests/ocr/real-ocr.spec.ts`, run by `npm run test:ocr`: real Tesseract.js from `/ocr/` on the clean English photo, the rotated fixtures and the glary or blurred fixture, and Malay only when `msa` is in `VALIDATED_OCR_LANGUAGES`. Fails when the clean fixture is below the OCR_Validation_Bar; asserts a Low_Quality_Page for the glary fixture; prints timings.
     - _Requirements: 25.5_
-  - [ ] 14.2 Record the real recognition timings (Slice 1, Tier A)
+  - [x] 14.2 Record the real recognition timings (Slice 1, Tier A)
     - Run task 14.1 on the desktop and write the measured timings into the OCR Spike Result table in design.md. Phone timings come from the developer's runs in task 3.4. Record any threshold change with its reason.
     - _Requirements: 8.9, 25.5, 26.4_
 
@@ -629,6 +631,7 @@ Tier B starts only when Tier A works end to end and at least 200 credits remain 
     - Checklist: the six entries of Requirement 23.9, each marked "not yet run".
     - `tests/unit/readme-ocr-languages.test.ts`: fails when the README's OCR language list differs from `VALIDATED_OCR_LANGUAGES`, and checks that the Malay statement is present exactly when `msa` is absent. Extend the phrase scan of `tests/unit/document-locales.test.ts` to the README text about the Document_Path, and check that the README privacy text equals the `en` Privacy_Notice.
     - _Requirements: 23.9, 24.8, 28.1, 28.2, 28.3, 28.4, 28.5_
+    - Checked 2026-11-26, left unticked: the README and checklist text is in (6de8700), but `tests/unit/readme-ocr-languages.test.ts` and the README phrase scan of `document-locales.test.ts` do not exist yet.
   - [ ] 15.2 Run the manual accessibility checks (Slice 1, Tier A)
     - **Needs the developer. Coordinated change:** `docs/accessibility-checklist.md`. Fill in the six entries of Requirement 23.9 with pass or fail and the date.
     - _Requirements: 23.9_

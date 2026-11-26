@@ -278,7 +278,7 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 13. THE Page_Model SHALL list the Element_Id of every option of a radio group in that group's entry, and THE Executor SHALL treat an Element_Id as "in the current Page_Model" under criteria 8.1 and 8.2 exactly when it is the Element_Id of a Page_Model entry or of a radio option listed in a radio group entry. A `check` Action on a radio group SHALL be addressed by the Element_Id of the option, and an Action addressed by the Element_Id of the radio group itself SHALL be rejected under criterion 8.2.
 14. IF the Executor receives an Action that started at an earlier Revival_Generation than the current one, THEN THE Executor SHALL reject the Action as criterion 8.2 states.
 
-15. WHERE skipping is delivered (Slice 2), THE clearing Action of criterion 8.11 SHALL be one `fill` with an empty value for a text input, one `select` of the empty option for a select, and one `check` with `checked` false on the chosen option for a radio group or on the box for a checkbox. THE Verifier SHALL read the field back and the status SHALL become `skipped` only when it reads empty, unselected or unchecked. A select without an empty option SHALL become Do_It_Yourself with a reason, because it cannot be cleared. A skip SHALL change no other Legacy_Field.
+15. WHERE skipping is delivered (Slice 2), THE clearing Action of criterion 8.11 SHALL be one `fill` with an empty value for a text input, one `select` of the empty option for a select, and one `check` with `checked` false on the chosen option for a radio group or on the box for a checkbox. THE Verifier SHALL read the field back and the status SHALL become `skipped` only when it reads empty, unselected or unchecked. A select that has no empty option and that the Mirror already wrote SHALL show no skip control, because it cannot be cleared; pressing skip SHALL do nothing. A skip SHALL change no other Legacy_Field.
 ### Requirement 9: Mirror question flow and validation
 
 **Slice:** 1, except the language-change sentence of criterion 9.4 and criterion 9.12 (Slice 2)
@@ -325,6 +325,7 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 12. IF any compared received value differs from its Intended_Value, or a Legacy_Field with status `filled` is missing from the Received_Fields_Summary, or the summary contains a field name that is not in the Page_Model, or the Reference_Number is absent or does not match its pattern, THEN THE Mirror SHALL report that the submission could not be verified, list each difference by original legacy label, and perform no automatic resubmission.
 13. WHILE any Verifier read-back is pending or any mapped Legacy_Field has a read-back value that differs from its Intended_Value, THE Mirror SHALL keep the confirm button disabled and state the reason in the Interface_Language.
 
+14. WHERE skipping is delivered (Slice 2), THE re-read of criterion 10.6 SHALL include every skipped Legacy_Field, and a skipped Legacy_Field SHALL read empty, unselected or unchecked. IF the user typed into a skipped Legacy_Field in the Revival_Frame after the skip, THEN THE ReForge_App SHALL treat the read-back as a mismatch under criterion 10.2, show the empty Intended_Value against the value read, and click nothing.
 ### Requirement 11: Report and confirmation in the user's language
 
 **Slice:** 1
@@ -358,7 +359,7 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 7. THE Mirror SHALL give a Legacy_Field status `filled` only when the Verifier's most recent read-back of that Legacy_Field equals its Intended_Value, and SHALL show every other mapped Legacy_Field as `skipped` or as the mismatch reported under Requirement 10.2.
 8. IF a Do_It_Yourself Legacy_Field carries the `required` attribute in the Page_Model and is empty in the Revival_Frame when the user reaches the review screen, THEN THE Mirror SHALL name that Legacy_Field in a notice telling the user to complete it in the Revival_Frame before confirming, and SHALL leave the confirm button available.
 
-9. WHERE manual-field recovery is delivered (Slice 2), THE review screen SHALL offer for each Do_It_Yourself Legacy_Field a control named for that field that shows the Revival_Frame and scrolls it to the field with the outline of criterion 8.5. The control SHALL read the frame, change no value and count as no Action. IF the field cannot be found exactly once, THEN the control SHALL do nothing.
+9. WHERE manual-field recovery is delivered (Slice 2), THE review screen SHALL offer for each Do_It_Yourself Legacy_Field a control named for that field that shows the Revival_Frame (before it scrolls, so a hidden frame can be scrolled) and scrolls it to the field with the outline of criterion 8.5. The control SHALL read the frame, change no value and count as no Action. IF the field cannot be found exactly once, THEN the control SHALL do nothing.
 ### Requirement 13: Privacy
 
 **Slice:** 1, except the re-translation parts of criteria 13.1, 13.7 and 13.10, which apply where language switching after analysis is delivered (Slice 2)

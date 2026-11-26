@@ -1354,6 +1354,17 @@ Chrome picked `tesseract-core-relaxedsimd-lstm.wasm.js` (3.9 MB). Other browsers
 
 **Malay (provisional).** Malay passes the bar on the synthetic fixtures. `VALIDATED_OCR_LANGUAGES` is set in task 3.5 after the phone photos are measured; until then Malay is not offered.
 
+**Real-OCR run (task 14.2), 2026-11-26.** `npm run test:ocr` (task 14.1) on the development desktop, in Chrome 158 (`PW_CHANNEL=chrome`), tesseract.js 7.0.0 with the `4.0.0_best_int` models, from a fake origin with every other origin blocked, one worker per language. The Playwright Chromium build is not installed on this machine, so the Chrome channel was used; Firefox was not run. Both tests passed (9.8 s in all).
+| Fixture | Language | Turns | Worker start | Recognition | Words | Mean line confidence | Low quality |
+|---|---|---|---|---|---|---|---|
+| `clean-en.png` | `eng` | 0 | 473 ms | 1,107 ms | 38 | 0.947 | no |
+| `clean-en.jpg` | `eng` | 0 | | 840 ms | 38 | 0.950 | no |
+| `rotated-exif6.jpg` | `eng` | 0 | | 914 ms | 38 | 0.949 | no |
+| `rotated-untagged.jpg` | `eng` | 1 | | 929 ms | 38 | 0.949 | no |
+| `glary.jpg` | `eng` | 0 | | 504 ms | 0 | 0 | yes |
+| `clean-ms.png` | `msa` | | 321 ms | 1,211 ms | 34 | 0.956 | |
+| `clean-ms.jpg` | `msa` | | | 957 ms | 34 | 0.956 | |
+The two rotated photos give the same 38 words as the clean one once upright (the tagged one with no press, the untagged one after one rotate press). The glary photo gives 0 words, so it is a Low_Quality_Page under `OCR_MIN_WORDS` 10. No threshold changed: the clean pages (34 to 38 words, confidence at least 0.947) and the glary page (0 words) stay far on either side of `OCR_MIN_WORDS` 10 and `OCR_MIN_MEAN_CONFIDENCE` 0.60. These are rendered fixtures on a desktop; the phone timings still come from task 3.4.
 **Not measured yet:** phone recognition times, cancel response on a phone, the second-fetch cache hit, the Slow 3G first-use time, `_headers` on the deployed URL, Firefox and Safari EXIF behaviour, and the uncertain-cell share of open decision 26 (it needs the Label_Classifier of group 6).
 
 ---

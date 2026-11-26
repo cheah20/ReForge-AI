@@ -309,14 +309,14 @@ Tasks that require Cloudflare access are marked **[needs CF access]**. Ask the d
 - [ ] 38. US validation pack (Dec 1 gate)
   - Confirm the US pack from task 23 is fully wired into the country pack registry and e2e path: `getCountryPack("US")` returns the US pack, ZIP and phone validation active in the wizard for US forms
 
-- [ ] 39. Dec 1 end-to-end acceptance test
-  - [ ] 39.1 Create `tests/e2e/dec1-acceptance.spec.ts` — two variants (high confidence and low confidence) as in task 36; path: Spanish language picker → US clinic form → disclosure → confirm English (US) + US country (when prompted) → question wizard (wrong ZIP rejected, then correct ZIP) → review → confirm → download
+- [x] 39. Dec 1 end-to-end acceptance test
+  - [x] 39.1 Create `tests/e2e/dec1-acceptance.spec.ts` — two variants (high confidence and low confidence) as in task 36; path: Spanish language picker → US clinic form → disclosure → confirm English (US) + US country (when prompted) → question wizard (wrong ZIP rejected, then correct ZIP) → review → confirm → download
     - _Requirements: 15.3_
-  - [ ] 39.2 Add pdf.js field-rect verification and visual screenshots (same approach as task 36.2)
+  - [x] 39.2 Add pdf.js field-rect verification and visual screenshots (same approach as task 36.2)
     - _Requirements: 15.3_
 
-- [ ] 40. Locale completeness test
-  - [ ] 40.1 Create `tests/unit/locale-completeness.test.ts` — for every BCP 47 tag with status `core` in the language registry and every key in `en.json`, assert the locale file has a non-empty entry
+- [x] 40. Locale completeness test
+  - [x] 40.1 Create `tests/unit/locale-completeness.test.ts` — for every BCP 47 tag with status `core` in the language registry and every key in `en.json`, assert the locale file has a non-empty entry
     - **Property 12: Core locale completeness**
     - **Validates: Requirements 1.4, 2-L.1**
 
