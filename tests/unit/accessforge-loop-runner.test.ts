@@ -164,7 +164,7 @@ describe('LoopRunner', () => {
     expect(runner.get().errorCode).toBe('AI_UNAVAILABLE');
   });
 
-  it('refuses a registration page with an unrecorded version and sends no analysis', async () => {
+  it('notes a registration page with an unrecorded version and goes on with the analysis', async () => {
     const analyze = vi.fn(mockAnalyze);
     const s = setup(analyze);
     const doc = parse(fill(TEMPLATES.register, {}));
@@ -174,8 +174,9 @@ describe('LoopRunner', () => {
     s.runner.dispatch({ type: 'REVIVE_PRESSED' });
     s.runner.dispatch({ type: 'NOTICE_ACKNOWLEDGED' });
     await flush();
-    expect(s.runner.get().phase).toBe('versionUnsupported');
-    expect(analyze).not.toHaveBeenCalled();
+    expect(s.runner.get().pageChanged).toBe(true);
+    expect(s.runner.get().phase).toBe('asking');
+    expect(analyze).toHaveBeenCalledTimes(1);
   });
 
   it('writes nothing to browser storage', async () => {

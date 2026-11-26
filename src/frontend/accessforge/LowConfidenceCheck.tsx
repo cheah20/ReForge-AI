@@ -14,6 +14,7 @@ import { ScreenHeading } from '../components/ScreenHeading.js';
 import { MachineTranslatedLabel } from '../components/MachineTranslatedLabel.js';
 import { stepInfo, type AgentEvent, type AgentState, type MirrorField } from '../../lib/accessforge/agent-machine.js';
 import { LowConfidenceEvidence } from './MirrorStep.js';
+import { PlanText } from './PlanText.js';
 
 export interface LowConfidenceCheckProps {
   state: AgentState;
@@ -27,10 +28,14 @@ export function LowConfidenceCheck({ state, field, dispatch }: LowConfidenceChec
   return (
     <form className="mirror-step stack" data-element-id={field.elementId} data-low-confidence-check="" onSubmit={(e) => e.preventDefault()} noValidate>
       <p className="mirror-step__counter">{info ? t('accessforge.step', { current: info.index, total: info.total }) : null}</p>
-      <ScreenHeading focusKey={field.elementId}>{field.plan!.humanLabel}</ScreenHeading>
+      <ScreenHeading focusKey={field.elementId}>
+        <PlanText field={field}>{field.plan!.humanLabel}</PlanText>
+      </ScreenHeading>
       <LowConfidenceEvidence field={field} />
       <div className="question__text">
-        <h2 className="question__title">{field.plan!.question}</h2>
+        <h2 className="question__title">
+          <PlanText field={field}>{field.plan!.question}</PlanText>
+        </h2>
         {state.analysisMode !== 'heuristic' && <MachineTranslatedLabel />}
       </div>
       <div className="actions actions--split">

@@ -28,9 +28,13 @@ describe('AccessForge data notice keys', () => {
     }
   });
 
-  it('the Slice 2 re-translation sentence is not shipped in any locale yet (13.7)', () => {
-    for (const entry of LANGUAGE_REGISTRY) {
-      expect(getOwnLocaleStrings(entry.tag)!['accessforge.notice.retranslate'], entry.tag).toBeUndefined();
+  it('the re-translation sentence ships in every core locale with the language switch (13.7)', () => {
+    const en = getOwnLocaleStrings('en')!['accessforge.notice.retranslate'];
+    expect(en).toMatch(/sent again to the AI service/);
+    for (const tag of CORE.filter((t) => t !== 'en')) {
+      const own = getOwnLocaleStrings(tag)!['accessforge.notice.retranslate'];
+      expect(own?.trim(), tag).toBeTruthy();
+      expect(own, tag).not.toBe(en);
     }
   });
 

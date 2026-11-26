@@ -25,6 +25,7 @@ import { StatusMessage } from '../components/StatusMessage.js';
 import { ValidationMessage } from '../components/ValidationMessage.js';
 import { useTranslation } from '../i18n.js';
 import { LowConfidenceCheck } from './LowConfidenceCheck.js';
+import { PlanText } from './PlanText.js';
 import { fixedQuestionProps, MIRROR_FORM_LANGUAGE, originalLabelOf, toFieldState } from './mirror-field-adapter.js';
 
 export interface MirrorStepProps {
@@ -72,7 +73,7 @@ function QuestionTitle({ field, id, machineTranslated = true }: { field: MirrorF
   return (
     <div className="question__text">
       <h2 className="question__title" id={id}>
-        {field.plan!.question}
+        <PlanText field={field}>{field.plan!.question}</PlanText>
       </h2>
       {machineTranslated && <MachineTranslatedLabel />}
       {original && (
@@ -167,7 +168,9 @@ export function ConsentQuestion({ field, checked, onChange, machineTranslated = 
   return (
     <div className="question">
       <div className="question__text">
-        <h2 className="question__title">{field.plan!.question}</h2>
+        <h2 className="question__title">
+          <PlanText field={field}>{field.plan!.question}</PlanText>
+        </h2>
         {machineTranslated && <MachineTranslatedLabel />}
       </div>
       <label className="checkbox-row" htmlFor={ids.box}>
@@ -179,7 +182,9 @@ export function ConsentQuestion({ field, checked, onChange, machineTranslated = 
           aria-invalid={(!!result && !result.needs) || undefined}
           onChange={(e) => onChange(e.target.checked)}
         />
-        <span>{field.plan!.humanLabel}</span>
+        <span>
+          <PlanText field={field}>{field.plan!.humanLabel}</PlanText>
+        </span>
       </label>
       <ValidationMessage id={ids.message} result={result} />
       {original && (
@@ -235,7 +240,9 @@ export function MirrorStep({ state, field, dispatch }: MirrorStepProps) {
   return (
     <form className="mirror-step stack" data-element-id={field.elementId} onSubmit={next} noValidate>
       <p className="mirror-step__counter">{info ? t('accessforge.step', { current: info.index, total: info.total }) : null}</p>
-      <ScreenHeading focusKey={field.elementId}>{field.plan!.humanLabel}</ScreenHeading>
+      <ScreenHeading focusKey={field.elementId}>
+        <PlanText field={field}>{field.plan!.humanLabel}</PlanText>
+      </ScreenHeading>
       <LowConfidenceEvidence field={field} />
       {isDate ? (
         <DateQuestion
@@ -255,6 +262,7 @@ export function MirrorStep({ state, field, dispatch }: MirrorStepProps) {
           onDraftChange={(text) => setDraft((d) => ({ ...d, text }))}
           onCommit={() => {}}
           result={resultOf(field)}
+          questionLang={field.wordingLanguage !== language ? field.wordingLanguage : undefined}
           {...fixedQuestionProps(language)}
         />
       )}

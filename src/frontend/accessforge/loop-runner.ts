@@ -16,7 +16,7 @@
  * - State is memory only: nothing is written to any browser storage.
  */
 
-import { agentReducer, initialAgentState, type AgentEvent, type AgentState, type Effect, type FramePage } from '../../lib/accessforge/agent-machine.js';
+import { agentReducer, initialAgentState, type Wording, type AgentEvent, type AgentState, type Effect, type FramePage } from '../../lib/accessforge/agent-machine.js';
 import { checkFrameDocument } from '../../lib/accessforge/allow-list.js';
 import { parseElementId } from '../../lib/accessforge/element-id.js';
 import { execute } from '../../lib/accessforge/executor.js';
@@ -27,7 +27,8 @@ import { validatePlan } from '../../lib/accessforge/plan-validator.js';
 import { REVIVAL_FRAME_SRC } from '../../lib/accessforge/scope.js';
 import { SUPPORTED_PAGE_VERSIONS } from '../../lib/accessforge/supported-versions.js';
 import { compareReceived, parseConfirmation, readBack } from '../../lib/accessforge/verifier.js';
-import type { PageAnalyzeRequest, PageAnalyzeResponse } from '../../shared/page-schemas.js';
+import { heuristicPlan } from '../../lib/accessforge/heuristic.js';
+import type { PageAnalyzeRequest, PageAnalyzeResponse, PageRetranslateRequest, PageRetranslateResponse } from '../../shared/page-schemas.js';
 import { ApiRequestError, type ApiReply } from '../api.js';
 
 export const SUBMIT_TIMEOUT_MS = 15_000;
@@ -37,6 +38,10 @@ export interface LoopDeps {
   frame: () => HTMLIFrameElement | null;
   appOrigin: string;
   analyze: (request: PageAnalyzeRequest, options: { signal: AbortSignal }) => Promise<ApiReply<PageAnalyzeResponse>>;
+  /** Slice 2 (Requirement 7.7): new wording in live and mock modes. Absent in tests that never switch language. */
+  retranslate?: (request: PageRetranslateRequest, options: { signal: AbortSignal }) => Promise<ApiReply<PageRetranslateResponse>>;
+  /** Slice 2 (Requirement 7.7): the saved plan for a version and language in cached mode. */
+  cachedPlan?: (version: string, language: string, options: { signal: AbortSignal }) => Promise<ApiReply<PageAnalyzeResponse>>;
   /** Outline a written control in the frame (Requirement 8.5). */
   highlight?: (el: Element) => void;
   setTimer?: (fn: () => void, ms: number) => unknown;
@@ -150,6 +155,10 @@ export class LoopRunner {
           );
         return;
       }
+      case 'RETRANSLATE': {
+        this.retranslate(fx);
+        return;
+      }
       case 'ABORT_PENDING':
         if (this.handle.generation < fx.before) this.advance(this.handle.document);
         return;
@@ -215,6 +224,55 @@ export class LoopRunner {
         return;
       }
     }
+  }
+
+  /**
+   * Slice 2 (Requirements 7.7, 7.9): new wording for the question texts. `live` and `mock` ask the
+   * re-translation route with the existing wording only; `cached` reads the saved plan for the new
+   * language and the same Page_Version; `heuristic` rebuilds the sentences from the locale files in the
+   * browser. Any failure, or a result that does not cover every planned field, keeps the earlier wording.
+   */
+  private retranslate(fx: Extract<Effect, { type: 'RETRANSLATE' }>): void {
+    const signal = this.controller.signal;
+    const ok = (items: Wording[]) => this.dispatch({ type: 'RETRANSLATED', generation: fx.generation, language: fx.language, items });
+    const fail = (err?: unknown) => {
+      // An aborted request belongs to an old generation; its result is not wanted.
+      if (err instanceof ApiRequestError && err.code === 'ABORTED') return;
+      this.dispatch({ type: 'RETRANSLATE_FAILED', generation: fx.generation, language: fx.language });
+    };
+    const wanted = fx.items.map((i) => i.elementId);
+    const pick = (source: ReadonlyMap<string, { humanLabel: string; question: string }>): Wording[] | null => {
+      const out: Wording[] = [];
+      for (const id of wanted) {
+        const w = source.get(id);
+        if (!w) return null;
+        out.push({ elementId: id, humanLabel: w.humanLabel, question: w.question });
+      }
+      return out;
+    };
+    if (fx.mode === 'heuristic') {
+      const picked = pick(new Map(heuristicPlan(fx.model, fx.language).map((p) => [p.elementId, p])));
+      if (picked) ok(picked);
+      else fail();
+      return;
+    }
+    if (fx.mode === 'cached') {
+      if (!this.deps.cachedPlan) return fail();
+      this.deps.cachedPlan(fx.model.pageVersion, fx.language, { signal }).then((reply) => {
+        const plan = validatePlan(fx.model, reply.data.entries);
+        const picked = pick(plan.mapped);
+        if (picked) ok(picked);
+        else fail();
+      }, fail);
+      return;
+    }
+    if (!this.deps.retranslate) return fail();
+    const request: PageRetranslateRequest = { targetLanguage: fx.language, items: fx.items.map((i) => ({ humanLabel: i.humanLabel, question: i.question })) };
+    this.deps.retranslate(request, { signal }).then((reply) => {
+      // The reply is matched by position, so a different count is unusable (Requirement 7.9).
+      if (reply.data.items.length !== fx.items.length) return fail();
+      ok(reply.data.items.map((w, i) => ({ elementId: fx.items[i]!.elementId, humanLabel: w.humanLabel, question: w.question })));
+    }, fail);
   }
 
   /**

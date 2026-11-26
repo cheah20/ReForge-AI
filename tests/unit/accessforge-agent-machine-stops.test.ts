@@ -28,23 +28,21 @@ describe('before analysis', () => {
     expect(r.effects).toEqual([{ type: 'ANALYZE', generation: 1, model: MODEL, interfaceLanguage: 'en' }]);
   });
 
-  it('gives versionUnsupported with no effects for an unrecorded registration version, and offers no revive', () => {
+  it('notes an unrecorded registration version, keeps the revive button and still waits for the notice', () => {
     let r = send(fresh(), { type: 'FRAME_LOADED', generation: 1, page: 'register', versionSupported: false });
-    expect(r.state.phase).toBe('versionUnsupported');
+    expect(r.state.phase).toBe('idle');
+    expect(r.state.pageChanged).toBe(true);
     expect(r.effects.filter((e) => e.type !== 'ABORT_PENDING')).toEqual([]);
     r = send(r, { type: 'REVIVE_PRESSED' });
-    expect(r.state.phase).toBe('versionUnsupported');
+    expect(r.state.phase).toBe('notice');
+    expect(r.state.pageChanged).toBe(true);
     expect(r.effects).toEqual([]);
   });
-
-  it('gives unreadable with no analysis effect when the submit count is wrong', () => {
-    let r = send(atNotice(), { type: 'NOTICE_ACKNOWLEDGED' });
-    r = send(r, { type: 'EXTRACT_FAILED', generation: 1, code: 'SUBMIT_COUNT' });
-    expect(r.state.phase).toBe('unreadable');
-    expect(r.state.errorCode).toBe('SUBMIT_COUNT');
-    expect(count(r.effects, 'ANALYZE')).toBe(0);
+  it('clears the page-changed note when a tested version loads again', () => {
+    let r = send(fresh(), { type: 'FRAME_LOADED', generation: 1, page: 'register', versionSupported: false });
+    r = send(r, { type: 'FRAME_LOADED', generation: 2, page: 'register', versionSupported: true });
+    expect(r.state.pageChanged).toBe(false);
   });
-
   it('gives analysisFailed on AI_UNAVAILABLE and a timeout, and retries on request', () => {
     let r = send(send(atNotice(), { type: 'NOTICE_ACKNOWLEDGED' }), { type: 'MODEL_READY', generation: 1, model: MODEL });
     for (const code of ['AI_UNAVAILABLE', 'TIMEOUT']) {
@@ -152,18 +150,22 @@ describe('cancel', () => {
 });
 
 describe('language picker', () => {
-  it('is locked while the loop is active and free before and after', () => {
+  it('is locked while the loop reads and analyses the page, and free once the questions exist', () => {
     const states: Array<[string, AgentState, boolean]> = [];
     let r = fresh();
     states.push(['idle', r.state, false]);
     r = atNotice();
     states.push(['notice', r.state, false]);
+    r = send(r, { type: 'NOTICE_ACKNOWLEDGED' });
+    states.push(['extracting', r.state, true]);
+    r = send(r, { type: 'MODEL_READY', generation: 1, model: MODEL });
+    states.push(['analysing', r.state, true]);
     r = toFirstQuestion();
-    states.push(['asking', r.state, true]);
+    states.push(['asking', r.state, false]);
     r = answerAll(r);
-    states.push(['review', r.state, true]);
+    states.push(['review', r.state, false]);
     r = send(r, { type: 'CONFIRM_PRESSED' });
-    states.push(['submitting', r.state, true]);
+    states.push(['submitting', r.state, false]);
     r = send(send(r, { type: 'FRAME_LOADED', generation: 3, page: 'confirmation', versionSupported: false }), { type: 'RESULT_VERIFIED', generation: 3, differences: [], reference: 'SR-DEMO-20261117-042137', originalText: '' });
     states.push(['done', r.state, false]);
     for (const [label, s, locked] of states) expect([label, languageLocked(s)]).toEqual([label, locked]);

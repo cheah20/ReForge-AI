@@ -21,7 +21,7 @@ import { MIRROR_FORM_LANGUAGE, originalLabelOf } from './mirror-field-adapter.js
 import { MirrorResult } from './MirrorResult.js';
 import { MirrorReview } from './MirrorReview.js';
 import { MirrorStep } from './MirrorStep.js';
-import { DataNotice, ModeNotice, ScopeNotice } from './notices.js';
+import { DataNotice, LanguageSwitchNotice, ModeNotice, PageChangedNotice, ScopeNotice } from './notices.js';
 import { RevivalFrame } from './RevivalFrame.js';
 import { useAgentLoop } from './useAgentLoop.js';
 import { useLeaveWarning } from './useLeaveWarning.js';
@@ -218,7 +218,9 @@ export function RevivalScreen({ changeLanguage, foreignAddress = false, loopDeps
       <MirrorHeader state={state} changeLanguage={changeLanguage} largeText={largeText} onLargeText={setLargeText} />
       <main id="main" className="revival__layout">
         <section className="revival__mirror stack" aria-label="AccessForge">
+          <PageChangedNotice show={state.pageChanged} />
           <ModeNotice mode={state.analysisMode} />
+          <LanguageSwitchNotice translating={state.translating} failed={state.translateFailed} />
           <MirrorContent
             state={state}
             dispatch={dispatch}

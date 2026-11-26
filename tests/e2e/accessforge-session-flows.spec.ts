@@ -90,16 +90,16 @@ test('the write highlight is at least 3 px, without transition under reduced mot
   expect(style.transition).toBe('none');
 });
 
-test('the language picker is locked while the loop runs', async ({ page }) => {
-  await page.goto('/accessforge');
-  await page.waitForLoadState('networkidle');
+test('the language picker stays free once the questions are ready and keeps the step', async ({ page }) => {
+  await revive(page);
+  const step = page.locator('form.mirror-step');
+  const elementId = await step.getAttribute('data-element-id');
   const picker = page.getByLabel(t('nav.pickLanguage'));
   await expect(picker).toBeEnabled();
-  await revive(page);
-  await expect(picker).toBeDisabled();
-  await expect(page.getByText(t('accessforge.language.locked'))).toBeVisible();
+  await picker.selectOption('ms');
+  await expect(page.getByRole('button', { name: translate('ms', 'accessforge.step.next') })).toBeVisible();
+  await expect(page.locator('form.mirror-step')).toHaveAttribute('data-element-id', elementId ?? '');
 });
-
 test.describe('with scripts disabled', () => {
   test.use({ javaScriptEnabled: false });
 

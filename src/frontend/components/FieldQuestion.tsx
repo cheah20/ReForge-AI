@@ -50,6 +50,8 @@ export interface FieldQuestionProps {
   onChooseDateFormat: (format: DateFormat) => void;
   /** Heading level of the question text: 2 in the wizard, 3 inside review. */
   headingLevel?: 2 | 3;
+  /** Language of the question text when it differs from the interface language (AccessForge, failed language switch). */
+  questionLang?: string | undefined;
 }
 
 /** Choice lists longer than this use a dropdown instead of radio buttons. */
@@ -98,10 +100,11 @@ export function FieldQuestion(props: FieldQuestionProps) {
   const isChoiceGroup = type === 'radio' || type === 'checkbox' || (type === 'dropdown' && (ev.options?.length ?? 0) <= MAX_RADIOS);
   const labelsInput = !lowConfidence && !isChoiceGroup && !(type === 'date' && needsDateFormatChoice(field));
 
+  const questionText = props.questionLang ? <span lang={props.questionLang}>{analysis.question}</span> : analysis.question;
   const questionBlock = (
     <div className="question__text">
       <Heading className="question__title">
-        {labelsInput ? <label htmlFor={ids.input}>{analysis.question}</label> : analysis.question}
+        {labelsInput ? <label htmlFor={ids.input}>{questionText}</label> : questionText}
       </Heading>
       {aiWritten && <MachineTranslatedLabel id={ids.badge} />}
       {originalLabel && (

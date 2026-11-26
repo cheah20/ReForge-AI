@@ -23,6 +23,7 @@ export function DataNotice({ onAcknowledge, onDismiss }: { onAcknowledge?: () =>
         <li>{t('accessforge.notice.pageText')}</li>
         <li>{t('accessforge.notice.answersStay')}</li>
         <li>{t('accessforge.notice.legacyOnly')}</li>
+        <li>{t('accessforge.notice.retranslate')}</li>
       </ul>
       {onAcknowledge && (
         <div className="actions">
@@ -53,6 +54,26 @@ export function ModeNotice({ mode }: { mode: AnalysisMode | null }) {
   );
 }
 
+/** Requirement 3.5: the registration page is not the version that was tested; the revival goes on. */
+export function PageChangedNotice({ show }: { show: boolean }) {
+  const { t } = useTranslation();
+  if (!show) return null;
+  return (
+    <div className="mode-notice">
+      <StatusMessage tone="caution">{t('accessforge.notice.pageChanged')}</StatusMessage>
+    </div>
+  );
+}
+/** Requirements 7.7 and 7.9: a language switch is running, or failed and the earlier wording stays. */
+export function LanguageSwitchNotice({ translating, failed }: { translating: boolean; failed: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <div className="mode-notice" aria-live="polite">
+      {translating && <StatusMessage tone="info">{t('accessforge.language.translating')}</StatusMessage>}
+      {failed && !translating && <StatusMessage tone="caution">{t('accessforge.language.translateFailed')}</StatusMessage>}
+    </div>
+  );
+}
 export function ScopeNotice({ foreignAddress }: { foreignAddress: boolean }) {
   const { t } = useTranslation();
   return (

@@ -156,12 +156,21 @@ export function MirrorResult({ state, dispatch }: MirrorResultProps) {
           </div>
         </div>
       );
+    case 'handoff':
+      // Requirement 6.16: the app has written and checked the answers and submitted nothing.
+      return (
+        <div className="mirror-result stack">
+          <ScreenHeading focusKey="handoff">{t('accessforge.result.title')}</ScreenHeading>
+          <StatusMessage tone="info">{t('accessforge.handoff.body')}</StatusMessage>
+          <NotFilled state={state} />
+          <SampleFormLink />
+        </div>
+      );
     case 'unreadable':
-    case 'versionUnsupported':
       return (
         <div className="mirror-result stack">
           <ScreenHeading focusKey={state.phase}>{t('accessforge.title')}</ScreenHeading>
-          <StatusMessage tone="caution">{t(state.phase === 'unreadable' ? 'accessforge.error.cannotRead' : 'accessforge.error.pageChanged')}</StatusMessage>
+          <StatusMessage tone="caution">{t('accessforge.error.cannotRead')}</StatusMessage>
         </div>
       );
     default:

@@ -14,7 +14,7 @@ import { MirrorResult } from '../../src/frontend/accessforge/MirrorResult.js';
 import { DoItYourselfList } from '../../src/frontend/accessforge/MirrorReview.js';
 import { MirrorHeader, hasUnsentAnswers } from '../../src/frontend/accessforge/RevivalScreen.js';
 import type { ChangeLanguage } from '../../src/frontend/use-change-language.js';
-import { planFor } from './accessforge-helpers.js';
+import { MODEL, planFor } from './accessforge-helpers.js';
 import { ANSWERS, TODAY, answerAll, fresh, send, toFirstQuestion } from './accessforge-machine-helpers.js';
 import { fire, render, withApp, type Rendered } from './accessforge-render.js';
 import { SAMPLE_FORM_PATH } from '../../src/shared/app-paths.js';
@@ -139,15 +139,18 @@ describe('do it yourself and scope', () => {
 });
 
 describe('MirrorHeader', () => {
-  it('locks the language picker with a note while the loop runs, and frees it otherwise', () => {
+  it('locks the language picker with a note until the questions exist, and frees it after', () => {
     const idle = send(fresh(), { type: 'FRAME_LOADED', generation: 1, page: 'register', versionSupported: true }).state;
     const root = show(<MirrorHeader state={idle} changeLanguage={CHANGE} largeText={false} onLargeText={() => {}} />);
     expect(root.querySelector('select')!.disabled).toBe(false);
-    const active = toFirstQuestion().state;
-    view!.rerender(withApp(<MirrorHeader state={active} changeLanguage={CHANGE} largeText={false} onLargeText={() => {}} />));
+    let reading = send(send(send(fresh(), { type: 'FRAME_LOADED', generation: 1, page: 'register', versionSupported: true }), { type: 'REVIVE_PRESSED' }), { type: 'NOTICE_ACKNOWLEDGED' });
+    reading = send(reading, { type: 'MODEL_READY', generation: 1, model: MODEL });
+    view!.rerender(withApp(<MirrorHeader state={reading.state} changeLanguage={CHANGE} largeText={false} onLargeText={() => {}} />));
     const select = root.querySelector('select')!;
     expect(select.disabled).toBe(true);
-    expect(document.getElementById(select.getAttribute('aria-describedby')!)?.textContent).toBe('You can change the language after you cancel or finish.');
+    expect(document.getElementById(select.getAttribute('aria-describedby')!)?.textContent).toBe('You can change the language when the questions are ready.');
+    view!.rerender(withApp(<MirrorHeader state={toFirstQuestion().state} changeLanguage={CHANGE} largeText={false} onLargeText={() => {}} />));
+    expect(root.querySelector('select')!.disabled).toBe(false);
   });
 
   it('counts unsent answers for the leave warning until a confirmation arrives', () => {

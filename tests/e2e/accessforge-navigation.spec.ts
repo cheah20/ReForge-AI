@@ -47,7 +47,7 @@ for (const [label, go] of CASES) {
   });
 }
 
-test('an unrecorded Page_Version sends no analysis request and shows the page-changed message', async ({ page }) => {
+test('an unrecorded Page_Version shows the page-changed notice and sends no analysis request before the data notice', async ({ page }) => {
   const analyses: string[] = [];
   page.on('request', (r) => {
     if (r.url().endsWith('/api/pages/analyze')) analyses.push(r.url());
@@ -60,8 +60,8 @@ test('an unrecorded Page_Version sends no analysis request and shows the page-ch
   });
   await page.goto('/accessforge');
   await page.waitForLoadState('networkidle');
-  await expect(page.getByText(t('accessforge.error.pageChanged'))).toBeVisible();
-  await expect(page.getByRole('button', { name: t('accessforge.start') })).toHaveCount(0);
+  await expect(page.getByText(t('accessforge.notice.pageChanged'))).toBeVisible();
+  await expect(page.getByRole('button', { name: t('accessforge.start') })).toBeVisible();
   // The old page stays usable.
   await expect(legacyFrame(page).locator('input[name="nama"]')).toBeEditable();
   expect(analyses).toEqual([]);

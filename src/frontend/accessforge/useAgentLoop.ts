@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { AgentState } from '../../lib/accessforge/agent-machine.js';
-import { analyzePage } from '../api.js';
+import { analyzePage, fetchCachedPlan, retranslatePage } from '../api.js';
 import { LoopRunner, type LoopDeps } from './loop-runner.js';
 import { highlightControl, prefersReducedMotion } from './RevivalFrame.js';
 
@@ -21,6 +21,8 @@ export function useAgentLoop(language: string, deps: Partial<LoopDeps> = {}) {
           frame: () => frameRef.current,
           appOrigin: typeof window !== 'undefined' ? window.location.origin : '',
           analyze: (request, options) => analyzePage(request, options),
+          retranslate: (request, options) => retranslatePage(request, options),
+          cachedPlan: (version, language, options) => fetchCachedPlan(version, language, options),
           highlight: (el) => highlightControl(el, prefersReducedMotion()),
           ...deps,
         },

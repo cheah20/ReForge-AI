@@ -16,6 +16,7 @@ import { StatusMessage, type StatusTone } from '../components/StatusMessage.js';
 import { useTranslation, type TranslateFn } from '../i18n.js';
 import { MIRROR_FORM_LANGUAGE, originalLabelOf } from './mirror-field-adapter.js';
 import { DataNotice } from './notices.js';
+import { PlanText } from './PlanText.js';
 
 const BLOCK_KEY: Partial<Record<ConfirmBlock, string>> = {
   PENDING: 'accessforge.review.pending',
@@ -91,7 +92,7 @@ export function MirrorReview({ state, dispatch, onShowField }: { state: AgentSta
               {field.plan && (
                 <p className="review-row__question">
                   <span className="visually-hidden">{t('accessforge.review.col.question')}: </span>
-                  {field.plan.question}
+                  <PlanText field={field}>{field.plan.question}</PlanText>
                 </p>
               )}
               <p className="review-row__value">
@@ -110,6 +111,7 @@ export function MirrorReview({ state, dispatch, onShowField }: { state: AgentSta
           );
         })}
       </ul>
+      {state.plan && !state.plan.submitId && <StatusMessage tone="caution">{t('accessforge.review.submitYourself')}</StatusMessage>}
       <div aria-live="polite">
         {blockKey && (
           <StatusMessage tone="caution" id={reasonId}>
@@ -126,7 +128,7 @@ export function MirrorReview({ state, dispatch, onShowField }: { state: AgentSta
           aria-describedby={blockKey ? reasonId : undefined}
           onClick={() => dispatch({ type: 'CONFIRM_PRESSED' })}
         >
-          {t('accessforge.review.confirm')}
+          {t(state.plan && !state.plan.submitId ? 'accessforge.review.confirmCheck' : 'accessforge.review.confirm')}
         </button>
         <button type="button" className="button button--quiet" disabled={busy} onClick={() => dispatch({ type: 'CANCEL_PRESSED' })}>
           {t('accessforge.step.cancel')}

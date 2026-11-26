@@ -61,11 +61,12 @@ export interface MirrorField {
   error?: FieldError | undefined;
   /** Slice 2 (Requirement 6.18): the user accepted a low-confidence question, so its answer input may show. */
   confidenceAccepted?: boolean | undefined;
+  /** Slice 2 (Requirement 7.7): the language of this field's label and question; differs from the interface language after a failed switch. */
+  wordingLanguage?: string | undefined;
 }
 
 export type Phase =
   | 'idle'
-  | 'versionUnsupported'
   | 'notice'
   | 'extracting'
   | 'unreadable'
@@ -84,6 +85,8 @@ export type Phase =
   | 'verifyingResult'
   | 'done'
   | 'notVerified'
+  /** No single submit button: the answers are written and checked, and the user submits in the frame (Requirement 6.16). */
+  | 'handoff'
   | 'stopped'
   | 'cancelConfirm';
 
@@ -145,6 +148,12 @@ export interface AgentState {
   keptAnswers: Record<string, MirrorAnswer>;
   /** After the loop ended, the frame showed an unsupported page; the result is unchanged. */
   pageNotice: boolean;
+  /** Slice 2 (Requirement 3.5): the registration page in the frame is not the tested Page_Version. */
+  pageChanged: boolean;
+  /** Slice 2 (Requirement 7.7): a re-translation request is running. */
+  translating: boolean;
+  /** Slice 2 (Requirement 7.9): the last language switch failed, so the earlier wording stays. */
+  translateFailed: boolean;
   noticeAcknowledged: boolean;
 }
 
@@ -157,8 +166,16 @@ export type Effect =
   | { type: 'RELOAD_FRAME' }
   | { type: 'START_SUBMIT_TIMER'; attempt: number }
   | { type: 'CLEAR_SUBMIT_TIMER' }
-  | { type: 'VERIFY_RESULT'; generation: number; filled: FilledField[] };
+  | { type: 'VERIFY_RESULT'; generation: number; filled: FilledField[] }
+  /** Slice 2 (Requirement 7.7): new wording for the planned fields, in the order of items. */
+  | { type: 'RETRANSLATE'; generation: number; language: string; mode: AnalysisMode; model: PageModel; items: Wording[] };
 
+/** A planned field's label and question. */
+export interface Wording {
+  elementId: string;
+  humanLabel: string;
+  question: string;
+}
 export type AgentEvent =
   | { type: 'FRAME_LOADED'; generation: number; page: FramePage; versionSupported: boolean; failingNames?: string[] }
   | { type: 'REVIVE_PRESSED' }
@@ -189,8 +206,10 @@ export type AgentEvent =
   | { type: 'CANCEL_CONFIRMED' }
   | { type: 'CANCEL_DECLINED' }
   | { type: 'RELOAD_PRESSED' }
-  /** The interface language changed; ignored while the loop is active (Requirement 7.11). */
-  | { type: 'LANGUAGE_SET'; language: string };
+  /** The interface language changed. Before the questions exist it is ignored while the loop is active (Requirement 7.11); after, it asks for new wording (Requirement 7.7). */
+  | { type: 'LANGUAGE_SET'; language: string }
+  | { type: 'RETRANSLATED'; generation: number; language: string; items: Wording[] }
+  | { type: 'RETRANSLATE_FAILED'; generation: number; language: string };
 
 export type Step = { state: AgentState; effects: Effect[] };
 
@@ -224,6 +243,9 @@ export function initialAgentState(interfaceLanguage: string): AgentState {
     stopReason: null,
     keptAnswers: {},
     pageNotice: false,
+    pageChanged: false,
+    translating: false,
+    translateFailed: false,
     noticeAcknowledged: false,
   };
 }
@@ -242,7 +264,13 @@ export function isActive(s: AgentState): boolean {
   return ACTIVE.has(s.phase === 'cancelConfirm' ? (s.resumePhase ?? 'idle') : s.phase);
 }
 
-export const languageLocked = isActive;
+/** The picker is locked only while the loop runs and no question wording exists yet (Requirement 7.11). */
+export function languageLocked(s: AgentState): boolean {
+  return isActive(s) && !hasWording(s);
+}
+function hasWording(s: AgentState): boolean {
+  return s.fields.some((f) => f.plan !== null);
+}
 
 const CANCELLABLE: ReadonlySet<Phase> = new Set<Phase>(['notice', 'extracting', 'analysing', 'analysisFailed', 'asking', 'writing', 'verifying', 'halted', 'review', 'rereading']);
 
@@ -414,7 +442,7 @@ function readValue(rb: ReadBack): string | boolean | null {
   return rb.kind === 'checkbox' ? rb.checked : rb.value;
 }
 
-function buildFields(model: PageModel, plan: ValidatedPlan, kept: Record<string, MirrorAnswer>): MirrorField[] {
+function buildFields(model: PageModel, plan: ValidatedPlan, kept: Record<string, MirrorAnswer>, language: string): MirrorField[] {
   return model.entries
     .filter((e) => e.control !== 'submit' && e.control !== 'reset')
     .map((entry) => {
@@ -427,6 +455,7 @@ function buildFields(model: PageModel, plan: ValidatedPlan, kept: Record<string,
         status: p ? 'pending' : 'do-it-yourself',
         answer: p ? kept[entry.elementId] : undefined,
         diyReason,
+        wordingLanguage: p ? language : undefined,
       };
     });
 }
@@ -443,7 +472,9 @@ function startRewrite(s: AgentState, after: After, effects: Effect[]): Step {
 
 function frameLoaded(s: AgentState, e: Extract<AgentEvent, { type: 'FRAME_LOADED' }>): Step {
   if (e.generation < s.generation) return same(s);
-  const base: AgentState = { ...s, generation: e.generation };
+  // Requirement 3.5: an unrecorded registration version is noted and the revival goes on.
+  // A load ends a running re-translation: its answer is ignored (Requirement 3.9), so the earlier wording stays and the user is told (Requirement 7.9).
+  const base: AgentState = { ...s, generation: e.generation, translating: false, translateFailed: s.translateFailed || s.translating, pageChanged: e.page === 'register' ? !e.versionSupported : s.pageChanged };
   const effects: Effect[] = [{ type: 'ABORT_PENDING', before: e.generation }];
 
   if (s.phase === 'done' || s.phase === 'notVerified') {
@@ -451,7 +482,6 @@ function frameLoaded(s: AgentState, e: Extract<AgentEvent, { type: 'FRAME_LOADED
   }
 
   const idleFrom = (st: AgentState): Step => {
-    if (e.page === 'register' && !e.versionSupported) return { state: { ...st, phase: 'versionUnsupported', frame: 'register' }, effects };
     return { state: { ...st, phase: 'idle', frame: e.page === 'register' ? 'register' : 'other' }, effects };
   };
 
@@ -463,7 +493,6 @@ function frameLoaded(s: AgentState, e: Extract<AgentEvent, { type: 'FRAME_LOADED
         if (reason === 'cancel' || reason === 'stop') return idleFrom(cleared);
         return stop(cleared, 'pageNotSupported', effects);
       }
-      if (!e.versionSupported) return { state: { ...cleared, phase: 'versionUnsupported', frame: 'register', queue: [] }, effects };
       if (reason === 'error') {
         const order = s.fields.map((f) => f.elementId);
         const named = s.fields.filter((f) => s.failingNames.includes(f.entry.name) && f.plan !== null && f.status !== 'do-it-yourself');
@@ -494,7 +523,7 @@ function frameLoaded(s: AgentState, e: Extract<AgentEvent, { type: 'FRAME_LOADED
     case 'none':
       if (s.phase === 'stopped') return { state: base, effects };
       if (s.phase === 'notice') return idleFrom(base);
-      if (s.phase === 'idle' || s.phase === 'versionUnsupported' || s.phase === 'unreadable') return idleFrom(base);
+      if (s.phase === 'idle' || s.phase === 'unreadable') return idleFrom(base);
       return isActive(s) ? stop(base, 'pageNotSupported', effects) : { state: base, effects };
   }
 }
@@ -566,7 +595,9 @@ function lowConfidenceAnswered(s: AgentState, accepted: boolean): Step {
 }
 
 function doSubmit(s: AgentState): Step {
-  if (!s.plan?.submitId) return stop(s, 'pageNotSupported');
+  if (!s.plan) return stop(s, 'pageNotSupported');
+  // Requirement 6.16: no single submit button, so the app submits nothing and the user does it in the frame.
+  if (!s.plan.submitId) return same({ ...s, phase: 'handoff', reread: {}, expectedLoad: 'none' });
   const attempt = s.submitAttempt + 1;
   return {
     state: { ...s, phase: 'submitting', submitAttempt: attempt, submissionDone: true, expectedLoad: 'post-response', reread: {} },
@@ -640,6 +671,39 @@ function actionResult(s: AgentState, e: Extract<AgentEvent, { type: 'ACTION_DONE
   }
 }
 
+/**
+ * Slice 2, Requirement 7.7: before any question exists the picker is locked and the event is
+ * ignored while the loop runs. Once questions exist, a new language keeps every Element_Id,
+ * answer type, confidence, status, answer and the current step, and asks only for new wording.
+ */
+function languageSet(s: AgentState, language: string): Step {
+  if (s.phase === 'cancelConfirm') return same(s);
+  if (!isActive(s)) return same({ ...s, interfaceLanguage: language });
+  if (!hasWording(s)) return same(s);
+  if (language === s.interfaceLanguage) return same(s);
+  const wordingLanguages = new Set(s.fields.filter((f) => f.plan).map((f) => f.wordingLanguage));
+  if (wordingLanguages.size === 1 && wordingLanguages.has(language)) {
+    // Back to the language the wording is already in.
+    return same({ ...s, interfaceLanguage: language, translating: false, translateFailed: false });
+  }
+  const items = s.fields.flatMap((f) => (f.plan ? [{ elementId: f.elementId, humanLabel: f.plan.humanLabel, question: f.plan.question }] : []));
+  const st: AgentState = { ...s, interfaceLanguage: language, translating: true, translateFailed: false };
+  if (!s.model || !s.analysisMode) return same({ ...st, translating: false, translateFailed: true });
+  return { state: st, effects: [{ type: 'RETRANSLATE', generation: s.generation, language, mode: s.analysisMode, model: s.model, items }] };
+}
+
+function retranslated(s: AgentState, e: Extract<AgentEvent, { type: 'RETRANSLATED' }>): Step {
+  if (e.generation !== s.generation || e.language !== s.interfaceLanguage || !s.translating) return same(s);
+  const byId = new Map(e.items.map((i) => [i.elementId, i]));
+  // Wording arrives for every planned field or for none: a mix of languages would mislead.
+  if (s.fields.some((f) => f.plan && !byId.has(f.elementId))) return same({ ...s, translating: false, translateFailed: true });
+  const fields = s.fields.map((f) => {
+    const w = f.plan ? byId.get(f.elementId) : undefined;
+    return f.plan && w ? { ...f, plan: { ...f.plan, humanLabel: w.humanLabel, question: w.question }, wordingLanguage: e.language } : f;
+  });
+  return same({ ...s, fields, translating: false, translateFailed: false });
+}
+
 function reduce(s: AgentState, e: AgentEvent): Step {
   switch (e.type) {
     case 'FRAME_LOADED':
@@ -668,8 +732,8 @@ function reduce(s: AgentState, e: AgentEvent): Step {
       return same({ ...s, phase: 'unreadable', errorCode: e.code, expectedLoad: 'none' });
     case 'PLAN_READY': {
       if (s.phase !== 'analysing' || e.generation !== s.generation || !s.model) return same(s);
-      const fields = buildFields(s.model, e.plan, s.keptAnswers);
-      const st: AgentState = { ...s, plan: e.plan, analysisMode: e.analysisMode, fields, keptAnswers: {}, submissionDone: false, confirmationReceived: false, result: null, after: { kind: 'review' } };
+      const fields = buildFields(s.model, e.plan, s.keptAnswers, s.interfaceLanguage);
+      const st: AgentState = { ...s, plan: e.plan, analysisMode: e.analysisMode, fields, translating: false, translateFailed: false, keptAnswers: {}, submissionDone: false, confirmationReceived: false, result: null, after: { kind: 'review' } };
       const first = steps(st)[0];
       return same(first ? { ...st, phase: 'asking', current: first } : { ...st, phase: 'review', current: null });
     }
@@ -749,7 +813,12 @@ function reduce(s: AgentState, e: AgentEvent): Step {
       };
     }
     case 'LANGUAGE_SET':
-      return isActive(s) || s.phase === 'cancelConfirm' ? same(s) : same({ ...s, interfaceLanguage: e.language });
+      return languageSet(s, e.language);
+    case 'RETRANSLATED':
+      return retranslated(s, e);
+    case 'RETRANSLATE_FAILED':
+      if (e.generation !== s.generation || e.language !== s.interfaceLanguage || !s.translating) return same(s);
+      return same({ ...s, translating: false, translateFailed: true });
     case 'RELOAD_PRESSED':
       if (s.phase !== 'stopped') return same(s);
       return {
@@ -759,7 +828,7 @@ function reduce(s: AgentState, e: AgentEvent): Step {
   }
 }
 
-const RESULT_EVENTS: ReadonlySet<AgentEvent['type']> = new Set(['MODEL_READY', 'EXTRACT_FAILED', 'PLAN_READY', 'ANALYSIS_FAILED', 'ACTION_DONE', 'ACTION_REJECTED', 'READ_BACK_DONE', 'SUBMIT_TIMEOUT', 'RESULT_VERIFIED']);
+const RESULT_EVENTS: ReadonlySet<AgentEvent['type']> = new Set(['MODEL_READY', 'EXTRACT_FAILED', 'PLAN_READY', 'ANALYSIS_FAILED', 'ACTION_DONE', 'ACTION_REJECTED', 'READ_BACK_DONE', 'SUBMIT_TIMEOUT', 'RESULT_VERIFIED', 'RETRANSLATED', 'RETRANSLATE_FAILED']);
 
 export function agentReducer(state: AgentState, event: AgentEvent): Step {
   // While the cancel question is open, results keep arriving for the interrupted phase.
