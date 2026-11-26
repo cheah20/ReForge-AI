@@ -23,8 +23,8 @@ The public site is rebuilt from this repository at each deploy. The table below 
 | Part | State |
 |------|-------|
 | FormBridge, fillable PDF | Finished and deployed (Malaysian and US forms; English, Malay, Chinese, Tamil and Spanish questions) |
-| FormBridge, photo or scan | In progress. The reading, line review, questions and answer sheet work locally; the public site gets them at the next deploy |
-| AccessForge | The first slice is finished locally. The acceptance run against the public URL needs a deploy and has not happened yet |
+| FormBridge, photo or scan | Deployed. Checked on the public site on 2026-11-26 with a synthetic clean English photo, from reading to the answer sheet. Photos only: reading scanned PDF pages is not built |
+| AccessForge | Deployed. The acceptance scenario passed against the public URL on 2026-11-26. Live AI response times vary: when it is too slow, saved questions are used and the screen says so |
 
 ## Setup
 
@@ -163,7 +163,7 @@ AccessForge shows an old registration page next to a plain, accessible set of qu
 - English and Simplified Chinese (`zh-Hans`) are covered by the automated acceptance test, with the Malaysian (`MY`) validation rules. The Malay, Traditional Chinese, Tamil and Spanish interface strings exist but are not covered by that test. Indonesian shows the data notice and English for the rest of AccessForge. Treat every language other than English and Simplified Chinese as experimental for AccessForge.
 - Not supported: real websites, pages from another origin, login pages, CAPTCHA pages, sites that need scripts to work, and crawling.
 - The questions come from live AI, from saved plans (English and Simplified Chinese only) when live AI is unavailable, or from a simulated demonstration provider. The screen says which one.
-- The same acceptance scenario has not yet been run against the public URL.
+- Against the public URL, run `BASE_URL=<url> npm run test:e2e -- --grep @smoke`. That run accepts any question source (live AI, saved, or fixed rules).
 
 ### What the tests show
 
