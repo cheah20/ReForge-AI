@@ -17,12 +17,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      // The phone specs measure a 360 px screen, so only the phone project runs them.
+      testIgnore: /document-.*mobile.*\.spec\.ts$/,
       // PW_CHANNEL=msedge or chrome runs the tests in an installed browser
       // instead of the Playwright download (`npx playwright install chromium`).
       use: { ...devices['Desktop Chrome'], ...(process.env['PW_CHANNEL'] ? { channel: process.env['PW_CHANNEL'] } : {}) },
     },
     {
       name: 'firefox',
+      testIgnore: /document-.*mobile.*\.spec\.ts$/,
       use: { ...devices['Desktop Firefox'] },
     },
     {
