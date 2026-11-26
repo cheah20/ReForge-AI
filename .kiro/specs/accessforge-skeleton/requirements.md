@@ -29,6 +29,8 @@ Every requirement carries a **Slice** line. Where a requirement mixes slices, th
 
 Slice 2 criteria are written with a `WHERE <feature> is delivered` clause or are listed on the Slice line. Slice 1 criteria never depend on a Slice 2 criterion. Where Slice 1 needs a safe behaviour in place of a Slice 2 feature (for example, a page whose Page_Version is not recorded), a Slice 1 criterion states it.
 
+Slice 2 is delivered. The conditions "where the Heuristic_Extractor is not delivered", "where generalized control types are not delivered" and "where language switching after analysis is not delivered" (criteria 3.8, 6.19, 7.10 and 7.11) therefore no longer apply.
+
 ### Acceptance scenario
 
 The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens the legacy registration page. The legacy page appears in its original old style. The user presses "Revive this page". The Mirror opens beside the legacy page and asks the registration questions one at a time in Chinese. The user types an IC number with an impossible birth date; the Mirror rejects it with a message in Chinese, and the user corrects it. After each answer, the matching field on the legacy page visibly fills in. The review screen lists every question with the value that will be sent. The user presses the confirm button. The legacy handler accepts the submission and returns a reference number. The Mirror shows the confirmation in Chinese with the reference number, and the user can open the original Malay confirmation text on request. A separate direct submission of the same synthetic data through the legacy form, without the Mirror, produces an identical received-fields summary.
@@ -151,6 +153,7 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 10. WHEN the Page_Version of the document in the Revival_Frame differs from the Page_Version of the current Page_Model, THE ReForge_App SHALL treat every pending page-analysis response, re-translation response and Action as obsolete under criterion 3.9. THE ReForge_App SHALL rely on the Revival_Generation, and not on Page_Version equality alone, to detect a new document, because two loads of the same Page_Version are different documents with different Legacy_Field values.
 11. THE ReForge_App SHALL treat the Allow_List check of criterion 3.2 as defence in depth that runs after a document has loaded. The guarantee that the Revival_Frame requests only the paths listed in Requirement 4.10 SHALL come from Requirement 4.10 and the Content-Security-Policy of Requirement 4.2, which act before any request is made.
 
+12. WHERE the Heuristic_Extractor is delivered (Slice 2), WHEN the loaded registration page has an unrecorded Page_Version, THE Mirror SHALL still offer the revival and SHALL show the notice of criterion 3.5 on every Mirror screen until a registration page with a recorded Page_Version loads. The Worker SHALL look up Precomputed_Page_Plans by the exact Page_Version only, so a page that changed gets no saved plan.
 ### Requirement 4: Template safety, content security and navigation limits
 
 **Slice:** 1
@@ -198,6 +201,8 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 9. WHERE generalized control types are delivered (Slice 2), IF the Legacy_Form contains a form control whose type is not one of text input, select, radio group, checkbox, submit button or reset button (other than a `hidden` input), THEN THE Page_Extractor SHALL record that control in the Page_Model with an unsupported control type and its evidence from criterion 5.4, and mark it Do_It_Yourself.
 10. IF the Revival_Frame document cannot be read, contains no Legacy_Form, contains more than one form, or its Legacy_Form contains more than 50 form controls, THEN THE Page_Extractor SHALL produce no Page_Model. THE ReForge_App SHALL then send no page-analysis request, perform no Action, leave the Revival_Frame document unchanged, and tell the user in the Interface_Language that the page could not be read and can be completed directly in the Revival_Frame.
 
+11. WHEN the Page_Extractor cuts a text item to 200 characters (criterion 5.6), THE Page_Extractor SHALL drop any whitespace the cut leaves at the end of the item, so that every evidence item is still whitespace-normalised and trimmed, and SHALL not end the item on half of a surrogate pair.
+12. WHERE generalized control types are delivered (Slice 2), WHEN two Legacy_Fields share an Element_Id, THE Page_Extractor SHALL set `duplicateId` on both entries, THE Plan_Validator SHALL map neither of them whatever the Page_Plan says, and THE Mirror SHALL show each with the reason that more than one field matched and nothing was written.
 ### Requirement 6: Plan (AI page analysis and plan validation)
 
 **Slice:** 1, except criteria 6.16 and 6.18 (Slice 2)
@@ -226,6 +231,8 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 18. WHERE the low-confidence accept-or-decline flow is delivered (Slice 2), WHEN a Page_Plan entry has a confidence below 0.7, THE Mirror SHALL ask the user to accept or decline the proposed question before an answer input is shown. IF the user declines, THEN THE Mirror SHALL mark that Legacy_Field Do_It_Yourself.
 19. WHERE generalized control types are not delivered, IF the Page_Model contains no submit button or more than one, THEN THE ReForge_App SHALL send no page-analysis request, perform no Action, and tell the user in the Interface_Language that the page could not be read and can be completed directly in the Revival_Frame.
 
+20. WHERE the low-confidence accept-or-decline flow is delivered (Slice 2), WHILE a question with a confidence below 0.7 has not been accepted, THE Mirror SHALL show the original legacy wording with the question and two choices, and SHALL show no answer input. Pressing next SHALL do nothing. WHEN the user accepts, THE Mirror SHALL show the answer input. WHEN the user declines, THE Mirror SHALL mark that Legacy_Field Do_It_Yourself with a reason that the user chose to fill it in, perform no Action on it, and move on.
+21. WHERE generalized control types are delivered (Slice 2), WHEN the Page_Model has no single submit button, THE Mirror SHALL say so on the review screen and label the confirm control as a check of the answers. WHEN the user presses it, THE ReForge_App SHALL read every filled Legacy_Field again, and when all read as intended SHALL show a hand-over screen telling the user to press the submit button on the old page. THE ReForge_App SHALL perform no `click` Action and start no submit timer. A `submit` image input counts as a submit button.
 ### Requirement 7: Analysis modes and their disclosure
 
 **Slice:** 1, except criteria 7.3, 7.4, 7.7 and 7.9 (Slice 2)
@@ -246,6 +253,8 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 10. WHERE the Heuristic_Extractor is not delivered, IF a live page-analysis call fails after every attempt that Requirement 6.10 allows, and no Precomputed_Page_Plan matches both the Page_Version and the Interface_Language, THEN THE Worker SHALL return the shared error shape with an error code stating that AI analysis is unavailable, and THE Mirror SHALL handle the response as Requirement 6.15 states.
 11. WHERE language switching after analysis is not delivered, WHILE the agent loop is active, THE ReForge_App SHALL keep the language picker unavailable in the Mirror and SHALL state in the Interface_Language that the language can be changed after cancelling or finishing the revival.
 
+12. WHERE the Heuristic_Extractor is delivered (Slice 2), WHILE the Analysis_Mode is `heuristic`, THE Mirror SHALL not label the questions as machine-translated, because they quote the old page. THE Worker SHALL log the fixed `errorCode` `AI_FALLBACK_HEURISTIC` for such a response and no field, label or answer.
+13. WHERE language switching after analysis is delivered (Slice 2), THE language picker SHALL be locked only while the loop is reading or analysing the page and no question exists. THE re-translation request SHALL carry only `targetLanguage` and the labels and questions in plan order, with no Element_Id, Page_Model or answer. A reply whose item count differs from the request SHALL count as invalid. A load of a new frame document during a re-translation SHALL end it, keep the earlier wording and show the notice of criterion 7.9. THE data notice SHALL state the re-translation sentence in every core locale.
 ### Requirement 8: Act (validated actions in the revival frame)
 
 **Slice:** 1, except criterion 8.11 (Slice 2, skipping)
@@ -269,6 +278,7 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 13. THE Page_Model SHALL list the Element_Id of every option of a radio group in that group's entry, and THE Executor SHALL treat an Element_Id as "in the current Page_Model" under criteria 8.1 and 8.2 exactly when it is the Element_Id of a Page_Model entry or of a radio option listed in a radio group entry. A `check` Action on a radio group SHALL be addressed by the Element_Id of the option, and an Action addressed by the Element_Id of the radio group itself SHALL be rejected under criterion 8.2.
 14. IF the Executor receives an Action that started at an earlier Revival_Generation than the current one, THEN THE Executor SHALL reject the Action as criterion 8.2 states.
 
+15. WHERE skipping is delivered (Slice 2), THE clearing Action of criterion 8.11 SHALL be one `fill` with an empty value for a text input, one `select` of the empty option for a select, and one `check` with `checked` false on the chosen option for a radio group or on the box for a checkbox. THE Verifier SHALL read the field back and the status SHALL become `skipped` only when it reads empty, unselected or unchecked. A select without an empty option SHALL become Do_It_Yourself with a reason, because it cannot be cleared. A skip SHALL change no other Legacy_Field.
 ### Requirement 9: Mirror question flow and validation
 
 **Slice:** 1, except the language-change sentence of criterion 9.4 and criterion 9.12 (Slice 2)
@@ -348,6 +358,7 @@ The user chooses Simplified Chinese (`zh-Hans`) on the language picker and opens
 7. THE Mirror SHALL give a Legacy_Field status `filled` only when the Verifier's most recent read-back of that Legacy_Field equals its Intended_Value, and SHALL show every other mapped Legacy_Field as `skipped` or as the mismatch reported under Requirement 10.2.
 8. IF a Do_It_Yourself Legacy_Field carries the `required` attribute in the Page_Model and is empty in the Revival_Frame when the user reaches the review screen, THEN THE Mirror SHALL name that Legacy_Field in a notice telling the user to complete it in the Revival_Frame before confirming, and SHALL leave the confirm button available.
 
+9. WHERE manual-field recovery is delivered (Slice 2), THE review screen SHALL offer for each Do_It_Yourself Legacy_Field a control named for that field that shows the Revival_Frame and scrolls it to the field with the outline of criterion 8.5. The control SHALL read the frame, change no value and count as no Action. IF the field cannot be found exactly once, THEN the control SHALL do nothing.
 ### Requirement 13: Privacy
 
 **Slice:** 1, except the re-translation parts of criteria 13.1, 13.7 and 13.10, which apply where language switching after analysis is delivered (Slice 2)

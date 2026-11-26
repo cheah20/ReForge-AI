@@ -410,115 +410,115 @@ FormBridge (`formbridge-pdf`) is being built in parallel. AccessForge work there
       - Decision C is raised with the developer at gate G2 (Nov 25) if it is still open, and its outcome or new date is recorded; no open decision is dropped silently.
     - _Requirements: 16.7, 18.5_
 
-- [ ] 24. Generalized control types and heuristic analysis (Slice 2, optional)
-  - [ ]* 24.1 Extend the extractor and plan validator for duplicate ids, unsupported controls and submit count (Slice 2)
+- [x] 24. Generalized control types and heuristic analysis (Slice 2, optional)
+  - [x]* 24.1 Extend the extractor and plan validator for duplicate ids, unsupported controls and submit count (Slice 2)
     - Keep both entries of a shared Element_Id and mark them Do_It_Yourself; record unsupported controls; return the model on a submit count other than one and mark the submission step Do_It_Yourself with a message to submit in the frame.
     - _Requirements: 5.8, 5.9, 6.16_
-  - [ ]* 24.2 Implement `src/lib/accessforge/heuristic.ts` (Slice 2)
+  - [x]* 24.2 Implement `src/lib/accessforge/heuristic.ts` (Slice 2)
     - `heuristicPlan(model, language)` with the rules table of design Question 3, confidence 0, locale sentence `accessforge.heuristic.question` quoting the legacy text with `lang="ms"`, no network.
     - _Requirements: 7.4_
-  - [ ]* 24.3 Add the `heuristic` mode and the page-changed notice (Slice 2)
+  - [x]* 24.3 Add the `heuristic` mode and the page-changed notice (Slice 2)
     - Route: the Slice 2 row of the decision table with `errorCode` `AI_FALLBACK_HEURISTIC` in the log. Mirror: `heuristic` mode notice; for an unrecorded Page_Version, the page-changed notice on every screen and continue, with no cached plan for that version.
     - _Requirements: 3.5, 7.3, 7.5_
 
-- [ ] 25. Language switching after analysis (Slice 2, optional)
-  - [ ]* 25.1 Add the re-translation schemas and provider method (Slice 2)
+- [x] 25. Language switching after analysis (Slice 2, optional)
+  - [x]* 25.1 Add the re-translation schemas and provider method (Slice 2)
     - **Shared files:** `src/shared/page-schemas.ts`, `src/lib/ai/interface.ts`, `src/lib/ai/mock.ts`, `src/lib/ai/cf-workers.ts`.
     - `PageRetranslateRequestSchema`, `PageRetranslateResponseSchema`, `PageRetranslateCall` and `retranslatePage` (mock by label match; real provider with `max_completion_tokens` 2,000).
     - _Requirements: 7.7, 13.1_
-  - [ ]* 25.2 Add `pageRetranslateMessages()` (Slice 2)
+  - [x]* 25.2 Add `pageRetranslateMessages()` (Slice 2)
     - **Shared file:** `src/lib/ai/prompt.ts`. Same delimiting as task 13.2.
     - _Requirements: 4.5, 13.2_
-  - [ ]* 25.3 Implement `runPageRetranslate()` and `POST /api/pages/retranslate` (Slice 2)
+  - [x]* 25.3 Implement `runPageRetranslate()` and `POST /api/pages/retranslate` (Slice 2)
     - **Shared file:** `src/worker/index.ts`.
     - 48 KB limit, item count must match, 503 and 504 errors, rate limit through `RATE_LIMITER_TRANSLATE` (60 per 60 s), allowed log items only.
     - _Requirements: 7.7, 7.9, 13.1, 13.5_
-  - [ ]* 25.4 Implement `GET /api/pages/cached-plan` (Slice 2)
+  - [x]* 25.4 Implement `GET /api/pages/cached-plan` (Slice 2)
     - **Shared file:** `src/worker/index.ts`.
     - Query `version` and `lang` validated with zod; reads only the bundled precomputed plans, never calls the provider; 404 when none exists; rate limit through `RATE_LIMITER_TRANSLATE` (60 per 60 s).
     - _Requirements: 7.7_
-  - [ ]* 25.5 Wire language switching into the Mirror (Slice 2)
+  - [x]* 25.5 Wire language switching into the Mirror (Slice 2)
     - **Shared files:** `src/frontend/api.ts`, every interface locale file.
     - Unlock the picker; `LANGUAGE_CHANGED` keeps state, step, answers and statuses; new wording by mode (re-translation, cached-plan route, or heuristic in the browser); on failure keep the previous wording with its `lang` and show the notice; add `accessforge.notice.retranslate` to the data notice in the same change.
     - _Requirements: 7.7, 7.9, 9.4, 13.7_
-  - [ ]* 25.6 Write the re-translation tests (Slice 2)
+  - [x]* 25.6 Write the re-translation tests (Slice 2)
     - `tests/unit/accessforge-retranslate.test.ts`: count mismatch counts as invalid; previous wording kept on every error code; `cached` mode switch makes no page-analysis request; both canaries absent from the re-translation body.
     - _Requirements: 7.7, 7.9, 13.10_
 
-- [ ] 26. Skipping, low-confidence accept-or-decline and manual-field recovery (Slice 2, optional)
-  - [ ]* 26.1 Implement skipping (Slice 2)
+- [x] 26. Skipping, low-confidence accept-or-decline and manual-field recovery (Slice 2, optional)
+  - [x]* 26.1 Implement skipping (Slice 2)
     - Skip control on non-required steps; one clearing Action per control type in the Executor; status `skipped`.
     - _Requirements: 8.11, 9.12_
-  - [ ]* 26.2 Implement `LowConfidenceCheck.tsx` (Slice 2)
+  - [x]* 26.2 Implement `LowConfidenceCheck.tsx` (Slice 2)
     - Accept or decline before the input for confidence below 0.7; declining marks the field Do_It_Yourself.
     - _Requirements: 6.18_
-  - [ ]* 26.3 Add the scroll-and-highlight control to `DoItYourselfList.tsx` (Slice 2)
+  - [x]* 26.3 Add the scroll-and-highlight control to `DoItYourselfList.tsx` (Slice 2)
     - The control scrolls the frame to the field and highlights it with the outline of task 16.2.
     - _Requirements: 12.2_
 
-- [ ] 27. Additional property tests (Slice 2, optional)
+- [x] 27. Additional property tests (Slice 2, optional)
   - Each property runs at least 100 cases, prints the seed on failure, carries no `skip` or `only`, and starts with the tag comment `// Feature: accessforge-skeleton, Property N: <title>`.
-  - [ ]* 27.1 Write property test for date round-trip (Slice 2)
+  - [x]* 27.1 Write property test for date round-trip (Slice 2)
     - **Property 5: Date answers round-trip and invalid dates write nothing**
     - **Validates: Requirements 9.7, 17.6**
-  - [ ]* 27.2 Write property test for documented transformations (Slice 2)
+  - [x]* 27.2 Write property test for documented transformations (Slice 2)
     - **Property 6: Intended_Value equals the documented transformation**
     - **Validates: Requirements 9.10, 9.11, 15.5, 17.7**
-  - [ ]* 27.3 Write property test for Element_Ids (Slice 2)
+  - [x]* 27.3 Write property test for Element_Ids (Slice 2)
     - **Property 8: Element_Ids are deterministic and injective, collisions become do it yourself**
     - **Validates: Requirements 5.3, 5.4, 5.6, 5.8, 5.9**
-  - [ ]* 27.4 Write property test for instruction-like page text (Slice 2)
+  - [x]* 27.4 Write property test for instruction-like page text (Slice 2)
     - **Property 9: Page text cannot steer the agent**
     - **Validates: Requirements 4.6**
-  - [ ]* 27.5 Write property test for the sanitiser (Slice 2)
+  - [x]* 27.5 Write property test for the sanitiser (Slice 2)
     - **Property 10: Sanitised output contains no active or foreign construct and keeps kept text**
     - **Validates: Requirements 4.1, 4.8**
-  - [ ]* 27.6 Write property test for prompt delimiting (Slice 2)
+  - [x]* 27.6 Write property test for prompt delimiting (Slice 2)
     - **Property 11: Prompt data stays inside its delimiters**
     - **Validates: Requirements 4.5, 13.2**
-  - [ ]* 27.7 Write property test for submission validation (Slice 2)
+  - [x]* 27.7 Write property test for submission validation (Slice 2)
     - **Property 12: The Legacy_Handler accepts exactly the valid bodies and names every failure**
     - **Validates: Requirements 2.2, 2.3**
-  - [ ]* 27.8 Write property test for the received-fields summary (Slice 2)
+  - [x]* 27.8 Write property test for the received-fields summary (Slice 2)
     - **Property 13: The Received_Fields_Summary round-trips exactly**
     - **Validates: Requirements 2.1, 2.4, 2.7, 2.10**
-  - [ ]* 27.9 Write property test for reference numbers (Slice 2)
+  - [x]* 27.9 Write property test for reference numbers (Slice 2)
     - **Property 14: Reference numbers follow the pattern and ignore submitted values**
     - **Validates: Requirements 2.9**
-  - [ ]* 27.10 Write property test for the frame check (Slice 2)
+  - [x]* 27.10 Write property test for the frame check (Slice 2)
     - **Property 15: The frame check accepts exactly the four Allow_List transitions**
     - **Validates: Requirements 3.2, 18.1**
-  - [ ]* 27.11 Write model-based property test for the agent loop (Slice 2)
+  - [x]* 27.11 Write model-based property test for the agent loop (Slice 2)
     - **Property 16: One confirm press, at most one submit, no stale effects, and only verified fields count as filled**
     - **Validates: Requirements 3.3, 3.6, 3.9, 3.10, 7.7, 10.2, 10.6, 10.7, 10.13, 12.1, 12.7**
-  - [ ]* 27.12 Write property test for analysis modes (Slice 2)
+  - [x]* 27.12 Write property test for analysis modes (Slice 2)
     - **Property 17: The Analysis_Mode always names the source of the plan**
     - **Validates: Requirements 6.10, 7.1, 7.2, 7.3, 7.8, 7.10**
-  - [ ]* 27.13 Write property test for the heuristic plan (Slice 2)
+  - [x]* 27.13 Write property test for the heuristic plan (Slice 2)
     - **Property 18: The heuristic plan is deterministic and rule-bound**
     - **Validates: Requirements 7.4**
-  - [ ]* 27.14 Write property test for received-data comparison (Slice 2)
+  - [x]* 27.14 Write property test for received-data comparison (Slice 2)
     - **Property 19: Received data is verified against what was intended**
     - **Validates: Requirements 10.10, 10.11, 10.12**
-  - [ ]* 27.15 Write property test for the form-target check (Slice 2)
+  - [x]* 27.15 Write property test for the form-target check (Slice 2)
     - **Property 20: The form-target check passes only for the legacy handler**
     - **Validates: Requirements 4.4, 4.9**
-  - [ ]* 27.16 Write property test for invalid analysis requests (Slice 2)
+  - [x]* 27.16 Write property test for invalid analysis requests (Slice 2)
     - **Property 21: Invalid analysis requests never reach the provider**
     - **Validates: Requirements 6.3, 13.6**
-  - [ ]* 27.17 Write property test for steps, evidence and review rows (Slice 2)
+  - [x]* 27.17 Write property test for steps, evidence and review rows (Slice 2)
     - **Property 22: Steps, evidence and review rows follow the plan**
     - **Validates: Requirements 6.9, 6.11, 6.18, 9.1, 10.4**
-  - [ ]* 27.18 Write property test for skip clearing (Slice 2)
+  - [x]* 27.18 Write property test for skip clearing (Slice 2)
     - **Property 23: Skipping clears what was written**
     - **Validates: Requirements 8.11, 9.12**
-  - [ ]* 27.19 Write property test for canary values (Slice 2)
+  - [x]* 27.19 Write property test for canary values (Slice 2)
     - **Property 24: Canary values never leave through a forbidden path**
     - **Validates: Requirements 13.1, 13.2, 13.3, 13.5, 13.6, 13.10**
-  - [ ]* 27.20 Write property test for unlisted legacy paths (Slice 2)
+  - [x]* 27.20 Write property test for unlisted legacy paths (Slice 2)
     - **Property 25: Unlisted legacy paths give the not-found document**
     - **Validates: Requirements 1.10, 2.6, 4.2**
-  - [ ]* 27.21 Write property test for the frame source (Slice 2)
+  - [x]* 27.21 Write property test for the frame source (Slice 2)
     - **Property 26: The frame source cannot be redirected**
     - **Validates: Requirements 18.1, 18.2**
 
