@@ -13,9 +13,11 @@ import { createApiClient, type ApiClient } from './api.js';
 import { AppContext, useServices, useSession } from './app-context.js';
 import { AppHeader } from './components/AppHeader.js';
 import { StatusMessage } from './components/StatusMessage.js';
+import { LoadBoundary, LoadFailed } from './components/LoadBoundary.js';
 import { I18nProvider, useTranslation } from './i18n.js';
 import { browserLanguages, matchLanguage } from './language-match.js';
 import { AnalysisLoading } from './screens/AnalysisLoading.js';
+import { AnswerSheet } from './screens/AnswerSheet.js';
 import { ConfirmLanguage, isBlockedFormLanguage } from './screens/ConfirmLanguage.js';
 import { DownloadConfirm } from './screens/DownloadConfirm.js';
 import { LanguagePicker } from './screens/LanguagePicker.js';
@@ -33,7 +35,8 @@ import { useChangeLanguage } from './use-change-language.js';
 const RevivalScreen = lazy(() => import('./accessforge/RevivalScreen.js').then((m) => ({ default: m.RevivalScreen })));
 const DocumentReading = lazy(() => import('./document/DocumentReading.js').then((m) => ({ default: m.DocumentReading })));
 const LabelReview = lazy(() => import('./document/LabelReview.js').then((m) => ({ default: m.LabelReview })));
-const AnswerSheet = lazy(() => import('./screens/AnswerSheet.js').then((m) => ({ default: m.AnswerSheet })));
+// The Answer_Sheet is small and stays in the first download: it ends a session full of answers, so it
+// must not depend on a download that can fail.
 
 /** The photo path's session helpers load with the photo path, not with the first screen. */
 const loadDocumentSession = () => import('./document/session.js');
@@ -75,6 +78,9 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
   );
   const [firstScreen, setFirstScreen] = useState(true);
   const { store } = useServices();
+  // A helper module that could not be downloaded shows the same message as a screen that could not.
+  const [loadFailed, setLoadFailed] = useState(false);
+  const onLoadFailed = useCallback(() => setLoadFailed(true), []);
 
   const show = useCallback((next: Screen) => {
     setFirstScreen(false);
@@ -104,9 +110,11 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
   const onWizardDone = useCallback(() => show('review'), [show]);
   if (screen === 'accessforge') {
     return (
-      <Suspense fallback={<ScreenLoading />}>
-        <RevivalScreen changeLanguage={changeLanguage} foreignAddress={foreignAddress} />
-      </Suspense>
+      <LoadBoundary fallback={<main className="page"><LoadFailed /></main>}>
+        <Suspense fallback={<ScreenLoading />}>
+          <RevivalScreen changeLanguage={changeLanguage} foreignAddress={foreignAddress} />
+        </Suspense>
+      </LoadBoundary>
     );
   }
 
@@ -122,6 +130,8 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
         </div>
       )}
       <main id="main" className="page">
+        {loadFailed && <LoadFailed />}
+        <LoadBoundary key={screen} fallback={<LoadFailed />}>
         <Suspense fallback={<ScreenLoading />}>
         {screen === 'language' && (
           <LanguagePicker
@@ -148,7 +158,7 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
                 store.set((s) => discardDocument(s, (u) => URL.revokeObjectURL(u)));
                 setPhoto(file);
                 show('reading');
-              });
+              }, onLoadFailed);
             }}
             onContinue={(f) => {
               setForm(f);
@@ -179,13 +189,13 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
                 store.set((s) => discardDocument(s, (u) => URL.revokeObjectURL(u)));
                 setPhoto(null);
                 show('upload');
-              });
+              }, onLoadFailed);
             }}
             onRead={(model, lang) => {
               void Promise.all([loadDocumentSession(), loadDocumentModel()]).then(([{ startDocumentSession }, { ocrLanguageTag }]) => {
                 store.set((s) => ({ ...s, formLanguage: ocrLanguageTag(lang), formCountry: s.formCountry || 'MY', document: startDocumentSession(model, lang) }));
                 show('labelReview');
-              });
+              }, onLoadFailed);
             }}
           />
         )}
@@ -193,6 +203,7 @@ function Flow({ extractor, initialPath, loadSample }: FlowProps) {
         {screen === 'sheet' && <AnswerSheet onBackToReview={() => show('review')} />}
         {screen === 'download' && form && <DownloadConfirm pdf={form.pdf} onBackToReview={() => show('review')} />}
         </Suspense>
+        </LoadBoundary>
       </main>
     </>
   );

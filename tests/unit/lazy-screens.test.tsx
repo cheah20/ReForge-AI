@@ -4,6 +4,7 @@
  *
  * The photo path and AccessForge are not part of the first download: App.tsx
  * loads their screens with `lazy()` and imports no module of theirs statically.
+ * The small Answer_Sheet is the exception: the last step never waits for a download.
  * Opening AccessForge shows a short loading note, then the screen.
  */
 import { describe, it, expect, afterEach } from 'vitest';
@@ -24,13 +25,13 @@ describe('App.tsx imports', () => {
     expect(staticImports).toContain('./screens/Upload.js');
   });
 
-  it('imports no AccessForge, document-pipeline or Answer_Sheet module statically', () => {
-    const heavy = staticImports.filter((p) => /accessforge\/(?!scope)|\/document\/|document\/|AnswerSheet/.test(p) && !p.endsWith('/scope.js'));
+  it('imports no AccessForge or document-pipeline module statically', () => {
+    const heavy = staticImports.filter((p) => /accessforge\/(?!scope)|\/document\/|document\//.test(p) && !p.endsWith('/scope.js'));
     expect(heavy).toEqual([]);
   });
 
   it('loads each of those screens with lazy()', () => {
-    for (const screen of ['RevivalScreen', 'DocumentReading', 'LabelReview', 'AnswerSheet']) {
+    for (const screen of ['RevivalScreen', 'DocumentReading', 'LabelReview']) {
       expect(SOURCE, screen).toMatch(new RegExp(`const ${screen} = lazy\\(\\(\\) => import\\(`));
     }
   });
